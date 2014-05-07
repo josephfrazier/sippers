@@ -1,0 +1,20 @@
+{
+  "name": "sippers",
+  "version": "0.0.0",
+  "description": "A SIP parsing library.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joseph-onsip/sippers.git"
+  },
+  "author": "Joseph Frazier <joseph@onsip.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joseph-onsip/sippers/issues"
+  },
+  "homepage": "https://github.com/joseph-onsip/sippers",
+  "devDependencies": {
+    "gulp": "~3.6.2",
+    "gulp-peg": "~0.1.1",
+    "gulp-util": "~2.2.14"
+  }
+}
