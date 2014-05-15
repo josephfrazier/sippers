@@ -1,3 +1,25 @@
+{
+  function mapList (append, list) {
+    return list.reduce(
+      function combine (map, item) {
+        var name = item.name;
+        var value = item.value;
+        if (append && Array.isArray(value)) {
+          value = (map[name] || []).concat(value);
+        }
+        map[name] = value;
+        return map;
+      },
+      {}
+    );
+  }
+
+  // See RFC 3261 Section 7.3
+  var combineHeaders = mapList.bind(null, true);
+  // non-RFC, just convenient
+  var combineParams = mapList.bind(null, false);
+}
+
 // begin RFC 2234
 // http://tools.ietf.org/html/rfc2234#section-6.1
 ALPHA          =  [A-Z] / [a-z]
@@ -196,7 +218,8 @@ hexseq         =  hex4 ( ":" hex4)*
 hex4           =  HEXDIG HEXDIG? HEXDIG? HEXDIG?
 port           =  $ DIGIT+
 
-uri_parameters    =  ( ";" up:uri_parameter {return up;})*
+uri_parameters    =  parameters:( ";" up:uri_parameter {return up;})*
+                     { return combineParams(parameters); }
 uri_parameter     =  transport_param / user_param / method_param
                      / ttl_param / maddr_param / lr_param / other_param
 
@@ -230,7 +253,7 @@ paramchar         =  param_unreserved / unreserved / escaped
 param_unreserved  =  "[" / "]" / "/" / ":" / "&" / "+" / "$"
 
 headers         =  "?" first:header rest:( "&" h:header {return h;} )*
-                   { return [first].concat(rest); }
+                   { return combineParams([first].concat(rest)); }
 header          =  name:hname "=" value:hvalue
                    {return {name: name, value: value};}
 hname           =  $( ( hnv_unreserved / unreserved / escaped )+ )
@@ -244,6 +267,7 @@ Request        =  Request_Line:Request_Line
                   CRLF
                   message_body:( message_body )?
                   {
+                    message_headers = combineHeaders(message_headers);
                     return {
                       Request_Line: Request_Line,
                       message_headers: message_headers,
@@ -296,6 +320,7 @@ path_segments  =  first:segment rest:( "/" s:segment {return s;} )*
 segment        =  value:$(pchar*)
                   params:( ";" p:param {return p;} )*
                   {
+                    params = combineParams(params);
                     return {
                       value: value,
                       params: params
@@ -419,6 +444,7 @@ Response          =  Status_Line:Status_Line
                      CRLF
                      message_body:( message_body )?
                      {
+                       message_headers = combineHeaders(message_headers);
                        return {
                          Status_Line: Status_Line,
                          message_headers: message_headers,
@@ -520,6 +546,7 @@ Accept         =  name:"Accept"i HCOLON
                   {return {name: "Accept", value: value};}
 accept_range   =  media_range:media_range accept_params:(SEMI a:accept_param {return a;})*
                   {
+                    accept_params = combineParams(accept_params);
                     return {
                       media_range: media_range,
                       accept_params: accept_params
@@ -555,6 +582,7 @@ Accept_Encoding  =  name:"Accept-Encoding"i HCOLON
 encoding         =  codings:codings
                     accept_params:(SEMI a:accept_param {return a;})*
                     {
+                      accept_params = combineParams(accept_params);
                       return {
                         codings: codings,
                         accept_params: accept_params
@@ -573,6 +601,7 @@ Accept_Language  =  name:"Accept-Language"i HCOLON
 language         =  language_range:language_range
                     accept_params:(SEMI a:accept_param {return a;})*
                     {
+                      accept_params = combineParams(accept_params);
                       return {
                         language_range: language_range,
                         accept_params: accept_params
@@ -591,6 +620,7 @@ Alert_Info   =  name:"Alert-Info"i HCOLON
 alert_param  =  LAQUOT absoluteURI:absoluteURI RAQUOT
                 generic_params:( SEMI g:generic_param {return g;} )*
                 {
+                  generic_params = combineParams(generic_params);
                   return {
                     absoluteURI: absoluteURI,
                     generic_params: generic_params
@@ -616,7 +646,7 @@ credentials       =  (
                      / (o:other_response {return {other_response: o};})
 digest_response   =  first:dig_resp
                      rest:(COMMA d:dig_resp {return d;})*
-                     { return [first].concat(rest); }
+                     { return combineParams([first].concat(rest)); }
 dig_resp          =  username / realm / nonce / digest_uri
                       / dresponse / algorithm / cnonce
                       / opaque / message_qop
@@ -653,7 +683,7 @@ other_response    =  auth_scheme:auth_scheme LWS first:auth_param
                      {
                        return {
                          auth_scheme: auth_scheme,
-                         auth_params: [first].concat(rest)
+                         auth_params: combineParams([first].concat(rest))
                        };
                      }
 auth_scheme       =  token
@@ -662,7 +692,7 @@ Authentication_Info  =  name:"Authentication-Info"i HCOLON
                         value:(
                           first:ainfo
                           rest:(COMMA a:ainfo {return a;})*
-                          { return [first].concat(rest); }
+                          { return combineParams([first].concat(rest)); }
                         )
                         {return {name: "Authentication-Info", value: value};}
 ainfo                =  nextnonce / message_qop
@@ -689,6 +719,7 @@ Call_Info   =  name:"Call-Info"i HCOLON
 info        =  LAQUOT absoluteURI:absoluteURI RAQUOT
                info_params:( SEMI i:info_param {return i;} )*
                {
+                 info_params = combineParams(info_params);
                  return {
                    absoluteURI: absoluteURI,
                    info_params: info_params
@@ -713,6 +744,7 @@ Contact        =  name:("Contact"i / "m"i ) HCOLON
 contact_param  =  addr:(name_addr / addr_spec)
                   params:(SEMI c:contact_params {return c;})*
                   {
+                    params = combineParams(params);
                     return {
                       addr: addr,
                       params: params
@@ -759,6 +791,7 @@ Content_Disposition   =  name:"Content-Disposition"i HCOLON
                            disp_type:disp_type
                            disp_params:( SEMI d:disp_param {return d;} )*
                            {
+                             disp_params = combineParams(disp_params);
                              return {
                                disp_type: disp_type,
                                disp_params: disp_params
@@ -812,6 +845,7 @@ Content_Type     =  name:( "Content-Type"i / "c"i ) HCOLON value:media_type
 media_type       =  m_type:m_type SLASH m_subtype:m_subtype
                     m_parameters:(SEMI p:m_parameter {return p;})*
                     {
+                      m_parameters = combineParams(m_parameters);
                       return {
                         m_type: m_type,
                         m_subtype: m_subtype,
@@ -827,8 +861,8 @@ ietf_token       =  token
 x_token          =  "x-" token
 m_subtype        =  extension_token / iana_token
 iana_token       =  token
-m_parameter      =  attribute:m_attribute EQUAL value:m_value
-                    {return {attribute: attribute, value: value};}
+m_parameter      =  name:m_attribute EQUAL value:m_value
+                    {return {name: name, value: value};}
 m_attribute      =  token
 m_value          =  token / quoted_string
 
@@ -894,6 +928,7 @@ Error_Info  =  name:"Error-Info"i HCOLON
 error_uri   =  LAQUOT absoluteURI:absoluteURI RAQUOT
                generic_params:( SEMI g:generic_param {return g;} )*
                {
+                 generic_params = combineParams(generic_params);
                  return {
                    absoluteURI: absoluteURI,
                    generic_params: generic_params
@@ -907,6 +942,7 @@ From        =  name:( "From"i / "f"i ) HCOLON value:from_spec
 from_spec   =  addr:(name_addr / addr_spec)
                params:(SEMI f:from_param {return f;})*
                {
+                 params = combineParams(params);
                  return {
                    addr: addr,
                    params: params
@@ -966,7 +1002,7 @@ other_challenge     =  auth_scheme:auth_scheme LWS first:auth_param
                        {
                          return {
                            auth_scheme: auth_scheme,
-                           auth_params: [first].concat(rest)
+                           auth_params: combineParams([first].concat(rest))
                          };
                        }
 digest_cln          =  realm / domain / nonce
@@ -1025,6 +1061,7 @@ Record_Route  =  name:"Record-Route"i HCOLON
 rec_route     =  addr:name_addr
                  params:( SEMI r:rr_param {return r;} )*
                  {
+                   params = combineParams(params);
                    return {
                      addr: addr,
                      params: params
@@ -1039,7 +1076,7 @@ rplyto_spec   =  addr:( name_addr / addr_spec )
                  {
                    return {
                      addr: addr,
-                     params: params
+                     params: combineParams(params)
                    };
                  }
 rplyto_param  =  generic_param
@@ -1058,6 +1095,7 @@ Retry_After  =  name:"Retry-After"i HCOLON
                   comment:( comment )?
                   retry_params:( SEMI r:retry_param {return r;} )*
                   {
+                    retry_params = combineParams(retry_params);
                     return {
                       delta_seconds: delta_seconds,
                       comment: comment,
@@ -1082,6 +1120,7 @@ Route        =  name:"Route"i HCOLON
                 {return {name: "Route", value: value};}
 route_param  =  addr:name_addr params:( SEMI r:rr_param {return r;} )*
                 {
+                  params = combineParams(params);
                   return {
                     addr: addr,
                     params: params
@@ -1129,6 +1168,7 @@ To        =  name:( "To"i / "t"i ) HCOLON
                addr:( name_addr / addr_spec )
                params:( SEMI t:to_param {return t;} )*
                {
+                 params = combineParams(params);
                  return {
                    addr: addr,
                    params: params
@@ -1164,6 +1204,7 @@ Via               =  name:( "Via"i / "v"i ) HCOLON
 via_parm          =  sent_protocol:sent_protocol LWS sent_by:sent_by
                      params:( SEMI v:via_params {return v;} )*
                      {
+                       params = combineParams(params);
                        return {
                          sent_protocol: sent_protocol,
                          sent_by: sent_by,
@@ -1274,6 +1315,7 @@ Reason            =  name:"Reason"i HCOLON
 reason_value      =  protocol:protocol
                      params:(SEMI r:reason_params {return r;})*
                      {
+                       params = combineParams(params);
                        return {
                          protocol: protocol,
                          params: params
@@ -1302,6 +1344,7 @@ Path       = name:"Path"i HCOLON
 path_value = addr:name_addr
              params:( SEMI p:rr_param {return p;} )*
              {
+               params = combineParams(params);
                return {
                  addr: addr,
                  params: params
@@ -1338,6 +1381,7 @@ Event             =  name:( "Event"i / "o"i ) HCOLON
                        type:event_type
                        params:( SEMI p:event_param {return p;} )*
                        {
+                         params = combineParams(params);
                          return {
                            type: type,
                            params: params
@@ -1377,6 +1421,7 @@ Subscription_State   = name:"Subscription-State"i HCOLON
                          substate_value:substate_value
                          params:( SEMI p:subexp_params {return p} )*
                          {
+                           params = combineParams(params);
                            return {
                              substate_value: substate_value,
                              params: params
