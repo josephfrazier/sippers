@@ -511,13 +511,13 @@ Global_Failure  =  "600"  //  Busy Everywhere
                /   "604"  //  Does not exist anywhere
                /   "606"  //  Not Acceptable
 
-Accept         =  name:"Accept" HCOLON
+Accept         =  name:"Accept"i HCOLON
                   value:(
                     first:accept_range
                     rest:(COMMA a:accept_range {return a;})*
                     { return [first].concat(rest); }
                   )?
-                  {return {name: name, value: value};}
+                  {return {name: "Accept", value: value};}
 accept_range   =  media_range:media_range accept_params:(SEMI a:accept_param {return a;})*
                   {
                     return {
@@ -545,13 +545,13 @@ generic_param  =  name:token value:( EQUAL g:gen_value {return g;} )?
                   {return {name: name, value: value};}
 gen_value      =  token / host / quoted_string
 
-Accept_Encoding  =  name:"Accept-Encoding" HCOLON
+Accept_Encoding  =  name:"Accept-Encoding"i HCOLON
                     value:(
                       first:encoding
                       rest:(COMMA e:encoding {return e;})*
                       { return [first].concat(rest); }
                     )?
-                    {return {name: name, value: value};}
+                    {return {name: "Accept-Encoding", value: value};}
 encoding         =  codings:codings
                     accept_params:(SEMI a:accept_param {return a;})*
                     {
@@ -563,13 +563,13 @@ encoding         =  codings:codings
 codings          =  content_coding / "*"
 content_coding   =  token
 
-Accept_Language  =  name:"Accept-Language" HCOLON
+Accept_Language  =  name:"Accept-Language"i HCOLON
                     value:(
                       first:language
                       rest:(COMMA l:language {return l;})*
                       { return [first].concat(rest); }
                     )?
-                    {return {name: name, value: value};}
+                    {return {name: "Accept-Language", value: value};}
 language         =  language_range:language_range
                     accept_params:(SEMI a:accept_param {return a;})*
                     {
@@ -581,13 +581,13 @@ language         =  language_range:language_range
 language_range   =  $ ( ( _1to8ALPHA ( "-" _1to8ALPHA )* ) / "*" )
 _1to8ALPHA       = ALPHA ALPHA? ALPHA? ALPHA? ALPHA? ALPHA? ALPHA? ALPHA?
 
-Alert_Info   =  name:"Alert-Info" HCOLON
+Alert_Info   =  name:"Alert-Info"i HCOLON
                 value:(
                   first:alert_param
                   rest:(COMMA a:alert_param {return a;})*
                   { return [first].concat(rest); }
                 )
-                {return {name: name, value: value};}
+                {return {name: "Alert-Info", value: value};}
 alert_param  =  LAQUOT absoluteURI:absoluteURI RAQUOT
                 generic_params:( SEMI g:generic_param {return g;} )*
                 {
@@ -597,16 +597,16 @@ alert_param  =  LAQUOT absoluteURI:absoluteURI RAQUOT
                   }
                 }
 
-Allow  =  name:"Allow" HCOLON
+Allow  =  name:"Allow"i HCOLON
           value:(
             first:Method
             rest:(COMMA m:Method {return m;})*
             { return [first].concat(rest); }
           )?
-          {return {name: name, value: value};}
+          {return {name: "Allow", value: value};}
 
-Authorization     =  name:"Authorization" HCOLON value:credentials
-                     {return {name: name, value: value};}
+Authorization     =  name:"Authorization"i HCOLON value:credentials
+                     {return {name: "Authorization", value: value};}
 credentials       =  (
                        "Digest" LWS d:digest_response
                        {
@@ -658,13 +658,13 @@ other_response    =  auth_scheme:auth_scheme LWS first:auth_param
                      }
 auth_scheme       =  token
 
-Authentication_Info  =  name:"Authentication-Info" HCOLON
+Authentication_Info  =  name:"Authentication-Info"i HCOLON
                         value:(
                           first:ainfo
                           rest:(COMMA a:ainfo {return a;})*
                           { return [first].concat(rest); }
                         )
-                        {return {name: name, value: value};}
+                        {return {name: "Authentication-Info", value: value};}
 ainfo                =  nextnonce / message_qop
                          / response_auth / cnonce
                          / nonce_count
@@ -674,18 +674,18 @@ response_auth        =  name:"rspauth" EQUAL value:response_digest
                         {return {name: name, value: value};}
 response_digest      =  LDQUOT value:$(LHEX*) RDQUOT {return value;}
 
-Call_ID  =  name:( "Call-ID" / "i" ) HCOLON value:callid
-            {return {name: name, value: value};}
+Call_ID  =  name:( "Call-ID"i / "i"i ) HCOLON value:callid
+            {return {name: "Call-ID", value: value};}
 callid   =  $( word ( "@" word )? )
 
 Call_Info   =  "Call-Info" HCOLON info (COMMA info)*
-Call_Info   =  name:"Call-Info" HCOLON
+Call_Info   =  name:"Call-Info"i HCOLON
                value:(
                  first:info
                  rest:(COMMA i:info {return i;})*
                  { return [first].concat(rest); }
                )
-               {return {name: name, value: value};}
+               {return {name: "Call-Info", value: value};}
 info        =  LAQUOT absoluteURI:absoluteURI RAQUOT
                info_params:( SEMI i:info_param {return i;} )*
                {
@@ -700,7 +700,7 @@ info_param  =  (
                  {return {name: name, value: value};}
                ) / generic_param
 
-Contact        =  name:("Contact" / "m" ) HCOLON
+Contact        =  name:("Contact"i / "m"i ) HCOLON
                   value:(
                     STAR /
                     (
@@ -709,7 +709,7 @@ Contact        =  name:("Contact" / "m" ) HCOLON
                       { return [first].concat(rest); }
                     )
                   )
-                  {return {name: name, value: value};}
+                  {return {name: "Contact", value: value};}
 contact_param  =  addr:(name_addr / addr_spec)
                   params:(SEMI c:contact_params {return c;})*
                   {
@@ -754,7 +754,7 @@ instance_val       =  $(uric+) // defined in RFC 3261
 contact_extension  =  generic_param
 delta_seconds      =  DIGIT+ { return parseInt(text(), 10); }
 
-Content_Disposition   =  name:"Content-Disposition" HCOLON
+Content_Disposition   =  name:"Content-Disposition"i HCOLON
                          value:(
                            disp_type:disp_type
                            disp_params:( SEMI d:disp_param {return d;} )*
@@ -765,7 +765,7 @@ Content_Disposition   =  name:"Content-Disposition" HCOLON
                              };
                            }
                          )
-                         {return {name: name, value: value};}
+                         {return {name: "Content-Disposition", value: value};}
 disp_type             =  "render" / "session" / "icon" / "alert"
                          / disp_extension_token
 // http://tools.ietf.org/html/rfc3261#page-229
@@ -777,23 +777,23 @@ handling_param        =  name:"handling" EQUAL
 other_handling        =  token
 disp_extension_token  =  token
 
-Content_Encoding  =  name:( "Content-Encoding" / "e" ) HCOLON
+Content_Encoding  =  name:( "Content-Encoding"i / "e"i ) HCOLON
                      value:(
                        first:content_coding
                        rest:(COMMA c:content_coding {return c;})*
                        { return [first].concat(rest); }
                      )
-                     {return {name: name, value: value};}
+                     {return {name: "Content-Encoding", value: value};}
 
 Content_Language  =  "Content-Language" HCOLON
                      language_tag (COMMA language_tag)*
-Content_Language  =  name:"Content-Language" HCOLON
+Content_Language  =  name:"Content-Language"i HCOLON
                      value:(
                        first:language_tag
                        rest:(COMMA l:language_tag {return c;})*
                        { return [first].concat(rest); }
                      )
-                     {return {name: name, value: value};}
+                     {return {name: "Content-Language", value: value};}
 language_tag      =  primary_tag:primary_tag
                      subtags:( "-" s:subtag {return s;})*
                      {
@@ -805,10 +805,10 @@ language_tag      =  primary_tag:primary_tag
 primary_tag       =  _1to8ALPHA
 subtag            =  _1to8ALPHA
 
-Content_Length   =  name:( "Content-Length" / "l" ) HCOLON value:$(DIGIT+)
-                    { return { name: name, value: parseInt(value, 10) }; }
-Content_Type     =  name:( "Content-Type" / "c" ) HCOLON value:media_type
-                    {return {name: name, value: value};}
+Content_Length   =  name:( "Content-Length"i / "l"i ) HCOLON value:$(DIGIT+)
+                    { return { name: "Content-Length" , value: parseInt(value, 10) }; }
+Content_Type     =  name:( "Content-Type"i / "c"i ) HCOLON value:media_type
+                    {return {name: "Content-Type", value: value};}
 media_type       =  m_type:m_type SLASH m_subtype:m_subtype
                     m_parameters:(SEMI p:m_parameter {return p;})*
                     {
@@ -832,7 +832,7 @@ m_parameter      =  attribute:m_attribute EQUAL value:m_value
 m_attribute      =  token
 m_value          =  token / quoted_string
 
-CSeq  =  name:"CSeq" HCOLON
+CSeq  =  name:"CSeq"i HCOLON
          value:(
            sequenceNumber:$(DIGIT+) LWS requestMethod:Method
            {
@@ -842,10 +842,10 @@ CSeq  =  name:"CSeq" HCOLON
              };
            }
          )
-         {return {name: name, value: value};}
+         {return {name: "CSeq", value: value};}
 
-Date          =  name:"Date" HCOLON value:SIP_date
-                 {return {name: name, value: value};}
+Date          =  name:"Date"i HCOLON value:SIP_date
+                 {return {name: "Date", value: value};}
 SIP_date      =  rfc1123_date
 rfc1123_date  =  wkday:wkday "," SP date1:date1 SP time:time SP "GMT"
                  {
@@ -882,13 +882,13 @@ month         =  "Jan" / "Feb" / "Mar" / "Apr"
                  / "Sep" / "Oct" / "Nov" / "Dec"
 
 Error_Info  =  "Error-Info" HCOLON error_uri (COMMA error_uri)*
-Error_Info  =  name:"Error-Info" HCOLON
+Error_Info  =  name:"Error-Info"i HCOLON
                value:(
                  first:error_uri
                  rest:(COMMA e:error_uri {return e;})*
                  { return [first].concat(rest); }
                )
-               {return {name: name, value: value};}
+               {return {name: "Error-Info", value: value};}
 
 // http://tools.ietf.org/html/rfc3261#page-230
 error_uri   =  LAQUOT absoluteURI:absoluteURI RAQUOT
@@ -900,10 +900,10 @@ error_uri   =  LAQUOT absoluteURI:absoluteURI RAQUOT
                  }
                }
 
-Expires     =  name:"Expires" HCOLON value:delta_seconds
-               {return {name: name, value: value};}
-From        =  name:( "From" / "f" ) HCOLON value:from_spec
-               {return {name: name, value: value};}
+Expires     =  name:"Expires"i HCOLON value:delta_seconds
+               {return {name: "Expires", value: value};}
+From        =  name:( "From"i / "f"i ) HCOLON value:from_spec
+               {return {name: "From", value: value};}
 from_spec   =  addr:(name_addr / addr_spec)
                params:(SEMI f:from_param {return f;})*
                {
@@ -916,18 +916,18 @@ from_param  =  tag_param / generic_param
 tag_param   =  name:"tag" EQUAL value:token
                {return {name: name, value: value};}
 
-In_Reply_To  =  name:"In-Reply-To" HCOLON
+In_Reply_To  =  name:"In-Reply-To"i HCOLON
                 value:(
                   first:callid
                   rest:(COMMA c:callid {return c;})*
                   { return [first].concat(rest); }
                 )
-                {return {name: name, value: value};}
+                {return {name: "In-Reply-To", value: value};}
 
-Max_Forwards  =  name:"Max-Forwards" HCOLON value:$(DIGIT+)
-                 {return {name: name, value: parseInt(value, 10)};}
+Max_Forwards  =  name:"Max-Forwards"i HCOLON value:$(DIGIT+)
+                 {return {name: "Max-Forwards", value: parseInt(value, 10)};}
 
-MIME_Version  =  name:"MIME-Version" HCOLON
+MIME_Version  =  name:"MIME-Version"i HCOLON
                  value:(
                    major:$(DIGIT+) "."
                    minor:$(DIGIT+)
@@ -938,22 +938,22 @@ MIME_Version  =  name:"MIME-Version" HCOLON
                      };
                    }
                  )
-                 {return {name: name, value: value};}
+                 {return {name: "MIME-Version", value: value};}
 
-Min_Expires  =  name:"Min-Expires" HCOLON value:delta_seconds
-                {return {name: name, value: value};}
+Min_Expires  =  name:"Min-Expires"i HCOLON value:delta_seconds
+                {return {name: "Min-Expires", value: value};}
 
-Organization  =  name:"Organization" HCOLON value:(TEXT_UTF8_TRIM)?
-                 {return {name: name, value: value};}
+Organization  =  name:"Organization"i HCOLON value:(TEXT_UTF8_TRIM)?
+                 {return {name: "Organization", value: value};}
 
-Priority        =  name:"Priority" HCOLON value:priority_value
-                   {return {name: name, value: value};}
+Priority        =  name:"Priority"i HCOLON value:priority_value
+                   {return {name: "Priority", value: value};}
 priority_value  =  "emergency" / "urgent" / "normal"
                    / "non-urgent" / other_priority
 other_priority  =  token
 
-Proxy_Authenticate  =  name:"Proxy-Authenticate" HCOLON value:challenge
-                       {return {name: name, value: value};}
+Proxy_Authenticate  =  name:"Proxy-Authenticate"i HCOLON value:challenge
+                       {return {name: "Proxy-Authenticate", value: value};}
 challenge           =  (
                          "Digest" LWS
                          first:digest_cln
@@ -1002,26 +1002,26 @@ qop_options         =  name:"qop" EQUAL LDQUOT
                        {return {name: name, value: value};}
 qop_value           =  "auth" / "auth-int" / token
 
-Proxy_Authorization  =  name:"Proxy-Authorization" HCOLON value:credentials
-                        {return {name: name, value: value};}
+Proxy_Authorization  =  name:"Proxy-Authorization"i HCOLON value:credentials
+                        {return {name: "Proxy-Authorization", value: value};}
 
 // http://tools.ietf.org/html/rfc3261#page-231
-Proxy_Require  =  name:"Proxy-Require" HCOLON
+Proxy_Require  =  name:"Proxy-Require"i HCOLON
                   value:(
                     first:option_tag
                     rest:(COMMA o:option_tag {return o;})*
                     { return [first].concat(rest); }
                   )
-                  {return {name: name, value: value};}
+                  {return {name: "Proxy-Require", value: value};}
 option_tag     =  token
 
-Record_Route  =  name:"Record_Route" HCOLON
+Record_Route  =  name:"Record-Route"i HCOLON
                   value:(
                     first:rec_route
                     rest:(COMMA r:rec_route {return r;})*
                     { return [first].concat(rest); }
                   )
-                  {return {name: name, value: value};}
+                  {return {name: "Record-Route", value: value};}
 rec_route     =  addr:name_addr
                  params:( SEMI r:rr_param {return r;} )*
                  {
@@ -1032,7 +1032,8 @@ rec_route     =  addr:name_addr
                  }
 rr_param      =  generic_param
 
-Reply_To      =  name:"Reply-To" HCOLON value:rplyto_spec
+Reply_To      =  name:"Reply-To"i HCOLON value:rplyto_spec
+                 {return {name: "Reply-To", value: value};}
 rplyto_spec   =  addr:( name_addr / addr_spec )
                  params:( SEMI r:rplyto_param {return r;} )*
                  {
@@ -1042,16 +1043,16 @@ rplyto_spec   =  addr:( name_addr / addr_spec )
                    };
                  }
 rplyto_param  =  generic_param
-Require       =  name:"Require" HCOLON
+Require       =  name:"Require"i HCOLON
                  value:(
                    first:option_tag
                    rest:(COMMA option_tag)*
                    { return [first].concat(rest); }
                  )
-                 {return {name: name, value: value};}
+                 {return {name: "Require", value: value};}
 rec_route     =  addr:name_addr
 
-Retry_After  =  name:"Retry-After" HCOLON
+Retry_After  =  name:"Retry-After"i HCOLON
                 value:(
                   delta_seconds:delta_seconds
                   comment:( comment )?
@@ -1064,7 +1065,7 @@ Retry_After  =  name:"Retry-After" HCOLON
                     };
                   }
                 )
-                {return {name: name, value: value};}
+                {return {name: "Retry-After", value: value};}
 
 retry_param  =  (
                   name:"duration" EQUAL value:delta_seconds
@@ -1072,13 +1073,13 @@ retry_param  =  (
                 )
                 / generic_param
 
-Route        =  name:"Route" HCOLON
+Route        =  name:"Route"i HCOLON
                 value:(
                   first:route_param
                   rest:(COMMA r:route_param {return r;})*
                   { return [first].concat(rest); }
                 )
-                {return {name: name, value: value};}
+                {return {name: "Route", value: value};}
 route_param  =  addr:name_addr params:( SEMI r:rr_param {return r;} )*
                 {
                   return {
@@ -1087,13 +1088,13 @@ route_param  =  addr:name_addr params:( SEMI r:rr_param {return r;} )*
                   };
                 }
 
-Server           =  name:"Server" HCOLON
+Server           =  name:"Server"i HCOLON
                     value:(
                       first:server_val
                       rest:(LWS server_val)*
                       { return [first].concat(rest); }
                     )
-                    {return {name: name, value: value};}
+                    {return {name: "Server", value: value};}
 server_val       =  product / comment
 product          =  token:token product_version:(SLASH p:product_version {return p;})?
                     {
@@ -1104,26 +1105,26 @@ product          =  token:token product_version:(SLASH p:product_version {return
                     }
 product_version  =  token
 
-Subject  =  name:( "Subject" / "s" ) HCOLON value:(TEXT_UTF8_TRIM)?
-            {return {name: name, value: value};}
+Subject  =  name:( "Subject"i / "s"i ) HCOLON value:(TEXT_UTF8_TRIM)?
+            {return {name: "Subject", value: value};}
 
-Supported  =  name:( "Supported" / "k" ) HCOLON
+Supported  =  name:( "Supported"i / "k"i ) HCOLON
               value:(
                 first:option_tag
                 rest:(COMMA o:option_tag {return o;})*
                 { return [first].concat(rest); }
               )?
-              {return {name: name, value: value};}
+              {return {name: "Supported", value: value};}
 
-Timestamp  =  name:"Timestamp" HCOLON
+Timestamp  =  name:"Timestamp"i HCOLON
               value:$(
                 (DIGIT)+
                 ( "." (DIGIT)* )? ( LWS delay )?
               )
-              {return {name: name, value: value};}
+              {return {name: "Timestamp", value: value};}
 delay      =  (DIGIT)* ( "." (DIGIT)* )?
 
-To        =  name:( "To" / "t" ) HCOLON
+To        =  name:( "To"i / "t"i ) HCOLON
              value:(
                addr:( name_addr / addr_spec )
                params:( SEMI t:to_param {return t;} )*
@@ -1134,32 +1135,32 @@ To        =  name:( "To" / "t" ) HCOLON
                  };
                }
              )
-             {return {name: name, value: value};}
+             {return {name: "To", value: value};}
 to_param  =  tag_param / generic_param
 
-Unsupported  =  name:"Unsupported" HCOLON
+Unsupported  =  name:"Unsupported"i HCOLON
                 value:(
                   first:option_tag
                   rest:(COMMA o:option_tag {return o;})*
                   { return [first].concat(rest); }
                 )
-                {return {name: name, value: value};}
-User_Agent  =  name:"User-Agent" HCOLON
+                {return {name: "Unsupported", value: value};}
+User_Agent  =  name:"User-Agent"i HCOLON
                 value:(
                   first:server_val
                   rest:(LWS s:server_val {return s;})*
                   { return [first].concat(rest); }
                 )
-                {return {name: name, value: value};}
+                {return {name: "User-Agent", value: value};}
 
 // http://tools.ietf.org/html/rfc3261#page-232
-Via               =  name:( "Via" / "v" ) HCOLON
+Via               =  name:( "Via"i / "v"i ) HCOLON
                      value:(
                        first:via_parm
                        rest:(COMMA v:via_parm {return v;})*
                        { return [first].concat(rest); }
                      )
-                     {return {name: name, value: value};}
+                     {return {name: "Via", value: value};}
 via_parm          =  sent_protocol:sent_protocol LWS sent_by:sent_by
                      params:( SEMI v:via_params {return v;} )*
                      {
@@ -1214,13 +1215,13 @@ ttl             = "25" [\x30-\x35]          // 250-255
                 / [\x31-\x39] DIGIT         // 10-99
                 / DIGIT                     // 0-9
 
-Warning        =  name:"Warning" HCOLON
+Warning        =  name:"Warning"i HCOLON
                   value:(
                     first:warning_value
                     rest:(COMMA w:warning_value {return w;})*
                     { return [first].concat(rest); }
                   )
-                  {return {name: name, value: value};}
+                  {return {name: "Warning", value: value};}
 warning_value  =  warn_code:warn_code SP warn_agent:warn_agent SP warn_text:warn_text
                   {
                     return {
@@ -1236,12 +1237,12 @@ warn_agent     =  hostport / pseudonym
 warn_text      =  quoted_string
 pseudonym      =  token
 
-WWW_Authenticate  =  name:"WWW-Authenticate" HCOLON value:challenge
-                     {return {name: name, value: value};}
+WWW_Authenticate  =  name:"WWW-Authenticate"i HCOLON value:challenge
+                     {return {name: "WWW-Authenticate", value: value};}
 
 // begin RFC 3262
 // http://tools.ietf.org/html/rfc3262#section-10
-RAck          =  name:"RAck" HCOLON
+RAck          =  name:"RAck"i HCOLON
                  value:(
                    response_num:response_num LWS
                    CSeq_num:CSeq_num LWS
@@ -1254,22 +1255,22 @@ RAck          =  name:"RAck" HCOLON
                      };
                    }
                  )
-                 {return {name: name, value: value};}
+                 {return {name: "RAck", value: value};}
 response_num  =  DIGIT+ {return parseInt(text(), 10);}
 CSeq_num      =  DIGIT+ {return parseInt(text(), 10);}
-RSeq          =  name:"RSeq" HCOLON value:response_num
-                 {return {name: name, value: value};}
+RSeq          =  name:"RSeq"i HCOLON value:response_num
+                 {return {name: "RSeq", value: value};}
 // end RFC 3262
 
 // begin RFC 3326
 // http://tools.ietf.org/html/rfc3326#section-2
-Reason            =  name:"Reason" HCOLON
+Reason            =  name:"Reason"i HCOLON
                      value:(
                        first:reason_value
                        rest:(COMMA r:reason_value {return r;})*
                        { return [first].concat(rest); }
                      )
-                     {return {name: name, value: value};}
+                     {return {name: "Reason", value: value};}
 reason_value      =  protocol:protocol
                      params:(SEMI r:reason_params {return r;})*
                      {
@@ -1291,13 +1292,13 @@ reason_extension  =  generic_param
 
 // begin RFC 3327
 // http://tools.ietf.org/html/rfc3327#section-4
-Path       = name:"Path" HCOLON
+Path       = name:"Path"i HCOLON
              value:(
                first:path_value
                rest:( COMMA p:path_value {return p;} )*
                { return [first].concat(rest); }
              )
-             {return {name: name, value: value};}
+             {return {name: "Path", value: value};}
 path_value = addr:name_addr
              params:( SEMI p:rr_param {return p;} )*
              {
@@ -1310,7 +1311,7 @@ path_value = addr:name_addr
 
 // begin RFC 3515
 // http://tools.ietf.org/html/rfc3515#section-2.1
-Refer_To = name:("Refer-To" / "r") HCOLON
+Refer_To = name:("Refer-To"i / "r"i) HCOLON
            value:(
              addr:( name_addr / addr_spec )
              params:(SEMI p:generic_param {return p;})*
@@ -1321,18 +1322,18 @@ Refer_To = name:("Refer-To" / "r") HCOLON
                };
              }
            )
-           {return {name: name, value: value};}
+           {return {name: "Refer-To", value: value};}
 // end RFC 3515
 
 // begin RFC 5626
 // http://tools.ietf.org/html/rfc5626#appendix-B
-Flow_Timer     = name:"Flow-Timer" HCOLON value:$(DIGIT+)
-                 {return {name: name, value: parseInt(value, 10)};}
+Flow_Timer     = name:"Flow-Timer"i HCOLON value:$(DIGIT+)
+                 {return {name: "Flow-Timer", value: parseInt(value, 10)};}
 // end RFC 5626
 
 // begin RFC 6665
 // http://tools.ietf.org/html/rfc6665#section-8.4
-Event             =  name:( "Event" / "o" ) HCOLON
+Event             =  name:( "Event"i / "o"i ) HCOLON
                      value:(
                        type:event_type
                        params:( SEMI p:event_param {return p;} )*
@@ -1363,15 +1364,15 @@ token_nodot       =  $( ( alphanum / "-"  / "!" / "%" / "*"
 event_param       =  generic_param // no need to parse "id" separately
 
 
-Allow_Events      =  name:( "Allow-Events" / "u" ) HCOLON
+Allow_Events      =  name:( "Allow-Events"i / "u"i ) HCOLON
                      value:(
                        first:event_type
                        rest:(COMMA t:event_type {return t;})*
                        { return [first].concat(rest); }
                      )
-                     {return {name: name, value: value};}
+                     {return {name: "Allow-Events", value: value};}
 
-Subscription_State   = name:"Subscription-State" HCOLON
+Subscription_State   = name:"Subscription-State"i HCOLON
                        value:(
                          substate_value:substate_value
                          params:( SEMI p:subexp_params {return p} )*
@@ -1382,7 +1383,7 @@ Subscription_State   = name:"Subscription-State" HCOLON
                            };
                          }
                        )
-                       {return {name: name, value: value};}
+                       {return {name: "Subscription-State", value: value};}
 substate_value       = "active" / "pending" / "terminated"
                        / extension_substate
 extension_substate   = token
