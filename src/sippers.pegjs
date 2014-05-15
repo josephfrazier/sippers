@@ -727,7 +727,7 @@ name_addr      =  display_name:( display_name )?
                     };
                   }
 addr_spec      =  SIP_URI / SIPS_URI / absoluteURI
-display_name   =  $( (token LWS)*/ quoted_string )
+display_name   =  quoted_string / $( (token LWS)* )
 
 contact_params     =  c_p_q / c_p_expires
                       // begin RFC 5626
