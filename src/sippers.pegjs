@@ -321,7 +321,7 @@ srvr           =  (
 reg_name       =  $( ( unreserved / escaped / "$" / ","
                   / ";" / ":" / "@" / "&" / "=" / "+" )+ )
 query          =  $( uric* )
-SIP_Version    =  "SIP" "/" major:$(DIGIT+) "." minor:$(DIGIT+)
+SIP_Version    =  "SIP"i "/" major:$(DIGIT+) "." minor:$(DIGIT+)
                   {
                     return {
                       major: parseInt(major, 10),
