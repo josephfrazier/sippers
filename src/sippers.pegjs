@@ -263,11 +263,10 @@ hnv_unreserved  =  "[" / "]" / "/" / "?" / ":" / "+" / "$"
 SIP_message    =  Request / Response
 
 Request        =  Request_Line:Request_Line
-                  message_headers:( message_header )*
+                  message_headers:_message_headers
                   CRLF
                   message_body:( message_body )?
                   {
-                    message_headers = combineHeaders(message_headers);
                     return {
                       Request_Line: Request_Line,
                       message_headers: message_headers,
@@ -354,6 +353,8 @@ SIP_Version    =  "SIP"i "/" major:$(DIGIT+) "." minor:$(DIGIT+)
                     };
                   }
 
+_message_headers = message_headers:( message_header )*
+                   { return combineHeaders(message_headers); }
 message_header  =  message_header:(Accept
                 /  Accept_Encoding
                 /  Accept_Language
@@ -440,11 +441,10 @@ Method            =  INVITEm / ACKm / OPTIONSm / BYEm
 extension_method  =  token
 
 Response          =  Status_Line:Status_Line
-                     message_headers:( message_header )*
+                     message_headers:_message_headers
                      CRLF
                      message_body:( message_body )?
                      {
-                       message_headers = combineHeaders(message_headers);
                        return {
                          Status_Line: Status_Line,
                          message_headers: message_headers,
