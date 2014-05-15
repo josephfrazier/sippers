@@ -2,6 +2,9 @@ var gulp = require('gulp');
 var gutil = require('gulp-util');
 var peg = require('gulp-peg');
 
+// make gulp work from subdirectories
+process.chdir(__dirname);
+
 var pegOptions = {
   'allowedStartRules': [
     'SIP_message'
