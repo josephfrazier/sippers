@@ -221,7 +221,7 @@ ttl_param         =  "ttl=" value:ttl
                      { return { name: 'ttl', value: value }; }
 maddr_param       =  "maddr=" value:host
                      { return { name: 'maddr', value: value }; }
-lr_param          =  "lr"
+lr_param          =  "lr" {return {name: 'lr', value: null }; }
 other_param       =  name:pname value:( "=" v:pvalue {return v;} )?
                      {return {name: name, value: value};}
 pname             =  $ paramchar+
