@@ -1105,7 +1105,7 @@ product          =  token:token product_version:(SLASH p:product_version {return
                     }
 product_version  =  token
 
-Subject  =  name:( "Subject"i / "s"i ) HCOLON value:(TEXT_UTF8_TRIM)?
+Subject  =  name:( "Subject"i / "s"i ) HCOLON value:$(TEXT_UTF8_TRIM)?
             {return {name: "Subject", value: value};}
 
 Supported  =  name:( "Supported"i / "k"i ) HCOLON
