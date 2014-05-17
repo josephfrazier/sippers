@@ -1087,7 +1087,6 @@ Require       =  name:"Require"i HCOLON
                    { return [first].concat(rest); }
                  )
                  {return {name: "Require", value: value};}
-rec_route     =  addr:name_addr
 
 Retry_After  =  name:"Retry-After"i HCOLON
                 value:(
