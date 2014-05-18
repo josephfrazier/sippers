@@ -150,7 +150,7 @@ userinfo         =  user:( user ) password:( ":" p:password {return p;} )? "@"
                       return {
                         user: user,
                         password: password
-                      }
+                      };
                     }
 user             =  chars:( unreserved / escaped / user_unreserved )+
                     {return chars.join('');}
@@ -165,7 +165,7 @@ hostport         =  host:host port:( ":" p:port {return p;} )?
                       return {
                         host: host,
                         port: port
-                      }
+                      };
                     }
 host             =  $( hostname / IPv4address / IPv6reference )
 hostname         =  ( domainlabel "." )* toplabel ( "." )?
@@ -314,7 +314,7 @@ net_path       =  "//" authority:authority abs_path:( abs_path )?
                       abs_path: abs_path
                     };
                   }
-abs_path       =  "/" path_segments:path_segments {return path_segments}
+abs_path       =  "/" path_segments:path_segments {return path_segments;}
 
 // http://tools.ietf.org/html/rfc3261#page-224
 opaque_part    =  ns:uric_no_slash chars:uric*
@@ -635,7 +635,7 @@ alert_param  =  LAQUOT absoluteURI:absoluteURI RAQUOT
                   return {
                     absoluteURI: absoluteURI,
                     generic_params: generic_params
-                  }
+                  };
                 }
 
 Allow  =  name:"Allow"i HCOLON
@@ -719,7 +719,6 @@ Call_ID  =  name:( "Call-ID"i / "i"i ) HCOLON value:callid
             {return {name: "Call-ID", value: value};}
 callid   =  $( word ( "@" word )? )
 
-Call_Info   =  "Call-Info" HCOLON info (COMMA info)*
 Call_Info   =  name:"Call-Info"i HCOLON
                value:(
                  first:info
@@ -734,7 +733,7 @@ info        =  LAQUOT absoluteURI:absoluteURI RAQUOT
                  return {
                    absoluteURI: absoluteURI,
                    info_params: info_params
-                 }
+                 };
                }
 info_param  =  (
                  name:"purpose" EQUAL
@@ -828,8 +827,6 @@ Content_Encoding  =  name:( "Content-Encoding"i / "e"i ) HCOLON
                      )
                      {return {name: "Content-Encoding", value: value};}
 
-Content_Language  =  "Content-Language" HCOLON
-                     language_tag (COMMA language_tag)*
 Content_Language  =  name:"Content-Language"i HCOLON
                      value:(
                        first:language_tag
@@ -925,7 +922,6 @@ month         =  "Jan" / "Feb" / "Mar" / "Apr"
                  / "May" / "Jun" / "Jul" / "Aug"
                  / "Sep" / "Oct" / "Nov" / "Dec"
 
-Error_Info  =  "Error-Info" HCOLON error_uri (COMMA error_uri)*
 Error_Info  =  name:"Error-Info"i HCOLON
                value:(
                  first:error_uri
@@ -942,7 +938,7 @@ error_uri   =  LAQUOT absoluteURI:absoluteURI RAQUOT
                  return {
                    absoluteURI: absoluteURI,
                    generic_params: generic_params
-                 }
+                 };
                }
 
 Expires     =  name:"Expires"i HCOLON value:delta_seconds
@@ -1404,7 +1400,7 @@ event_type        =  package:event_package
                        return {
                          package: package,
                          templates: templates
-                       }
+                       };
                      }
 event_package     =  token_nodot
 event_template    =  token_nodot
@@ -1428,7 +1424,7 @@ Allow_Events      =  name:( "Allow-Events"i / "u"i ) HCOLON
 Subscription_State   = name:"Subscription-State"i HCOLON
                        value:(
                          substate_value:substate_value
-                         params:( SEMI p:subexp_params {return p} )*
+                         params:( SEMI p:subexp_params {return p;} )*
                          {
                            params = combineParams(params);
                            return {
