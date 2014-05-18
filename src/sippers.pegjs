@@ -753,10 +753,8 @@ contact_param  =  addr:(name_addr / addr_spec)
 name_addr      =  display_name:( display_name )?
                   LAQUOT addr_spec:addr_spec RAQUOT
                   {
-                    return {
-                      display_name: display_name,
-                      addr_spec: addr_spec
-                    };
+                    addr_spec.display_name = display_name;
+                    return addr_spec;
                   }
 addr_spec      =  SIP_URI / SIPS_URI / absoluteURI
 display_name   =  quoted_string / $( (token LWS)* )
