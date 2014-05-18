@@ -51,7 +51,8 @@ reserved    =  ";" / "/" / "?" / ":" / "@" / "&" / "=" / "+"
 unreserved  =  alphanum / mark
 mark        =  "-" / "_" / "." / "!" / "~" / "*" / "'"
                / "(" / ")"
-escaped     =  $ "%" HEXDIG HEXDIG
+escaped     =  "%" HEXDIG HEXDIG
+               {return decodeURIComponent(text());}
 
 /* RFC3261 25: A recipient MAY replace any linear white space with a single SP
  * before interpreting the field value or forwarding the message downstream
@@ -151,10 +152,14 @@ userinfo         =  user:( user ) password:( ":" p:password {return p;} )? "@"
                         password: password
                       }
                     }
-user             =  $( ( unreserved / escaped / user_unreserved )+ )
+user             =  chars:( unreserved / escaped / user_unreserved )+
+                    {return chars.join('');}
+
 user_unreserved  =  "&" / "=" / "+" / "$" / "," / ";" / "?" / "/"
-password         =  $( ( unreserved / escaped /
-                    "&" / "=" / "+" / "$" / "," )* )
+password         =  chars:( unreserved / escaped /
+                    "&" / "=" / "+" / "$" / "," )*
+                    {return chars.join('');}
+
 hostport         =  host:host port:( ":" p:port {return p;} )?
                     {
                       return {
@@ -247,8 +252,9 @@ maddr_param       =  "maddr=" value:host
 lr_param          =  "lr" {return {name: 'lr', value: null }; }
 other_param       =  name:pname value:( "=" v:pvalue {return v;} )?
                      {return {name: name, value: value};}
-pname             =  $ paramchar+
-pvalue            =  $ paramchar+
+pname             =  _paramchars
+pvalue            =  _paramchars
+_paramchars       =  chars:paramchar+ {return chars.join('');}
 paramchar         =  param_unreserved / unreserved / escaped
 param_unreserved  =  "[" / "]" / "/" / ":" / "&" / "+" / "$"
 
@@ -256,8 +262,9 @@ headers         =  "?" first:header rest:( "&" h:header {return h;} )*
                    { return combineParams([first].concat(rest)); }
 header          =  name:hname "=" value:hvalue
                    {return {name: name, value: value};}
-hname           =  $( ( hnv_unreserved / unreserved / escaped )+ )
-hvalue          =  $( ( hnv_unreserved / unreserved / escaped )* )
+hname           =  chars:_hchar+ {return chars.join('');}
+hvalue          =  chars:_hchar* {return chars.join('');}
+_hchar          =  hnv_unreserved / unreserved / escaped
 hnv_unreserved  =  "[" / "]" / "/" / "?" / ":" / "+" / "$"
 
 SIP_message    =  Request / Response
@@ -310,13 +317,14 @@ net_path       =  "//" authority:authority abs_path:( abs_path )?
 abs_path       =  "/" path_segments:path_segments {return path_segments}
 
 // http://tools.ietf.org/html/rfc3261#page-224
-opaque_part    =  $( uric_no_slash uric* )
+opaque_part    =  ns:uric_no_slash chars:uric*
+                  {return ns + chars.join('');}
 uric           =  reserved / unreserved / escaped
 uric_no_slash  =  unreserved / escaped / ";" / "?" / ":" / "@"
                   / "&" / "=" / "+" / "$" / ","
 path_segments  =  first:segment rest:( "/" s:segment {return s;} )*
                   { return [first].concat(rest); }
-segment        =  value:$(pchar*)
+segment        =  value:_pchars
                   params:( ";" p:param {return p;} )*
                   {
                     params = combineParams(params);
@@ -325,7 +333,8 @@ segment        =  value:$(pchar*)
                       params: params
                     };
                   }
-param          =  $(pchar*)
+param          =  _pchars
+_pchars        =  chars:pchar* {return chars.join('');}
 pchar          =  unreserved / escaped /
                   ":" / "@" / "&" / "=" / "+" / "$" / ","
 scheme         =  $( ALPHA ( ALPHA / DIGIT / "+" / "-" / "." )* )
@@ -342,9 +351,10 @@ srvr           =  (
                     }
                   )?
 
-reg_name       =  $( ( unreserved / escaped / "$" / ","
-                  / ";" / ":" / "@" / "&" / "=" / "+" )+ )
-query          =  $( uric* )
+reg_name       =  chars:( unreserved / escaped / "$" / ","
+                  / ";" / ":" / "@" / "&" / "=" / "+" )+
+                  {return chars.join();}
+query          =  chars:uric* {return chars.join('');}
 SIP_Version    =  "SIP"i "/" major:$(DIGIT+) "." minor:$(DIGIT+)
                   {
                     return {
@@ -474,8 +484,9 @@ Status_Code     =  text:$(
                      return parseInt(text, 10);
                    }
 extension_code  =  DIGIT DIGIT DIGIT
-Reason_Phrase   =  $( (reserved / unreserved / escaped
-                   / UTF8_NONASCII / UTF8_CONT / SP / HTAB)* )
+Reason_Phrase   =  chars:(reserved / unreserved / escaped
+                   / UTF8_NONASCII / UTF8_CONT / SP / HTAB)*
+                   {return chars.join('');}
 
 Informational  =  "100"  //  Trying
               /   "180"  //  Ringing
@@ -778,7 +789,8 @@ c_p_instance       =  name:"+sip.instance" EQUAL
                       DQUOTE "<" value:instance_val ">" DQUOTE
                       {return {name: name, value: value};}
 
-instance_val       =  $(uric+) // defined in RFC 3261
+// defined in RFC 3261
+instance_val       =  chars:uric+ {return chars.join('');}
 // end RFC 5626
 
 contact_extension  =  generic_param
