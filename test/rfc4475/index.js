@@ -10,11 +10,7 @@ function parseFile (path, assertion) {
     try {
       var parsed = sippers.parse(raw);
     } catch (e) {
-      if (assertion !== 'throws') {
-        console.error(path);
-        console.info(raw);
-        console.warn(e);
-      }
+      e.message += ' at line ' + e.line + ', column ' + e.column;
       throw e;
     }
   });
