@@ -2,6 +2,7 @@ var gulp = require('gulp');
 var gutil = require('gulp-util');
 var peg = require('gulp-peg');
 var jshint = require('gulp-jshint');
+var mocha = require('gulp-mocha');
 
 // make gulp work from subdirectories
 process.chdir(__dirname);
@@ -33,4 +34,13 @@ gulp.task('lint', ['build'], function () {
   ;
 });
 
-gulp.task('default', ['lint']);
+gulp.task('test', ['lint'], function () {
+  return gulp
+    .src('test/**/index.js')
+    .pipe(jshint())
+    .pipe(jshint.reporter('default'))
+    .pipe(mocha())
+  ;
+});
+
+gulp.task('default', ['test']);
