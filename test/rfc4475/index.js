@@ -17,16 +17,16 @@ function parseFile (path, assertion) {
 }
 
 function describeDir (path, assertion) {
-  describe(path, function () {
+  describe('parsing a ' + path + ' message', function () {
     fs.readdirSync(path).forEach(function (file) {
-      it(assertion + ' on torture test: ' + file, function () {
+      it(assertion + ' for ' + file, function () {
         parseFile(path + '/' + file, assertion);
       });
     });
   });
 }
 
-describe('Torture Tests', function () {
+describe('Torture Tests:', function () {
   describeDir('wellformed', 'doesNotThrow');
   describeDir('malformed', 'throws');
 });
