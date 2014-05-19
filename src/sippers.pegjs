@@ -1243,7 +1243,7 @@ protocol_version  =  token
 // begin RFC 7118 (augments transport & transport_param)
 // http://tools.ietf.org/html/rfc7118
 transport         =  "UDP" / "TCP" / "TLS" / "SCTP"
-                    / "WS" / "WSS"
+                    / "WSS" / "WS"
                     / other_transport
 // end RFC 7118
 
