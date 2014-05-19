@@ -232,7 +232,7 @@ uri_parameter     =  transport_param / user_param / method_param
 // http://tools.ietf.org/html/rfc7118
 transport_param   =  "transport="
                      value:( "udp" / "tcp" / "sctp" / "tls"
-                     / "ws"
+                     / "wss" / "ws"
                      / other_transport)
                      { return { name: 'transport', value: value }; }
 // end RFC 7118
