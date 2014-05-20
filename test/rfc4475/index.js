@@ -17,16 +17,17 @@ function parseFile (path, assertion) {
 }
 
 function describeDir (path, assertion) {
-  describe('parsing a ' + path + ' message', function () {
+  describe('parsing ' + path + ' messages', function () {
     fs.readdirSync(path).forEach(function (file) {
-      it(assertion + ' for ' + file, function () {
+      var prettyAssertion = assertion.replace(/([A-Z])/g, ' $1').toLowerCase();
+      it(prettyAssertion + ' for ' + file, function () {
         parseFile(path + '/' + file, assertion);
       });
     });
   });
 }
 
-describe('Torture Tests:', function () {
+describe('RFC 4475 Torture Tests:', function () {
   describeDir('wellformed', 'doesNotThrow');
   describeDir('malformed', 'throws');
 });

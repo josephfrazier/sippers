@@ -7,21 +7,26 @@ var mocha = require('gulp-mocha');
 // make gulp work from subdirectories
 process.chdir(__dirname);
 
-var pegOptions = {
-  'allowedStartRules': [
-    'SIP_message'
-  ]
-};
-
-var jshintOptions = {
-   laxcomma: true
-  ,laxbreak: true
+var options = {
+  peg: {
+    'allowedStartRules': [
+      'SIP_message'
+    ]
+  },
+  jshint: {
+    laxcomma: true,
+    laxbreak: true,
+    '-W100': true
+  },
+  mocha: {
+    reporter: 'spec'
+  }
 };
 
 gulp.task('build', function() {
   return gulp
     .src('src/sippers.pegjs')
-    .pipe(peg(pegOptions).on('error', gutil.log))
+    .pipe(peg(options.peg).on('error', gutil.log))
     .pipe(gulp.dest('dist'))
   ;
 });
@@ -29,7 +34,7 @@ gulp.task('build', function() {
 gulp.task('lint', ['build'], function () {
   return gulp
     .src('dist/sippers.js')
-    .pipe(jshint(jshintOptions))
+    .pipe(jshint(options.jshint))
     .pipe(jshint.reporter('default'))
   ;
 });
@@ -39,7 +44,7 @@ gulp.task('test', ['lint'], function () {
     .src('test/**/index.js')
     .pipe(jshint())
     .pipe(jshint.reporter('default'))
-    .pipe(mocha())
+    .pipe(mocha(options.mocha))
   ;
 });
 
