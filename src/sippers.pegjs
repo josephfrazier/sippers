@@ -1394,11 +1394,11 @@ Event             =  name:( "Event"i / "o"i ) HCOLON
                        }
                      )
                      {return {name: name, value: value};}
-event_type        =  package:event_package
+event_type        =  event_package:event_package
                      templates:( "." t:event_template {return t;} )*
                      {
                        return {
-                         package: package,
+                         event_package: event_package,
                          templates: templates
                        };
                      }
