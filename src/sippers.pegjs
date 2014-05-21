@@ -913,7 +913,7 @@ time          =  hours:$(_2DIGIT) ":" minutes:$(_2DIGIT) ":" seconds:$(_2DIGIT)
                    return {
                      hours: parseInt(hours, 10),
                      minutes: parseInt(minutes, 10),
-                     seconds: parseInt(seconds, 10),
+                     seconds: parseInt(seconds, 10)
                    };
                  }
 wkday         =  "Mon" / "Tue" / "Wed"
