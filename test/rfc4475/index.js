@@ -4,12 +4,13 @@ var fs = require('fs');
 
 process.chdir(__dirname);
 
-function assertivelyParse (name) {
+function assertivelyParse (name, valid) {
   var path = 'dat/' + name + '.dat';
   var raw = fs.readFileSync(path, 'ascii');
   var parsed;
 
-  assert.doesNotThrow(function () {
+  var assertion = valid === false ? 'throws' : 'doesNotThrow';
+  assert[assertion](function () {
     try {
       parsed = sippers.parse(raw);
     } catch (e) {
@@ -182,6 +183,236 @@ describe('RFC 4475 Torture Tests', function () {
 
         it('contains no reason phrase', function () {
           assert.strictEqual('', parsed.Status_Line.Reason_Phrase);
+        });
+      });
+    });
+
+    describe('3.1.2. Invalid Messages', function () {
+      describe('3.1.2.1. Extraneous Header Field Separators', function () {
+        var name = 'badinv01';
+        var parsed;
+        it('does not parse', function () {
+          parsed = assertivelyParse(name, false);
+        });
+      });
+
+      describe('3.1.2.2. Content Length Larger Than Message', function () {
+        var name = 'clerr';
+        var parsed;
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('has a Content Length that is larger than the actual length of the body', function () {
+          assert(parsed.message_headers['Content-Length'] > parsed.message_body.length);
+        });
+      });
+
+      describe('3.1.2.3. Negative Content-Length', function () {
+        var name = 'ncl';
+        var parsed;
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('This request has a negative value for Content-Length.', function () {
+          assert.strictEqual('-999', parsed.message_headers['Content-Length']);
+        });
+      });
+
+      describe('3.1.2.4. Request Scalar Fields with Overlarge Values', function () {
+        var name = 'scalar02';
+        var parsed;
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('The CSeq sequence number is >2**32-1.', function () {
+          assert(parsed.message_headers.CSeq.sequenceNumber > Math.pow(2, 32) - 1);
+        });
+
+        it('The Max-Forwards value is >255.', function () {
+          assert(parsed.message_headers['Max-Forwards'] > 255);
+        });
+
+        it('The Expires value is >2**32-1.', function () {
+          assert(parsed.message_headers.Expires > Math.pow(2, 32) - 1);
+        });
+
+        it('The Contact expires parameter value is >2**32-1.', function () {
+          assert(parsed.message_headers.Contact[0].params.expires > Math.pow(2, 32) - 1);
+        });
+      });
+
+      describe('3.1.2.5. Response Scalar Fields with Overlarge Values', function () {
+        var name = 'scalarlg';
+        var parsed;
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('The CSeq sequence number is >2**32-1.', function () {
+          assert(parsed.message_headers.CSeq.sequenceNumber > Math.pow(2, 32) - 1);
+        });
+
+        it('The Retry-After field is unreasonably large', function () {
+          assert.strictEqual(parsed.message_headers['Retry-After'].delta_seconds, 949302838503028349304023988);
+        });
+
+        it('The Warning field has a warning-value with more than 3 digits.', function () {
+          assert.strictEqual(parsed.message_headers.Warning, '1812 overture "In Progress"');
+        });
+      });
+
+      describe('3.1.2.6. Unterminated Quoted String in Display Name', function () {
+        var name = 'quotbal';
+        var parsed;
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('has an unterminated quote in the display name of the To field', function () {
+          assert.strictEqual(parsed.message_headers.To, '"Mr. J. User <sip:j.user@example.com>');
+        });
+      });
+
+      describe('3.1.2.7. <> Enclosing Request-URI', function () {
+        var name = 'ltgtruri';
+        var parsed;
+        it('does not parse', function () {
+          parsed = assertivelyParse(name, false);
+        });
+      });
+
+      describe('3.1.2.8. Malformed SIP Request-URI (embedded LWS)', function () {
+        var name = 'lwsruri';
+        var parsed;
+        it('does not parse', function () {
+          parsed = assertivelyParse(name, false);
+        });
+      });
+
+      describe('3.1.2.9. Multiple SP Separating Request-Line Elements', function () {
+        var name = 'lwsstart';
+        var parsed;
+        it('does not parse', function () {
+          parsed = assertivelyParse(name, false);
+        });
+      });
+ 
+      describe('3.1.2.10. SP Characters at End of Request-Line', function () {
+        var name = 'trws';
+        var parsed;
+        it('does not parse', function () {
+          parsed = assertivelyParse(name, false);
+        });
+      });
+
+      describe('3.1.2.11. Escaped Headers in SIP Request-URI', function () {
+        var name = 'escruri';
+        var parsed;
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('the SIP Request-URI contains escaped headers', function () {
+          assert.strictEqual(parsed.Request_Line.Request_URI.headers.Route, "<sip:example.com>");
+        });
+      });
+
+      describe('3.1.2.12. Invalid Time Zone in Date Header Field', function () {
+        var name = 'baddate';
+        var parsed;
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('contains a non-GMT time zone in the SIP Date header field', function () {
+          assert.strictEqual(parsed.message_headers.Date, "Fri, 01 Jan 2010 16:00:00 EST");
+        });
+      });
+
+      describe('3.1.2.13. Failure to Enclose name-addr URI in <>', function () {
+        var name = 'regbadct';
+        var parsed;
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('The SIP URI contained in the Contact Header field has an escaped header', function () {
+          assert.strictEqual(parsed.message_headers.Contact[0].addr.headers.Route, "<sip:sip.example.com>");
+        });
+      });
+
+      describe('3.1.2.14. Spaces within addr-spec', function () {
+        var name = 'badaspec';
+        var parsed;
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('the addr-spec in the To header field contains spaces', function () {
+          assert.strictEqual(parsed.message_headers.To, '"Watson, Thomas" < sip:t.watson@example.org >');
+        });
+      });
+
+      describe('3.1.2.15. Non-token Characters in Display Name', function () {
+        var name = 'baddn';
+        var parsed;
+        it('does not parse', function () {
+          parsed = assertivelyParse(name, false);
+        });
+      });
+
+      describe('3.1.2.16. Unknown Protocol Version', function () {
+        var name = 'badvers';
+        var parsed;
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('has version number 7.0', function () {
+          assert.deepEqual(
+            parsed.Request_Line.SIP_Version,
+            {
+              major: 7,
+              minor: 0
+            }
+          );
+        });
+      });
+
+      describe('3.1.2.17. Start Line and CSeq Method Mismatch', function () {
+        var name = 'mismatch01';
+        var parsed;
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('This request has mismatching values for the method in the start line and the CSeq header field.', function () {
+          assert.strictEqual('OPTIONS', parsed.Request_Line.Method);
+          assert.strictEqual('INVITE', parsed.message_headers.CSeq.requestMethod);
+        });
+      });
+
+      describe('3.1.2.18. Unknown Method with CSeq Method Mismatch', function () {
+        var name = 'mismatch02';
+        var parsed;
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('This request has mismatching values for the method in the start line and the CSeq header field.', function () {
+          assert.strictEqual('NEWMETHOD', parsed.Request_Line.Method);
+          assert.strictEqual('INVITE', parsed.message_headers.CSeq.requestMethod);
+        });
+      });
+
+      describe('3.1.2.19. Overlarge Response Code', function () {
+        var name = 'bigcode';
+        var parsed;
+        it('does not parse', function () {
+          parsed = assertivelyParse(name, false);
         });
       });
     });
