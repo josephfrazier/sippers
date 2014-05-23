@@ -417,4 +417,18 @@ describe('RFC 4475 Torture Tests', function () {
       });
     });
   });
+
+  describe('3.2. Transaction Layer Semantics', function () {
+    describe('3.2.1. Missing Transaction Identifier', function () {
+      var name = 'badbranch';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('has Via branch parameter of "z9hG4bK"', function () {
+        assert.strictEqual('z9hG4bK', parsed.message_headers.Via[0].params.branch);
+      });
+    });
+  });
 });
