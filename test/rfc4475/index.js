@@ -431,4 +431,237 @@ describe('RFC 4475 Torture Tests', function () {
       });
     });
   });
+
+  describe('3.3. Application-Layer Semantics', function () {
+    describe('3.3.1. Missing Required Header Fields', function () {
+      var name = 'insuf';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('This request contains no Call-ID, From, or To header fields.', function () {
+        ['Call-ID', 'From', 'To'].forEach(function (headerName) {
+          assert.strictEqual(undefined, parsed.message_headers[headerName]);
+        });
+      });
+    });
+
+    describe('3.3.2. Request-URI with Unknown Scheme', function () {
+      var name = 'unkscm';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('This OPTIONS contains an unknown URI scheme in the Request-URI.', function () {
+        assert.strictEqual(parsed.Request_Line.Request_URI.scheme, 'nobodyKnowsThisScheme');
+      });
+    });
+
+    describe('3.3.3. Request-URI with Known but Atypical Scheme', function () {
+      var name = 'novelsc';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('This OPTIONS contains an Request-URI with an IANA-registered scheme that does not commonly appear in Request-URIs of SIP requests.', function () {
+        assert.strictEqual(parsed.Request_Line.Request_URI.scheme, 'soap.beep');
+      });
+    });
+
+    describe('3.3.4. Unknown URI Schemes in Header Fields', function () {
+      var name = 'unksm2';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('This message contains registered schemes in the To, From, and Contact header fields of a request.', function () {
+        assert.strictEqual(parsed.message_headers.To.addr.scheme, 'isbn');
+        assert.strictEqual(parsed.message_headers.From.addr.scheme, 'http');
+        assert.strictEqual(parsed.message_headers.Contact[0].addr.scheme, 'name');
+      });
+    });
+
+    describe('3.3.5. Proxy-Require and Require', function () {
+      var name = 'bext01';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+    });
+
+    describe('3.3.6. Unknown Content-Type', function () {
+      var name = 'invut';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('This INVITE request contains a body of unknown type.', function () {
+        assert.deepEqual(parsed.message_headers['Content-Type'],
+          {
+            "m_type": "application",
+            "m_subtype": "unknownformat",
+            "m_parameters": {}
+          }
+        );
+      });
+    });
+
+    describe('3.3.7. Unknown Authorization Scheme', function () {
+      var name = 'regaut01';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('This REGISTER request contains an Authorization header field with an unknown scheme.', function () {
+        assert.strictEqual(parsed.message_headers.Authorization.other_response.auth_scheme, 'NoOneKnowsThisScheme');
+      });
+    });
+
+    describe('3.3.8. Multiple Values in Single Value Required Fields', function () {
+      var name = 'multi01';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('The message contains a request with multiple Call-ID, To, From, Max- Forwards, and CSeq values.', function () {
+        assert.fail(null, null, 'this actually parses as if only the last of each header was present');
+      });
+    });
+
+    describe('3.3.9. Multiple Content-Length Values', function () {
+      var name = 'mcl01';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('Multiple conflicting Content-Length header field values appear in this request.', function () {
+        assert.fail(null, null, 'this actually parses as if only the last Content-Length header was present');
+      });
+    });
+
+    describe('3.3.10. 200 OK Response with Broadcast Via Header Field Value', function () {
+      var name = 'bcast';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('This message is a response with a 2nd Via header field value\'s sent-by containing 255.255.255.255.', function () {
+        assert.strictEqual(parsed.message_headers.Via[1].sent_by.host, '255.255.255.255');
+      });
+    });
+
+    describe('3.3.11. Max-Forwards of Zero', function () {
+      var name = 'zeromf';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('This is a legal SIP request with the Max-Forwards header field value set to zero.', function () {
+        assert.strictEqual(parsed.message_headers['Max-Forwards'], 0);
+      });
+    });
+
+    describe('3.3.12. REGISTER with a Contact Header Parameter', function () {
+      var name = 'cparam01';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it("This register request contains a contact where the 'unknownparam' parameter must be interpreted as a contact-param and not a url-param.", function () {
+        assert.strictEqual(parsed.message_headers.Contact[0].addr.uri_parameters.unknownparam, undefined);
+        assert.strictEqual(parsed.message_headers.Contact[0].addr.params.unknownparam, null);
+      });
+    });
+
+    describe('3.3.13. REGISTER with a url-parameter', function () {
+      var name = 'cparam02';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('This register request contains a contact where the URI has an unknown parameter.', function () {
+        assert.strictEqual(parsed.message_headers.Contact[0].addr.uri_parameters.unknownparam, null);
+      });
+    });
+
+    describe('3.3.14. REGISTER with a URL Escaped Header', function () {
+      var name = 'regescrt';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('This register request contains a contact where the URI has an escaped header', function () {
+        assert.strictEqual(parsed.message_headers.Contact[0].addr.headers.Route, '<sip:sip.example.com>');
+      });
+    });
+
+    describe('3.3.15. Unacceptable Accept Offering', function () {
+      var name = 'sdp01';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('This request indicates that the response must contain a body in an unknown type.', function () {
+        assert.deepEqual(
+          parsed.message_headers.Accept[0].media_range,
+          {
+            "m_type": "text",
+            "m_subtype": "nobodyKnowsThis",
+            "m_parameters": {}
+          }
+        );
+      });
+    });
+  });
+
+  describe('3.4. Backward Compatibility', function () {
+    describe('3.4.1. INVITE with RFC 2543 Syntax', function () {
+      var name = 'inv2543';
+      var parsed;
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('There is no branch parameter at all on the Via header field value.', function () {
+        assert.strictEqual(undefined, parsed.message_headers.Via[0].params.branch);
+      });
+
+      it('There is no From tag.', function () {
+        assert.strictEqual(undefined, parsed.message_headers.From.params.tag);
+      });
+
+      it('There is no explicit Content-Length.', function () {
+        assert.strictEqual(undefined, parsed.message_headers['Content-Length']);
+      });
+
+      it('The body is assumed to be all octets in the datagram after the null-line.', function () {
+        assert.strictEqual(parsed.message_body,
+          'v=0\r\n' +
+          'o=mhandley 29739 7272939 IN IP4 192.0.2.5\r\n' +
+          's=-\r\n' +
+          'c=IN IP4 192.0.2.5\r\n' +
+          't=0 0\r\n' +
+          'm=audio 49217 RTP/AVP 0\r\n'
+        );
+      });
+
+      it('There is no Max-Forwards header field.', function () {
+        assert.strictEqual(undefined, parsed.message_headers['Max-Forwards']);
+      });
+    });
+  });
 });
