@@ -1331,9 +1331,7 @@ Subscription_State   = name:"Subscription-State"i HCOLON
                          }
                        )
                        {return {name: "Subscription-State", value: value};}
-substate_value       = "active" / "pending" / "terminated"
-                       / extension_substate
-extension_substate   = token
+substate_value       = token
 subexp_params        =   (name:"reason" EQUAL value:event_reason_value {return {name: name, value: value};} )
                        / (name:"expires" EQUAL value:delta_seconds {return {name: name, value: value};} )
                        / (name:"retry-after" EQUAL value:delta_seconds {return {name: name, value: value};} )
