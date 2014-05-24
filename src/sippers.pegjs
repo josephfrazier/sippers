@@ -725,8 +725,7 @@ Content_Disposition   =  name:"Content-Disposition"i HCOLON
                            }
                          )
                          {return {name: "Content-Disposition", value: value};}
-disp_type             =  "render" / "session" / "icon" / "alert"
-                         / disp_extension_token
+disp_type             =  token
 // http://tools.ietf.org/html/rfc3261#page-229
 disp_param            =  handling_param / generic_param
 handling_param        =  name:"handling" EQUAL
@@ -734,7 +733,6 @@ handling_param        =  name:"handling" EQUAL
                          / other_handling )
                          {return {name: name, value: value};}
 other_handling        =  token
-disp_extension_token  =  token
 
 Content_Encoding  =  name:( "Content-Encoding"i / "e"i ) HCOLON
                      value:(
