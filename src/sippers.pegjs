@@ -1336,15 +1336,7 @@ subexp_params        =   (name:"reason" EQUAL value:event_reason_value {return {
                        / (name:"expires" EQUAL value:delta_seconds {return {name: name, value: value};} )
                        / (name:"retry-after" EQUAL value:delta_seconds {return {name: name, value: value};} )
                        / generic_param
-event_reason_value   =   "deactivated"
-                       / "probation"
-                       / "rejected"
-                       / "timeout"
-                       / "giveup"
-                       / "noresource"
-                       / "invariant"
-                       / event_reason_extension
-event_reason_extension = token
+event_reason_value   = token
 // end RFC 6665
 
 extension_header  =  name:header_name HCOLON value:header_value
