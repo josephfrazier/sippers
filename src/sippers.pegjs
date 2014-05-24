@@ -864,9 +864,9 @@ m_type           =  discrete_type / composite_type
 discrete_type    =  "text" / "image" / "audio" / "video"
                     / "application" / extension_token
 composite_type   =  "message" / "multipart" / extension_token
-extension_token  =  ietf_token / x_token
+extension_token  =  x_token / ietf_token
 ietf_token       =  token
-x_token          =  "x-" token
+x_token          =  $("x-" token)
 m_subtype        =  extension_token / iana_token
 iana_token       =  token
 m_parameter      =  name:m_attribute EQUAL value:m_value
