@@ -563,10 +563,11 @@ accept_range   =  media_range:media_range accept_params:(SEMI a:accept_param {re
                       accept_params: accept_params
                     };
                   }
-media_range    =  ( "*/*"
-                  / ( m_type SLASH "*" )
-                  / ( m_type SLASH m_subtype )
-                  ) ( SEMI m_parameter )*
+//media_range    =  ( "*/*"
+//                  / ( m_type SLASH "*" )
+//                  / ( m_type SLASH m_subtype )
+//                  ) ( SEMI m_parameter )*
+media_range    =  media_type
 accept_param   =  (
                     name:"q" EQUAL value:qvalue
                     {return {name: name, value: value};}
