@@ -29,6 +29,10 @@ CR             =  "\r" // carriage return
 CRLF           =  $ CR LF // Internet standard newline
 CTL            =  [\x00-\x1F] / "\x7F" // controls
 DIGIT          =  [0-9] // 0-9
+_PDIGITS       =  DIGIT+ {return parseInt(text(), 10);}
+_PDIGIT2       =  DIGIT DIGIT {return parseInt(text(), 10);}
+_PDIGIT3       =  DIGIT DIGIT DIGIT {return parseInt(text(), 10);}
+_PDIGIT4       =  DIGIT DIGIT DIGIT DIGIT {return parseInt(text(), 10);}
 DQUOTE         =  "\"" // " (Double Quote)
 HEXDIG         =  DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
 HTAB           =  "\t" // horizontal tab
@@ -221,7 +225,7 @@ IPv6reference  =  "[" IPv6address "]"
 hexpart        =  hexseq / hexseq "::" ( hexseq )? / "::" ( hexseq )?
 hexseq         =  hex4 ( ":" hex4)*
 hex4           =  HEXDIG HEXDIG? HEXDIG? HEXDIG?
-port           =  $ DIGIT+
+port           =  _PDIGITS
 
 uri_parameters    =  parameters:( ";" up:uri_parameter {return up;})*
                      { return combineParams(parameters); }
@@ -355,11 +359,12 @@ reg_name       =  chars:( unreserved / escaped / "$" / ","
                   / ";" / ":" / "@" / "&" / "=" / "+" )+
                   {return chars.join();}
 query          =  chars:uric* {return chars.join('');}
-SIP_Version    =  "SIP"i "/" major:$(DIGIT+) "." minor:$(DIGIT+)
+SIP_Version    =  "SIP"i "/" v: _version {return v;}
+_version       =  major:_PDIGITS "." minor:_PDIGITS
                   {
                     return {
-                      major: parseInt(major, 10),
-                      minor: parseInt(minor, 10)
+                      major: major,
+                      minor: minor
                     };
                   }
 
@@ -783,8 +788,8 @@ c_p_expires        =  name:"expires" EQUAL value:delta_seconds
                       {return {name: name, value: value};}
 // begin RFC 5626
 // http://tools.ietf.org/html/rfc5626#appendix-B
-c_p_reg            =  name:"reg-id" EQUAL value:$(DIGIT+) // 1 to (2^31 - 1)
-                      {return {name: name, value: parseInt(value, 10)};}
+c_p_reg            =  name:"reg-id" EQUAL value:_PDIGITS // 1 to (2^31 - 1)
+                      {return {name: name, value: value};}
 c_p_instance       =  name:"+sip.instance" EQUAL
                       DQUOTE "<" value:instance_val ">" DQUOTE
                       {return {name: name, value: value};}
@@ -794,7 +799,7 @@ instance_val       =  chars:uric+ {return chars.join('');}
 // end RFC 5626
 
 contact_extension  =  generic_param
-delta_seconds      =  DIGIT+ { return parseInt(text(), 10); }
+delta_seconds      =  _PDIGITS
 
 Content_Disposition   =  name:"Content-Disposition"i HCOLON
                          value:(
@@ -846,8 +851,8 @@ language_tag      =  primary_tag:primary_tag
 primary_tag       =  _1to8ALPHA
 subtag            =  _1to8ALPHA
 
-Content_Length   =  name:( "Content-Length"i / "l"i ) HCOLON value:$(DIGIT+)
-                    { return { name: "Content-Length" , value: parseInt(value, 10) }; }
+Content_Length   =  name:( "Content-Length"i / "l"i ) HCOLON value:_PDIGITS
+                    { return { name: "Content-Length" , value: value }; }
 Content_Type     =  name:( "Content-Type"i / "c"i ) HCOLON value:media_type
                     {return {name: "Content-Type", value: value};}
 media_type       =  m_type:m_type SLASH m_subtype:m_subtype
@@ -876,10 +881,10 @@ m_value          =  token / quoted_string
 
 CSeq  =  name:"CSeq"i HCOLON
          value:(
-           sequenceNumber:$(DIGIT+) LWS requestMethod:Method
+           sequenceNumber:_PDIGITS LWS requestMethod:Method
            {
              return {
-               sequenceNumber: parseInt(sequenceNumber, 10),
+               sequenceNumber: sequenceNumber,
                requestMethod: requestMethod
              };
            }
@@ -897,24 +902,22 @@ rfc1123_date  =  wkday:wkday "," SP date1:date1 SP time:time SP "GMT"
                      time: time
                    };
                  }
-_2DIGIT       =  DIGIT DIGIT
-_4DIGIT       =  _2DIGIT _2DIGIT
-date1         =  day:$(_2DIGIT) SP month:month SP year:$(_4DIGIT)
+date1         =  day:_PDIGIT2 SP month:month SP year:_PDIGIT4
                  // day month year (e.g., 02 Jun 1982)
                  {
                    return {
-                     day: parseInt(day, 10),
+                     day: day,
                      month: month,
-                     year: parseInt(year, 10)
+                     year: year
                    };
                  }
-time          =  hours:$(_2DIGIT) ":" minutes:$(_2DIGIT) ":" seconds:$(_2DIGIT)
+time          =  hours:_PDIGIT2 ":" minutes:_PDIGIT2 ":" seconds:_PDIGIT2
                  // 00:00:00 _ 23:59:59
                  {
                    return {
-                     hours: parseInt(hours, 10),
-                     minutes: parseInt(minutes, 10),
-                     seconds: parseInt(seconds, 10)
+                     hours: hours,
+                     minutes: minutes,
+                     seconds: seconds
                    };
                  }
 wkday         =  "Mon" / "Tue" / "Wed"
@@ -967,20 +970,11 @@ In_Reply_To  =  name:"In-Reply-To"i HCOLON
                 )
                 {return {name: "In-Reply-To", value: value};}
 
-Max_Forwards  =  name:"Max-Forwards"i HCOLON value:$(DIGIT+)
-                 {return {name: "Max-Forwards", value: parseInt(value, 10)};}
+Max_Forwards  =  name:"Max-Forwards"i HCOLON value:_PDIGITS
+                 {return {name: "Max-Forwards", value: value};}
 
 MIME_Version  =  name:"MIME-Version"i HCOLON
-                 value:(
-                   major:$(DIGIT+) "."
-                   minor:$(DIGIT+)
-                   {
-                     return {
-                       major: parseInt(major, 10),
-                       minor: parseInt(minor, 10)
-                     };
-                   }
-                 )
+                 value: _version
                  {return {name: "MIME-Version", value: value};}
 
 Min_Expires  =  name:"Min-Expires"i HCOLON value:delta_seconds
@@ -1277,7 +1271,7 @@ warning_value  =  warn_code:warn_code SP warn_agent:warn_agent SP warn_text:warn
                       warn_text: warn_text
                     };
                   }
-warn_code      =  DIGIT DIGIT DIGIT {return parseInt(text(), 10);}
+warn_code      =  _PDIGIT3
 warn_agent     =  hostport / pseudonym
                   //  the name or pseudonym of the server adding
                   //  the Warning header, for use in debugging
@@ -1303,8 +1297,8 @@ RAck          =  name:"RAck"i HCOLON
                    }
                  )
                  {return {name: "RAck", value: value};}
-response_num  =  DIGIT+ {return parseInt(text(), 10);}
-CSeq_num      =  DIGIT+ {return parseInt(text(), 10);}
+response_num  =  _PDIGITS
+CSeq_num      =  _PDIGITS
 RSeq          =  name:"RSeq"i HCOLON value:response_num
                  {return {name: "RSeq", value: value};}
 // end RFC 3262
@@ -1332,7 +1326,7 @@ reason_params     =  protocol_cause / reason_text
                      / reason_extension
 protocol_cause    =  name:"cause" EQUAL value:cause
                      {return {name: name, value: value};}
-cause             =  DIGIT+ {return parseInt(text(), 10);}
+cause             =  _PDIGITS
 reason_text       =  name:"text" EQUAL value:quoted_string
                      {return {name: name, value: value};}
 reason_extension  =  generic_param
@@ -1376,8 +1370,8 @@ Refer_To = name:("Refer-To"i / "r"i) HCOLON
 
 // begin RFC 5626
 // http://tools.ietf.org/html/rfc5626#appendix-B
-Flow_Timer     = name:"Flow-Timer"i HCOLON value:$(DIGIT+)
-                 {return {name: "Flow-Timer", value: parseInt(value, 10)};}
+Flow_Timer     = name:"Flow-Timer"i HCOLON value:_PDIGITS
+                 {return {name: "Flow-Timer", value: value};}
 // end RFC 5626
 
 // begin RFC 6665
