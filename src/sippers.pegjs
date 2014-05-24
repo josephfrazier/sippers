@@ -1140,7 +1140,7 @@ Server           =  name:"Server"i HCOLON
                       { return [first].concat(rest); }
                     )
                     {return {name: "Server", value: value};}
-server_val       =  product / comment
+server_val       =  product / (c:comment {return {comment: c};})
 product          =  token:token product_version:(SLASH p:product_version {return p;})?
                     {
                       return {
