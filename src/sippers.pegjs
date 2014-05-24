@@ -776,15 +776,8 @@ media_type       =  m_type:m_type SLASH m_subtype:m_subtype
                         m_parameters: m_parameters
                       };
                     }
-m_type           =  discrete_type / composite_type
-discrete_type    =  "text" / "image" / "audio" / "video"
-                    / "application" / extension_token
-composite_type   =  "message" / "multipart" / extension_token
-extension_token  =  x_token / ietf_token
-ietf_token       =  token
-x_token          =  $("x-" token)
-m_subtype        =  extension_token / iana_token
-iana_token       =  token
+m_type           =  token
+m_subtype        =  token
 m_parameter      =  name:m_attribute EQUAL value:m_value
                     {return {name: name, value: value};}
 m_attribute      =  token
