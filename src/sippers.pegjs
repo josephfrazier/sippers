@@ -435,25 +435,7 @@ message_header  =  message_header:(Accept
                   return message_header;
                 }
 
-INVITEm           =  "INVITE" // INVITE in caps
-ACKm              =  "ACK" // ACK in caps
-OPTIONSm          =  "OPTIONS" // OPTIONS in caps
-BYEm              =  "BYE" // BYE in caps
-CANCELm           =  "CANCEL" // CANCEL in caps
-REGISTERm         =  "REGISTER" // REGISTER in caps
-PRACKm            =  "PRACK" // PRACK in caps, RFC 3262 // http://tools.ietf.org/html/rfc3262#section-10
-MESSAGEm          =  "MESSAGE" // MESSAGE in caps // RFC 3428 // http://tools.ietf.org/html/rfc3428#section-9
-REFERm            =  "REFER" // REFER in caps // RFC 3515 // http://tools.ietf.org/html/rfc3515#section-2.1
-SUBSCRIBEm        =  "SUBSCRIBE" // SUBSCRIBE in caps // RFC 6665 // http://tools.ietf.org/html/rfc6665#section-8.4
-NOTIFYm           =  "NOTIFY" // NOTIFY in caps // RFC 6665 // http://tools.ietf.org/html/rfc6665#section-8.4
-Method            =  INVITEm / ACKm / OPTIONSm / BYEm
-                     / CANCELm / REGISTERm
-                     / PRACKm // RFC 3262 // http://tools.ietf.org/html/rfc3262#section-10
-                     / MESSAGEm // RFC 3428 // http://tools.ietf.org/html/rfc3428#section-9
-                     / REFERm // RFC 3515 // http://tools.ietf.org/html/rfc3515#section-2.1
-                     / SUBSCRIBEm / NOTIFYm // RFC 6665 // http://tools.ietf.org/html/rfc6665#section-3.2
-                     / extension_method
-extension_method  =  token
+Method            =  token
 
 Response          =  Status_Line:Status_Line
                      message_headers:_message_headers
