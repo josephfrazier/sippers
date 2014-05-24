@@ -1090,7 +1090,7 @@ rplyto_param  =  generic_param
 Require       =  name:"Require"i HCOLON
                  value:(
                    first:option_tag
-                   rest:(COMMA option_tag)*
+                   rest:(COMMA o:option_tag {return o;})*
                    { return [first].concat(rest); }
                  )
                  {return {name: "Require", value: value};}
