@@ -101,8 +101,8 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('The display name portion of the To and From header fields is "%Z%45".', function () {
-          assert.strictEqual('%Z%45', parsed.message_headers.To.addr.display_name);
-          assert.strictEqual('%Z%45', parsed.message_headers.From.addr.display_name);
+          assert.equal('%Z%45', parsed.message_headers.To.addr.display_name.valueOf());
+          assert.equal('%Z%45', parsed.message_headers.From.addr.display_name.valueOf());
         });
 
         it('This message has two Contact header field values, not three.', function () {
@@ -372,13 +372,7 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('has version number 7.0', function () {
-          assert.deepEqual(
-            parsed.Request_Line.SIP_Version,
-            {
-              major: 7,
-              minor: 0
-            }
-          );
+          assert.strictEqual(parsed.Request_Line.SIP_Version, 'SIP/7.0');
         });
       });
 

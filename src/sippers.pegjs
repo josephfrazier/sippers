@@ -1,5 +1,5 @@
 {
-  function mapList (append, list) {
+  function mapList (append, list, paramSep) {
     var combined = list.reduce(
       function combine (map, item) {
         var name = item.name;
@@ -13,21 +13,26 @@
       {}
     );
 
-    Object.defineProperty(combined, 'toString', {
-      value: function (append) {
-        var keyToString = function (name) {
+    Object.defineProperty(combined, 'normalize', {
+      value: function (append, paramSep) {
+        var keyNormalize = function (name) {
+          // cast to array
+          var values = [].concat(this[name]);
+          values = values.map(normalizeHelper);
           if (append) {
-            // cast to array
-            var values = [].concat(this[name]);
             return name + ': ' + values.join(', ') + '\r\n';
           }
           else {
-            return ';' + name + '=' + this[name];
+            return (paramSep || ';') + name + (values[0] ? '=' + values[0] : '');
           }
         }.bind(this);
 
-        return Object.keys(this).map(keyToString).join('');
-      }.bind(combined, append)
+        var normalized = Object.keys(this).map(keyNormalize).join('');
+        if (paramSep) {
+          normalized = normalized.slice(paramSep.length);
+        }
+        return normalized;
+      }.bind(combined, append, paramSep)
     });
 
     return combined;
@@ -37,6 +42,76 @@
   var combineHeaders = mapList.bind(null, true);
   // non-RFC, just convenient
   var combineParams = mapList.bind(null, false);
+
+  function normalizeHelper (obj, separator) {
+    if (obj) {
+      if (Array.isArray(obj)) {
+        return obj.filter(function(i){return i != null;}).map(normalizeHelper).join(separator || '');
+      }
+      if (obj.normalize) {
+        return obj.normalize();
+      }
+      return obj;
+    }
+    return '';
+  }
+
+  function sipuriBuild (scheme, userinfo, hostport, uri_parameters, headers) {
+    return Object.defineProperty({
+        scheme: scheme
+      , userinfo: userinfo
+      , hostport: hostport
+      , uri_parameters: uri_parameters
+      , headers: headers
+    }, 'normalize', {value:
+      function () {
+        var addrSpecString = normalizeHelper([
+            this.scheme + ':',
+          , this.userinfo
+          , this.hostport
+          , this.uri_parameters
+          , this.headers
+        ]);
+        if (this.display_name) {
+          addrSpecString = normalizeHelper(this.display_name) + ' <' + addrSpecString + '>';
+        }
+        return addrSpecString;
+      }
+    });
+  }
+
+  function hostportBuild (host, port) {
+    return Object.defineProperty({
+      host: host,
+      port: port
+    }, 'normalize', {value:
+      function () {
+        return normalizeHelper([
+          , this.host
+          , this.port
+        ], ':');
+      }
+    });
+  }
+
+  function xparamsBuild (prop, propName, params, paramsName, paramSep) {
+    paramsName = paramsName || 'params';
+    var ret = {};
+    ret[propName] = prop;
+    ret[paramsName] = combineParams(params, paramSep);
+    return Object.defineProperty(ret, 'normalize', {value:
+      function (propName, paramsName) {
+        return normalizeHelper([
+            this[propName]
+          , this[paramsName]
+        ]);
+      }.bind(ret, propName, paramsName)
+    });
+  }
+
+  function addrparamsBuild (addr, params) {
+    return xparamsBuild(addr, 'addr', params, 'params');
+  }
 }
 
 // begin RFC 2234
@@ -124,12 +199,28 @@ LDQUOT  =  SWS DQUOTE  {return '"';}// open double quotation mark
 RDQUOT  =  DQUOTE SWS  {return '"';}// close double quotation mark
 
 // http://tools.ietf.org/html/rfc3261#page-222
-comment  =  LPAREN value:$((ctext / quoted_pair / comment)*) RPAREN {return value;}
+comment  =  LPAREN value:$((ctext / quoted_pair / comment)*) RPAREN
+            {
+              return Object.defineProperties({}, {
+                valueOf: {value: function () {return this;}.bind(value)},
+                normalize: {value: function () {
+                  return '(' + this.valueOf() + ')';
+                }}
+              });
+            }
 ctext    =  [\x21-\x27] / [\x2A-\x5B] / [\x5D-\x7E] / UTF8_NONASCII
             / LWS
 
 
-quoted_string  =  SWS DQUOTE value:$((qdtext / quoted_pair )*) DQUOTE {return value;}
+quoted_string  =  SWS DQUOTE value:$((qdtext / quoted_pair )*) DQUOTE
+                  {
+                    return Object.defineProperties({}, {
+                      valueOf: {value: function () {return this;}.bind(value)},
+                      normalize: {value: function () {
+                        return '"' + this.valueOf() + '"';
+                      }}
+                    });
+                  }
 qdtext         =  LWS / "\x21" / [\x23-\x5B] / [\x5D-\x7E]
                   / UTF8_NONASCII
 
@@ -145,35 +236,30 @@ quoted_pair  =  "\\" ([\x00-\x09] / [\x0B-\x0C]
 SIP_URI          =  "sip:" userinfo:( userinfo )? hostport:hostport
                     uri_parameters:uri_parameters headers:( headers )?
                     {
-                      return {
-                        scheme: 'sip'
-                        ,userinfo: userinfo
-                        ,hostport: hostport
-                        ,uri_parameters: uri_parameters
-                        ,headers: headers
-                      };
+                      return sipuriBuild('sip', userinfo, hostport, uri_parameters, headers);
                     }
 
 SIPS_URI          =  "sips:" userinfo:( userinfo )? hostport:hostport
                      uri_parameters:uri_parameters headers:( headers )?
                      {
-                      return {
-                        scheme: 'sips'
-                        ,userinfo: userinfo
-                        ,hostport: hostport
-                        ,uri_parameters: uri_parameters
-                        ,headers: headers
-                      };
+                       return sipuriBuild('sip', userinfo, hostport, uri_parameters, headers);
                     }
 
 //TODO telephone_subscriber
 //userinfo         =  ( user / telephone_subscriber ) ( ":" password )? "@"
 userinfo         =  user:( user ) password:( ":" p:password {return p;} )? "@"
                     {
-                      return {
+                      return Object.defineProperty({
                         user: user,
                         password: password
-                      };
+                      }, 'normalize', {value:
+                        function () {
+                          return normalizeHelper([
+                            , this.user
+                            , this.password
+                          ], ':') + '@';
+                        }
+                      });
                     }
 user             =  chars:( unreserved / escaped / user_unreserved )+
                     {return chars.join('');}
@@ -185,10 +271,7 @@ password         =  chars:( unreserved / escaped /
 
 hostport         =  host:host port:( ":" p:port {return p;} )?
                     {
-                      return {
-                        host: host,
-                        port: port
-                      };
+                      return hostportBuild(host, port);
                     }
 host             =  $( hostname / IPv4address / IPv6reference )
 hostname         =  ( domainlabel "." )* toplabel ( "." )?
@@ -282,7 +365,7 @@ paramchar         =  param_unreserved / unreserved / escaped
 param_unreserved  =  "[" / "]" / "/" / ":" / "&" / "+" / "$"
 
 headers         =  "?" first:header rest:( "&" h:header {return h;} )*
-                   { return combineParams([first].concat(rest)); }
+                   { return combineParams([first].concat(rest), '&'); }
 header          =  name:hname "=" value:hvalue
                    {return {name: name, value: value};}
 hname           =  chars:_hchar+ {return chars.join('');}
@@ -297,45 +380,84 @@ Request        =  Request_Line:Request_Line
                   CRLF
                   message_body:( message_body )?
                   {
-                    return {
+                    return Object.defineProperty({
                       Request_Line: Request_Line,
                       message_headers: message_headers,
                       message_body: message_body
-                    };
+                    }, 'normalize', {value:
+                      function () {
+                        return normalizeHelper([
+                            this.Request_Line
+                          , this.message_headers
+                          , '\r\n'
+                          , this.message_body
+                        ]);
+                      }
+                    });
                   }
 
 Request_Line   =  Method:Method SP Request_URI:Request_URI SP SIP_Version:SIP_Version CRLF
                   {
-                    return {
+                    return Object.defineProperty({
                       Method: Method,
                       Request_URI: Request_URI,
                       SIP_Version: SIP_Version
-                    };
+                    }, 'normalize', {value:
+                      function () {
+                        return normalizeHelper([
+                            this.Method
+                          , this.Request_URI
+                          , this.SIP_Version
+                        ], ' ') + '\r\n';
+                      }
+                    });
                   }
 
 Request_URI    =  SIP_URI / SIPS_URI / absoluteURI
 absoluteURI    =  scheme:scheme ":" part:( hier_part / opaque_part )
                   {
-                    return {
+                    return Object.defineProperty({
                       scheme: scheme,
                       part: part
-                    };
+                    }, 'normalize', {value:
+                      function () {
+                        return normalizeHelper([
+                            this.scheme
+                          , this.part
+                        ], ':');
+                      }
+                    });
                   }
 
 hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )?
                   {
-                    return {
+                    return Object.defineProperty({
                       path: path,
                       query: query
-                    };
+                    }, 'normalize', {value:
+                      function () {
+                        return normalizeHelper([
+                            this.path
+                          , this.query
+                        ], '?');
+                      }
+                    });
                   }
 
 net_path       =  "//" authority:authority abs_path:( abs_path )?
                   {
-                    return {
+                    return Object.defineProperty({
                       authority: authority,
                       abs_path: abs_path
-                    };
+                    }, 'normalize', {value:
+                      function () {
+                        return normalizeHelper([
+                            '//'
+                          , this.authority
+                          , this.abs_path
+                        ]);
+                      }
+                    });
                   }
 abs_path       =  "/" path_segments:path_segments {return path_segments;}
 
@@ -350,11 +472,7 @@ path_segments  =  first:segment rest:( "/" s:segment {return s;} )*
 segment        =  value:_pchars
                   params:( ";" p:param {return p;} )*
                   {
-                    params = combineParams(params);
-                    return {
-                      value: value,
-                      params: params
-                    };
+                    return xparamsBuild(value, 'value', params);
                   }
 param          =  _pchars
 _pchars        =  chars:pchar* {return chars.join('');}
@@ -367,10 +485,17 @@ srvr           =  (
                     userinfo:userinfo?
                     hostport: hostport
                     {
-                      return {
+                      return Object.defineProperty({
                         userinfo: userinfo,
                         hostport: hostport
-                      };
+                      }, 'normalize', {value:
+                        function () {
+                          return normalizeHelper([
+                              this.userinfo
+                            , this.hostport
+                          ]);
+                        }
+                      });
                     }
                   )?
 
@@ -378,13 +503,20 @@ reg_name       =  chars:( unreserved / escaped / "$" / ","
                   / ";" / ":" / "@" / "&" / "=" / "+" )+
                   {return chars.join();}
 query          =  chars:uric* {return chars.join('');}
-SIP_Version    =  "SIP"i "/" v: _version {return v;}
+SIP_Version    =  $("SIP"i "/" _version)
 _version       =  major:_PDIGITS "." minor:_PDIGITS
                   {
-                    return {
+                    return Object.defineProperty({
                       major: major,
                       minor: minor
-                    };
+                    }, 'normalize', {value:
+                      function () {
+                        return normalizeHelper([
+                            this.major
+                          , this.minor
+                        ], '.');
+                      }
+                    });
                   }
 
 _message_headers = message_headers:( message_header )*
@@ -461,20 +593,37 @@ Response          =  Status_Line:Status_Line
                      CRLF
                      message_body:( message_body )?
                      {
-                       return {
+                       return Object.defineProperty({
                          Status_Line: Status_Line,
                          message_headers: message_headers,
                          message_body: message_body
-                       };
+                       }, 'normalize', {value:
+                         function () {
+                           return normalizeHelper([
+                               this.Status_Line
+                             , this.message_headers
+                             , '\r\n'
+                             , this.message_body
+                           ]);
+                         }
+                       });
                      }
 
 Status_Line     =  SIP_Version:SIP_Version SP Status_Code:Status_Code SP Reason_Phrase:Reason_Phrase CRLF
                    {
-                     return {
+                     return Object.defineProperty({
                        SIP_Version: SIP_Version,
                        Status_Code: Status_Code,
                        Reason_Phrase: Reason_Phrase
-                     };
+                     }, 'normalize', {value:
+                       function () {
+                         return normalizeHelper([
+                             this.SIP_Version
+                           , this.Status_Code
+                           , this.Reason_Phrase
+                         ], ' ') + '\r\n';
+                       }
+                     });
                    }
 
 Status_Code     =  _PDIGIT3
@@ -492,11 +641,7 @@ Accept         =  name:"Accept"i HCOLON
                   {return {name: "Accept", value: value};}
 accept_range   =  media_range:media_range accept_params:(SEMI a:accept_param {return a;})*
                   {
-                    accept_params = combineParams(accept_params);
-                    return {
-                      media_range: media_range,
-                      accept_params: accept_params
-                    };
+                    return xparamsBuild(media_range, 'media_range', accept_params, 'accept_params');
                   }
 //media_range    =  ( "*/*"
 //                  / ( m_type SLASH "*" )
@@ -529,11 +674,7 @@ Accept_Encoding  =  name:"Accept-Encoding"i HCOLON
 encoding         =  codings:codings
                     accept_params:(SEMI a:accept_param {return a;})*
                     {
-                      accept_params = combineParams(accept_params);
-                      return {
-                        codings: codings,
-                        accept_params: accept_params
-                      };
+                      return xparamsBuild(codings, 'codings', accept_params, 'accept_params');
                     }
 codings          =  content_coding / "*"
 content_coding   =  token
@@ -548,11 +689,7 @@ Accept_Language  =  name:"Accept-Language"i HCOLON
 language         =  language_range:language_range
                     accept_params:(SEMI a:accept_param {return a;})*
                     {
-                      accept_params = combineParams(accept_params);
-                      return {
-                        language_range: language_range,
-                        accept_params: accept_params
-                      };
+                      return xparamsBuild(language_range, 'language_range', accept_params, 'accept_params');
                     }
 language_range   =  $ ( ( _1to8ALPHA ( "-" _1to8ALPHA )* ) / "*" )
 _1to8ALPHA       = ALPHA ALPHA? ALPHA? ALPHA? ALPHA? ALPHA? ALPHA? ALPHA?
@@ -565,13 +702,9 @@ Alert_Info   =  name:"Alert-Info"i HCOLON
                 )
                 {return {name: "Alert-Info", value: value};}
 alert_param  =  LAQUOT absoluteURI:absoluteURI RAQUOT
-                generic_params:( SEMI g:generic_param {return g;} )*
+                params:( SEMI g:generic_param {return g;} )*
                 {
-                  generic_params = combineParams(generic_params);
-                  return {
-                    absoluteURI: absoluteURI,
-                    generic_params: generic_params
-                  };
+                  return xparamsBuild(absoluteURI, 'absoluteURI', params);
                 }
 
 Allow  =  name:"Allow"i HCOLON
@@ -587,13 +720,30 @@ Authorization     =  name:"Authorization"i HCOLON value:credentials
 credentials       =  (
                        "Digest" LWS d:digest_response
                        {
-                         return { digest_response: d };
+                         return Object.defineProperty({
+                           digest_response: d
+                         }, 'normalize', {value:
+                           function () {
+                             return normalizeHelper([
+                                 'Digest '
+                               , this.digest_response
+                             ]);
+                           }
+                         });
                        }
                      )
-                     / (o:other_response {return {other_response: o};})
+                     / (o:other_response {
+                         return Object.defineProperty({
+                           other_response: o
+                         }, 'normalize', {value:
+                           function () {
+                             return normalizeHelper(this.other_response);
+                           }
+                         });
+                       })
 digest_response   =  first:dig_resp
                      rest:(COMMA d:dig_resp {return d;})*
-                     { return combineParams([first].concat(rest)); }
+                     { return combineParams([first].concat(rest), ', '); }
 dig_resp          =  username / realm / nonce / digest_uri
                       / dresponse / algorithm / cnonce
                       / opaque / message_qop
@@ -628,10 +778,8 @@ auth_param_name   =  token
 other_response    =  auth_scheme:auth_scheme LWS first:auth_param
                      rest:(COMMA a:auth_param {return a;})*
                      {
-                       return {
-                         auth_scheme: auth_scheme,
-                         auth_params: combineParams([first].concat(rest))
-                       };
+                       auth_params = [first].concat(rest);
+                       return xparamsBuild(auth_scheme, 'auth_scheme', auth_params, 'auth_params', ', ');
                      }
 auth_scheme       =  token
 
@@ -639,7 +787,7 @@ Authentication_Info  =  name:"Authentication-Info"i HCOLON
                         value:(
                           first:ainfo
                           rest:(COMMA a:ainfo {return a;})*
-                          { return combineParams([first].concat(rest)); }
+                          { return combineParams([first].concat(rest), ', '); }
                         )
                         {return {name: "Authentication-Info", value: value};}
 ainfo                =  nextnonce / message_qop
@@ -665,11 +813,7 @@ Call_Info   =  name:"Call-Info"i HCOLON
 info        =  LAQUOT absoluteURI:absoluteURI RAQUOT
                info_params:( SEMI i:info_param {return i;} )*
                {
-                 info_params = combineParams(info_params);
-                 return {
-                   absoluteURI: absoluteURI,
-                   info_params: info_params
-                 };
+                 return xparamsBuild(absoluteURI, 'absoluteURI', info_params, 'info_params');
                }
 info_param  =  (
                  name:"purpose" EQUAL
@@ -690,11 +834,7 @@ Contact        =  name:("Contact"i / "m"i ) HCOLON
 contact_param  =  addr:(name_addr / addr_spec)
                   params:(SEMI c:contact_params {return c;})*
                   {
-                    params = combineParams(params);
-                    return {
-                      addr: addr,
-                      params: params
-                    };
+                    return addrparamsBuild(addr, params);
                   }
 name_addr      =  display_name:( display_name )?
                   LAQUOT addr_spec:addr_spec RAQUOT
@@ -736,11 +876,7 @@ Content_Disposition   =  name:"Content-Disposition"i HCOLON
                            disp_type:disp_type
                            disp_params:( SEMI d:disp_param {return d;} )*
                            {
-                             disp_params = combineParams(disp_params);
-                             return {
-                               disp_type: disp_type,
-                               disp_params: disp_params
-                             };
+                             return xparamsBuild(disp_type, 'disp_type', disp_params, 'disp_params');
                            }
                          )
                          {return {name: "Content-Disposition", value: value};}
@@ -771,10 +907,17 @@ Content_Language  =  name:"Content-Language"i HCOLON
 language_tag      =  primary_tag:primary_tag
                      subtags:( "-" s:subtag {return s;})*
                      {
-                       return {
+                       return Object.defineProperty({
                          primary_tag: primary_tag,
                          subtags: subtags
-                       };
+                       }, 'normalize', {value:
+                         function () {
+                           return normalizeHelper([
+                               this.primary_tag
+                             , this.subtags
+                           ]);
+                         }
+                       });
                      }
 primary_tag       =  _1to8ALPHA
 subtag            =  _1to8ALPHA
@@ -787,11 +930,20 @@ media_type       =  m_type:m_type SLASH m_subtype:m_subtype
                     m_parameters:(SEMI p:m_parameter {return p;})*
                     {
                       m_parameters = combineParams(m_parameters);
-                      return {
+                      return Object.defineProperty({
                         m_type: m_type,
                         m_subtype: m_subtype,
                         m_parameters: m_parameters
-                      };
+                      }, 'normalize', {value:
+                        function () {
+                          return normalizeHelper([
+                              this.m_type
+                            , '/'
+                            , this.m_subtype
+                            , this.m_parameters
+                          ]);
+                        }
+                      });
                     }
 m_type           =  token
 m_subtype        =  token
@@ -804,10 +956,17 @@ CSeq  =  name:"CSeq"i HCOLON
          value:(
            sequenceNumber:_PDIGITS LWS requestMethod:Method
            {
-             return {
+             return Object.defineProperty({
                sequenceNumber: sequenceNumber,
                requestMethod: requestMethod
-             };
+             }, 'normalize', {value:
+               function () {
+                 return normalizeHelper([
+                     sequenceNumber
+                   , requestMethod
+                 ], ' ');
+               }
+             });
            }
          )
          {return {name: "CSeq", value: value};}
@@ -817,29 +976,53 @@ Date          =  name:"Date"i HCOLON value:SIP_date
 SIP_date      =  rfc1123_date
 rfc1123_date  =  wkday:wkday "," SP date1:date1 SP time:time SP "GMT"
                  {
-                   return {
+                   return Object.defineProperty({
                      wkday: wkday,
                      date1: date1,
                      time: time
-                   };
+                   }, 'normalize', {value:
+                     function () {
+                       return normalizeHelper([
+                           this.wkday, ','
+                         , this.date1, ' '
+                         , this.time, ' GMT'
+                       ]);
+                     }
+                   });
                  }
 date1         =  day:_PDIGIT2 SP month:month SP year:_PDIGIT4
                  // day month year (e.g., 02 Jun 1982)
                  {
-                   return {
+                   return Object.defineProperty({
                      day: day,
                      month: month,
                      year: year
-                   };
+                   }, 'normalize', {value:
+                     function () {
+                       return normalizeHelper([
+                           this.day
+                         , this.month
+                         , this.year
+                       ], ' ');
+                     }
+                   });
                  }
 time          =  hours:_PDIGIT2 ":" minutes:_PDIGIT2 ":" seconds:_PDIGIT2
                  // 00:00:00 _ 23:59:59
                  {
-                   return {
+                   return Object.defineProperty({
                      hours: hours,
                      minutes: minutes,
                      seconds: seconds
-                   };
+                   }, 'normalize', {value:
+                     function () {
+                       return normalizeHelper([
+                           this.hours
+                         , this.minutes
+                         , this.seconds
+                       ], ':');
+                     }
+                   });
                  }
 wkday         =  "Mon" / "Tue" / "Wed"
                  / "Thu" / "Fri" / "Sat" / "Sun"
@@ -857,13 +1040,9 @@ Error_Info  =  name:"Error-Info"i HCOLON
 
 // http://tools.ietf.org/html/rfc3261#page-230
 error_uri   =  LAQUOT absoluteURI:absoluteURI RAQUOT
-               generic_params:( SEMI g:generic_param {return g;} )*
+               params:( SEMI g:generic_param {return g;} )*
                {
-                 generic_params = combineParams(generic_params);
-                 return {
-                   absoluteURI: absoluteURI,
-                   generic_params: generic_params
-                 };
+                 return xparamsBuild(absoluteURI, 'absoluteURI', params);
                }
 
 Expires     =  name:"Expires"i HCOLON value:delta_seconds
@@ -873,11 +1052,7 @@ From        =  name:( "From"i / "f"i ) HCOLON value:from_spec
 from_spec   =  addr:(name_addr / addr_spec)
                params:(SEMI f:from_param {return f;})*
                {
-                 params = combineParams(params);
-                 return {
-                   addr: addr,
-                   params: params
-                 };
+                 return addrparamsBuild(addr, params);
                }
 from_param  =  tag_param / generic_param
 tag_param   =  name:"tag" EQUAL value:token
@@ -922,10 +1097,8 @@ challenge           =  (
 other_challenge     =  auth_scheme:auth_scheme LWS first:auth_param
                        rest:(COMMA a:auth_param {return a;})*
                        {
-                         return {
-                           auth_scheme: auth_scheme,
-                           auth_params: combineParams([first].concat(rest))
-                         };
+                         auth_params = [first].concat(rest);
+                         return xparamsBuild(auth_scheme, 'auth_scheme', auth_params, 'auth_params', ', ');
                        }
 digest_cln          =  realm / domain / nonce
                         / opaque / stale / algorithm
@@ -983,11 +1156,7 @@ Record_Route  =  name:"Record-Route"i HCOLON
 rec_route     =  addr:name_addr
                  params:( SEMI r:rr_param {return r;} )*
                  {
-                   params = combineParams(params);
-                   return {
-                     addr: addr,
-                     params: params
-                   };
+                   return addrparamsBuild(addr, params);
                  }
 rr_param      =  generic_param
 
@@ -996,10 +1165,7 @@ Reply_To      =  name:"Reply-To"i HCOLON value:rplyto_spec
 rplyto_spec   =  addr:( name_addr / addr_spec )
                  params:( SEMI r:rplyto_param {return r;} )*
                  {
-                   return {
-                     addr: addr,
-                     params: combineParams(params)
-                   };
+                   return addrparamsBuild(addr, params);
                  }
 rplyto_param  =  generic_param
 Require       =  name:"Require"i HCOLON
@@ -1017,11 +1183,19 @@ Retry_After  =  name:"Retry-After"i HCOLON
                   retry_params:( SEMI r:retry_param {return r;} )*
                   {
                     retry_params = combineParams(retry_params);
-                    return {
+                    return Object.defineProperty({
                       delta_seconds: delta_seconds,
                       comment: comment,
                       retry_params: retry_params
-                    };
+                    }, 'normalize', {value:
+                      function () {
+                        return normalizeHelper([
+                            this.delta_seconds
+                          , this.comment
+                          , this.retry_params
+                        ]);
+                      }
+                    });
                   }
                 )
                 {return {name: "Retry-After", value: value};}
@@ -1041,11 +1215,7 @@ Route        =  name:"Route"i HCOLON
                 {return {name: "Route", value: value};}
 route_param  =  addr:name_addr params:( SEMI r:rr_param {return r;} )*
                 {
-                  params = combineParams(params);
-                  return {
-                    addr: addr,
-                    params: params
-                  };
+                  return addrparamsBuild(addr, params);
                 }
 
 Server           =  name:"Server"i HCOLON
@@ -1058,10 +1228,17 @@ Server           =  name:"Server"i HCOLON
 server_val       =  product / (c:comment {return {comment: c};})
 product          =  token:token product_version:(SLASH p:product_version {return p;})?
                     {
-                      return {
+                      return Object.defineProperty({
                         token: token,
                         product_version: product_version
-                      };
+                      }, 'normalize', {value:
+                        function () {
+                          return normalizeHelper([
+                              this.token
+                            , this.product_version
+                          ], '/');
+                        }
+                      });
                     }
 product_version  =  token
 
@@ -1089,11 +1266,7 @@ To        =  name:( "To"i / "t"i ) HCOLON
                addr:( name_addr / addr_spec )
                params:( SEMI t:to_param {return t;} )*
                {
-                 params = combineParams(params);
-                 return {
-                   addr: addr,
-                   params: params
-                 };
+                 return addrparamsBuild(addr, params);
                }
              )
              {return {name: "To", value: value};}
@@ -1126,11 +1299,20 @@ via_parm          =  sent_protocol:sent_protocol LWS sent_by:sent_by
                      params:( SEMI v:via_params {return v;} )*
                      {
                        params = combineParams(params);
-                       return {
+                       return Object.defineProperty({
                          sent_protocol: sent_protocol,
                          sent_by: sent_by,
                          params: params
-                       };
+                       }, 'normalize', {value:
+                         function () {
+                           return normalizeHelper([
+                               this.sent_protocol
+                             , ' '
+                             , this.sent_by
+                             , this.params
+                           ]);
+                         }
+                       });
                      }
 via_params        =  via_ttl / via_maddr
                      / via_received / via_branch
@@ -1147,11 +1329,19 @@ via_extension     =  generic_param
 sent_protocol     =  protocol_name:protocol_name SLASH protocol_version:protocol_version
                      SLASH transport:transport
                      {
-                       return {
+                       return Object.defineProperty({
                          protocol_name: protocol_name,
                          protocol_version: protocol_version,
                          transport: transport
-                       };
+                       }, 'normalize', {value:
+                         function () {
+                           return normalizeHelper([
+                               this.protocol_name
+                             , this.protocol_version
+                             , this.transport
+                           ], '/');
+                         }
+                       });
                      }
 protocol_name     =  "SIP" / token
 protocol_version  =  token
@@ -1165,10 +1355,7 @@ transport         =  "UDP" / "TCP" / "TLS" / "SCTP"
 
 sent_by           =  host:host port:( COLON p:port {return p;} )?
                      {
-                       return {
-                         host: host,
-                         port: port
-                       };
+                       return hostportBuild(host, port);
                      }
 // ttl               =  1*3DIGIT // 0 to 255
 ttl             = "25" [\x30-\x35]          // 250-255
@@ -1186,11 +1373,19 @@ Warning        =  name:"Warning"i HCOLON
                   {return {name: "Warning", value: value};}
 warning_value  =  warn_code:warn_code SP warn_agent:warn_agent SP warn_text:warn_text
                   {
-                    return {
+                    return Object.defineProperty({
                       warn_code: warn_code,
                       warn_agent: warn_agent,
                       warn_text: warn_text
-                    };
+                    }, 'normalize', {value:
+                      function () {
+                        return normalizeHelper([
+                            this.warn_code
+                          , this.warn_agent
+                          , this.warn_text
+                        ], ' ');
+                      }
+                    });
                   }
 warn_code      =  _PDIGIT3
 warn_agent     =  hostport / pseudonym
@@ -1210,11 +1405,19 @@ RAck          =  name:"RAck"i HCOLON
                    CSeq_num:CSeq_num LWS
                    Method:Method
                    {
-                     return {
+                     return Object.defineProperty({
                        response_num: response_num,
                        CSeq_num: CSeq_num,
                        Method: Method
-                     };
+                     }, 'normalize', {value:
+                       function () {
+                         return normalizeHelper([
+                             this.response_num
+                           , this.CSeq_num
+                           , this.Method
+                         ], ' ');
+                       }
+                     });
                    }
                  )
                  {return {name: "RAck", value: value};}
@@ -1236,11 +1439,7 @@ Reason            =  name:"Reason"i HCOLON
 reason_value      =  protocol:protocol
                      params:(SEMI r:reason_params {return r;})*
                      {
-                       params = combineParams(params);
-                       return {
-                         protocol: protocol,
-                         params: params
-                       };
+                       return xparamsBuild(protocol, 'protocol', params);
                      }
 protocol          =  "SIP" / "Q.850" / token
 reason_params     =  protocol_cause / reason_text
@@ -1265,11 +1464,7 @@ Path       = name:"Path"i HCOLON
 path_value = addr:name_addr
              params:( SEMI p:rr_param {return p;} )*
              {
-               params = combineParams(params);
-               return {
-                 addr: addr,
-                 params: params
-               };
+               return addrparamsBuild(addr, params);
              }
 // end RFC 3327
 
@@ -1280,10 +1475,7 @@ Refer_To = name:("Refer-To"i / "r"i) HCOLON
              addr:( name_addr / addr_spec )
              params:(SEMI p:generic_param {return p;})*
              {
-               return {
-                 addr: addr,
-                 params: params
-               };
+               return addrparamsBuild(addr, params);
              }
            )
            {return {name: "Refer-To", value: value};}
@@ -1302,21 +1494,24 @@ Event             =  name:( "Event"i / "o"i ) HCOLON
                        type:event_type
                        params:( SEMI p:event_param {return p;} )*
                        {
-                         params = combineParams(params);
-                         return {
-                           type: type,
-                           params: params
-                         };
+                         return xparamsBuild(type, 'type', params);
                        }
                      )
                      {return {name: name, value: value};}
 event_type        =  event_package:event_package
                      templates:( "." t:event_template {return t;} )*
                      {
-                       return {
+                       return Object.defineProperty({
                          event_package: event_package,
                          templates: templates
-                       };
+                       }, 'normalize', {value:
+                         function () {
+                           return normalizeHelper([
+                               this.event_package
+                             , this.templates
+                           ]);
+                         }
+                       });
                      }
 event_package     =  token_nodot
 event_template    =  token_nodot
@@ -1342,11 +1537,7 @@ Subscription_State   = name:"Subscription-State"i HCOLON
                          substate_value:substate_value
                          params:( SEMI p:subexp_params {return p;} )*
                          {
-                           params = combineParams(params);
-                           return {
-                             substate_value: substate_value,
-                             params: params
-                           };
+                           return xparamsBuild(substate_value, 'substate_value', params);
                          }
                        )
                        {return {name: "Subscription-State", value: value};}
