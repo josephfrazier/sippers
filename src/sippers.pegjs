@@ -18,7 +18,7 @@
         var keyNormalize = function (name) {
           // cast to array
           var values = [].concat(this[name]);
-          values = values.map(normalizeHelper);
+          values = values.map(function(i){return normalizeHelper(i);});
           if (append) {
             return name + ': ' + values.join(', ') + '\r\n';
           }
@@ -43,55 +43,68 @@
   // non-RFC, just convenient
   var combineParams = mapList.bind(null, false);
 
-  function normalizeHelper (obj, separator) {
+  function normalizeHelper (obj, separator, transform) {
     if (obj) {
       if (Array.isArray(obj)) {
-        return obj.filter(function(i){return i != null;}).map(normalizeHelper).join(separator || '');
+        normalized = obj
+          .filter(function(i){return i != null;})
+          .map(function(i){return normalizeHelper(i);})
+          .join(separator || '');
       }
-      if (obj.normalize) {
-        return obj.normalize();
+      else if (obj.normalize) {
+        normalized = obj.normalize();
       }
-      return obj;
+      else {
+        normalized = obj + '';
+      }
     }
-    return '';
+    else {
+      normalized = '';
+    }
+    transform = transform || function(i){return i};
+    return transform(normalized);
   }
 
   function sipuriBuild (scheme, userinfo, hostport, uri_parameters, headers) {
-    return Object.defineProperty({
+    return defineNormalize({
         scheme: scheme
       , userinfo: userinfo
       , hostport: hostport
       , uri_parameters: uri_parameters
       , headers: headers
-    }, 'normalize', {value:
-      function () {
-        var addrSpecString = normalizeHelper([
-            this.scheme + ':',
-          , this.userinfo
-          , this.hostport
-          , this.uri_parameters
-          , this.headers
-        ]);
+    }, ['scheme', ':', 'userinfo', 'hostport', 'uri_parameters', 'headers'], '',
+      function (addrSpecString) {
         if (this.display_name) {
           addrSpecString = normalizeHelper(this.display_name) + ' <' + addrSpecString + '>';
         }
         return addrSpecString;
       }
+    );
+  }
+
+  function defineNormalize (obj, propertyList, separator, transform) {
+    transform = transform || function(i){return i};
+    if (transform.constructor === String) {
+      transform = function(s){return s + this;}.bind(transform);
+    }
+    return Object.defineProperty(obj, 'normalize', {value:
+      function (propertyList, separator, transform) {
+        function getProperty (property) {
+          if (property in this) {
+            return this[property];
+          }
+          return property;
+        }
+        return normalizeHelper(propertyList.map(getProperty.bind(this)), separator, transform);
+      }.bind(obj, propertyList, separator, transform.bind(obj))
     });
   }
 
   function hostportBuild (host, port) {
-    return Object.defineProperty({
+    return defineNormalize({
       host: host,
       port: port
-    }, 'normalize', {value:
-      function () {
-        return normalizeHelper([
-          , this.host
-          , this.port
-        ], ':');
-      }
-    });
+    }, ['host', 'port'], ':');
   }
 
   function xparamsBuild (prop, propName, params, paramsName, paramSep) {
@@ -99,14 +112,7 @@
     var ret = {};
     ret[propName] = prop;
     ret[paramsName] = combineParams(params, paramSep);
-    return Object.defineProperty(ret, 'normalize', {value:
-      function (propName, paramsName) {
-        return normalizeHelper([
-            this[propName]
-          , this[paramsName]
-        ]);
-      }.bind(ret, propName, paramsName)
-    });
+    return defineNormalize(ret, [propName, paramsName]);
   }
 
   function addrparamsBuild (addr, params) {
@@ -249,17 +255,10 @@ SIPS_URI          =  "sips:" userinfo:( userinfo )? hostport:hostport
 //userinfo         =  ( user / telephone_subscriber ) ( ":" password )? "@"
 userinfo         =  user:( user ) password:( ":" p:password {return p;} )? "@"
                     {
-                      return Object.defineProperty({
+                      return defineNormalize({
                         user: user,
                         password: password
-                      }, 'normalize', {value:
-                        function () {
-                          return normalizeHelper([
-                            , this.user
-                            , this.password
-                          ], ':') + '@';
-                        }
-                      });
+                      }, ['user', 'password'], ':', '@');
                     }
 user             =  chars:( unreserved / escaped / user_unreserved )+
                     {return chars.join('');}
@@ -380,84 +379,45 @@ Request        =  Request_Line:Request_Line
                   CRLF
                   message_body:( message_body )?
                   {
-                    return Object.defineProperty({
+                    return defineNormalize({
                       Request_Line: Request_Line,
                       message_headers: message_headers,
                       message_body: message_body
-                    }, 'normalize', {value:
-                      function () {
-                        return normalizeHelper([
-                            this.Request_Line
-                          , this.message_headers
-                          , '\r\n'
-                          , this.message_body
-                        ]);
-                      }
-                    });
+                    }, ['Request_Line', 'message_headers', '\r\n', 'message_body']);
                   }
 
 Request_Line   =  Method:Method SP Request_URI:Request_URI SP SIP_Version:SIP_Version CRLF
                   {
-                    return Object.defineProperty({
+                    return defineNormalize({
                       Method: Method,
                       Request_URI: Request_URI,
                       SIP_Version: SIP_Version
-                    }, 'normalize', {value:
-                      function () {
-                        return normalizeHelper([
-                            this.Method
-                          , this.Request_URI
-                          , this.SIP_Version
-                        ], ' ') + '\r\n';
-                      }
-                    });
+                    }, ['Method', 'Request_URI', 'SIP_Version'], ' ', '\r\n');
                   }
 
 Request_URI    =  SIP_URI / SIPS_URI / absoluteURI
 absoluteURI    =  scheme:scheme ":" part:( hier_part / opaque_part )
                   {
-                    return Object.defineProperty({
+                    return defineNormalize({
                       scheme: scheme,
                       part: part
-                    }, 'normalize', {value:
-                      function () {
-                        return normalizeHelper([
-                            this.scheme
-                          , this.part
-                        ], ':');
-                      }
-                    });
+                    }, ['scheme', 'port'], ':');
                   }
 
 hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )?
                   {
-                    return Object.defineProperty({
+                    return defineNormalize({
                       path: path,
                       query: query
-                    }, 'normalize', {value:
-                      function () {
-                        return normalizeHelper([
-                            this.path
-                          , this.query
-                        ], '?');
-                      }
-                    });
+                    }, ['path', 'query'], '?');
                   }
 
 net_path       =  "//" authority:authority abs_path:( abs_path )?
                   {
-                    return Object.defineProperty({
+                    return defineNormalize({
                       authority: authority,
                       abs_path: abs_path
-                    }, 'normalize', {value:
-                      function () {
-                        return normalizeHelper([
-                            '//'
-                          , this.authority
-                          , this.abs_path
-                        ]);
-                      }
-                    });
+                    }, ['//', 'authority', 'abs_path']);
                   }
 abs_path       =  "/" path_segments:path_segments {return path_segments;}
 
@@ -485,17 +445,10 @@ srvr           =  (
                     userinfo:userinfo?
                     hostport: hostport
                     {
-                      return Object.defineProperty({
+                      return defineNormalize({
                         userinfo: userinfo,
                         hostport: hostport
-                      }, 'normalize', {value:
-                        function () {
-                          return normalizeHelper([
-                              this.userinfo
-                            , this.hostport
-                          ]);
-                        }
-                      });
+                      }, ['userinfo', 'hostport']);
                     }
                   )?
 
@@ -506,17 +459,10 @@ query          =  chars:uric* {return chars.join('');}
 SIP_Version    =  $("SIP"i "/" _version)
 _version       =  major:_PDIGITS "." minor:_PDIGITS
                   {
-                    return Object.defineProperty({
+                    return defineNormalize({
                       major: major,
                       minor: minor
-                    }, 'normalize', {value:
-                      function () {
-                        return normalizeHelper([
-                            this.major
-                          , this.minor
-                        ], '.');
-                      }
-                    });
+                    }, ['major', 'minor'], '.');
                   }
 
 _message_headers = message_headers:( message_header )*
@@ -593,37 +539,20 @@ Response          =  Status_Line:Status_Line
                      CRLF
                      message_body:( message_body )?
                      {
-                       return Object.defineProperty({
+                       return defineNormalize({
                          Status_Line: Status_Line,
                          message_headers: message_headers,
                          message_body: message_body
-                       }, 'normalize', {value:
-                         function () {
-                           return normalizeHelper([
-                               this.Status_Line
-                             , this.message_headers
-                             , '\r\n'
-                             , this.message_body
-                           ]);
-                         }
-                       });
+                       }, ['Status_Line', 'message_headers', '\r\n', 'message_body']);
                      }
 
 Status_Line     =  SIP_Version:SIP_Version SP Status_Code:Status_Code SP Reason_Phrase:Reason_Phrase CRLF
                    {
-                     return Object.defineProperty({
+                     return defineNormalize({
                        SIP_Version: SIP_Version,
                        Status_Code: Status_Code,
                        Reason_Phrase: Reason_Phrase
-                     }, 'normalize', {value:
-                       function () {
-                         return normalizeHelper([
-                             this.SIP_Version
-                           , this.Status_Code
-                           , this.Reason_Phrase
-                         ], ' ') + '\r\n';
-                       }
-                     });
+                     }, ['SIP_Version', 'Status_Code', 'Reason_Phrase'], ' ', '\r\n');
                    }
 
 Status_Code     =  _PDIGIT3
@@ -720,26 +649,15 @@ Authorization     =  name:"Authorization"i HCOLON value:credentials
 credentials       =  (
                        "Digest" LWS d:digest_response
                        {
-                         return Object.defineProperty({
+                         return defineNormalize({
                            digest_response: d
-                         }, 'normalize', {value:
-                           function () {
-                             return normalizeHelper([
-                                 'Digest '
-                               , this.digest_response
-                             ]);
-                           }
-                         });
+                         }, ['Digest ', 'digest_response']);
                        }
                      )
                      / (o:other_response {
-                         return Object.defineProperty({
+                         return defineNormalize({
                            other_response: o
-                         }, 'normalize', {value:
-                           function () {
-                             return normalizeHelper(this.other_response);
-                           }
-                         });
+                         }, ['other_response']);
                        })
 digest_response   =  first:dig_resp
                      rest:(COMMA d:dig_resp {return d;})*
@@ -907,17 +825,10 @@ Content_Language  =  name:"Content-Language"i HCOLON
 language_tag      =  primary_tag:primary_tag
                      subtags:( "-" s:subtag {return s;})*
                      {
-                       return Object.defineProperty({
+                       return defineNormalize({
                          primary_tag: primary_tag,
                          subtags: subtags
-                       }, 'normalize', {value:
-                         function () {
-                           return normalizeHelper([
-                               this.primary_tag
-                             , this.subtags
-                           ]);
-                         }
-                       });
+                       }, ['primary_tag', 'subtags']);
                      }
 primary_tag       =  _1to8ALPHA
 subtag            =  _1to8ALPHA
@@ -930,20 +841,11 @@ media_type       =  m_type:m_type SLASH m_subtype:m_subtype
                     m_parameters:(SEMI p:m_parameter {return p;})*
                     {
                       m_parameters = combineParams(m_parameters);
-                      return Object.defineProperty({
+                      return defineNormalize({
                         m_type: m_type,
                         m_subtype: m_subtype,
                         m_parameters: m_parameters
-                      }, 'normalize', {value:
-                        function () {
-                          return normalizeHelper([
-                              this.m_type
-                            , '/'
-                            , this.m_subtype
-                            , this.m_parameters
-                          ]);
-                        }
-                      });
+                      }, ['m_type', '/', 'm_subtype', 'm_parameters']);
                     }
 m_type           =  token
 m_subtype        =  token
@@ -956,17 +858,10 @@ CSeq  =  name:"CSeq"i HCOLON
          value:(
            sequenceNumber:_PDIGITS LWS requestMethod:Method
            {
-             return Object.defineProperty({
+             return defineNormalize({
                sequenceNumber: sequenceNumber,
                requestMethod: requestMethod
-             }, 'normalize', {value:
-               function () {
-                 return normalizeHelper([
-                     sequenceNumber
-                   , requestMethod
-                 ], ' ');
-               }
-             });
+             }, ['sequenceNumber', 'requestMethod'], ' ');
            }
          )
          {return {name: "CSeq", value: value};}
@@ -976,53 +871,29 @@ Date          =  name:"Date"i HCOLON value:SIP_date
 SIP_date      =  rfc1123_date
 rfc1123_date  =  wkday:wkday "," SP date1:date1 SP time:time SP "GMT"
                  {
-                   return Object.defineProperty({
+                   return defineNormalize({
                      wkday: wkday,
                      date1: date1,
                      time: time
-                   }, 'normalize', {value:
-                     function () {
-                       return normalizeHelper([
-                           this.wkday, ','
-                         , this.date1, ' '
-                         , this.time, ' GMT'
-                       ]);
-                     }
-                   });
+                   }, ['wkday', ', ', 'date1', ' ', 'time', ' GMT']);
                  }
 date1         =  day:_PDIGIT2 SP month:month SP year:_PDIGIT4
                  // day month year (e.g., 02 Jun 1982)
                  {
-                   return Object.defineProperty({
+                   return defineNormalize({
                      day: day,
                      month: month,
                      year: year
-                   }, 'normalize', {value:
-                     function () {
-                       return normalizeHelper([
-                           this.day
-                         , this.month
-                         , this.year
-                       ], ' ');
-                     }
-                   });
+                   }, ['day', 'month', 'year'], ' ');
                  }
 time          =  hours:_PDIGIT2 ":" minutes:_PDIGIT2 ":" seconds:_PDIGIT2
                  // 00:00:00 _ 23:59:59
                  {
-                   return Object.defineProperty({
+                   return defineNormalize({
                      hours: hours,
                      minutes: minutes,
                      seconds: seconds
-                   }, 'normalize', {value:
-                     function () {
-                       return normalizeHelper([
-                           this.hours
-                         , this.minutes
-                         , this.seconds
-                       ], ':');
-                     }
-                   });
+                   }, ['hours', 'minutes', 'seconds'], ':');
                  }
 wkday         =  "Mon" / "Tue" / "Wed"
                  / "Thu" / "Fri" / "Sat" / "Sun"
@@ -1183,19 +1054,11 @@ Retry_After  =  name:"Retry-After"i HCOLON
                   retry_params:( SEMI r:retry_param {return r;} )*
                   {
                     retry_params = combineParams(retry_params);
-                    return Object.defineProperty({
+                    return defineNormalize({
                       delta_seconds: delta_seconds,
                       comment: comment,
                       retry_params: retry_params
-                    }, 'normalize', {value:
-                      function () {
-                        return normalizeHelper([
-                            this.delta_seconds
-                          , this.comment
-                          , this.retry_params
-                        ]);
-                      }
-                    });
+                    }, ['delta_seconds', 'comment', 'retry_params']);
                   }
                 )
                 {return {name: "Retry-After", value: value};}
@@ -1228,17 +1091,10 @@ Server           =  name:"Server"i HCOLON
 server_val       =  product / (c:comment {return {comment: c};})
 product          =  token:token product_version:(SLASH p:product_version {return p;})?
                     {
-                      return Object.defineProperty({
+                      return defineNormalize({
                         token: token,
                         product_version: product_version
-                      }, 'normalize', {value:
-                        function () {
-                          return normalizeHelper([
-                              this.token
-                            , this.product_version
-                          ], '/');
-                        }
-                      });
+                      }, ['token', 'product_version'], '/');
                     }
 product_version  =  token
 
@@ -1299,20 +1155,11 @@ via_parm          =  sent_protocol:sent_protocol LWS sent_by:sent_by
                      params:( SEMI v:via_params {return v;} )*
                      {
                        params = combineParams(params);
-                       return Object.defineProperty({
+                       return defineNormalize({
                          sent_protocol: sent_protocol,
                          sent_by: sent_by,
                          params: params
-                       }, 'normalize', {value:
-                         function () {
-                           return normalizeHelper([
-                               this.sent_protocol
-                             , ' '
-                             , this.sent_by
-                             , this.params
-                           ]);
-                         }
-                       });
+                       }, ['sent_protocol', ' ', 'sent_by', 'params']);
                      }
 via_params        =  via_ttl / via_maddr
                      / via_received / via_branch
@@ -1329,19 +1176,11 @@ via_extension     =  generic_param
 sent_protocol     =  protocol_name:protocol_name SLASH protocol_version:protocol_version
                      SLASH transport:transport
                      {
-                       return Object.defineProperty({
+                       return defineNormalize({
                          protocol_name: protocol_name,
                          protocol_version: protocol_version,
                          transport: transport
-                       }, 'normalize', {value:
-                         function () {
-                           return normalizeHelper([
-                               this.protocol_name
-                             , this.protocol_version
-                             , this.transport
-                           ], '/');
-                         }
-                       });
+                       }, ['protocol_name', 'protocol_version', 'transport'], '/');
                      }
 protocol_name     =  "SIP" / token
 protocol_version  =  token
@@ -1373,19 +1212,11 @@ Warning        =  name:"Warning"i HCOLON
                   {return {name: "Warning", value: value};}
 warning_value  =  warn_code:warn_code SP warn_agent:warn_agent SP warn_text:warn_text
                   {
-                    return Object.defineProperty({
+                    return defineNormalize({
                       warn_code: warn_code,
                       warn_agent: warn_agent,
                       warn_text: warn_text
-                    }, 'normalize', {value:
-                      function () {
-                        return normalizeHelper([
-                            this.warn_code
-                          , this.warn_agent
-                          , this.warn_text
-                        ], ' ');
-                      }
-                    });
+                    }, ['warn_code', 'warn_agent', 'warn_text'], ' ');
                   }
 warn_code      =  _PDIGIT3
 warn_agent     =  hostport / pseudonym
@@ -1405,19 +1236,11 @@ RAck          =  name:"RAck"i HCOLON
                    CSeq_num:CSeq_num LWS
                    Method:Method
                    {
-                     return Object.defineProperty({
+                     return defineNormalize({
                        response_num: response_num,
                        CSeq_num: CSeq_num,
                        Method: Method
-                     }, 'normalize', {value:
-                       function () {
-                         return normalizeHelper([
-                             this.response_num
-                           , this.CSeq_num
-                           , this.Method
-                         ], ' ');
-                       }
-                     });
+                     }, ['response_num', 'CSeq_num', 'Method'], ' ');
                    }
                  )
                  {return {name: "RAck", value: value};}
@@ -1501,17 +1324,10 @@ Event             =  name:( "Event"i / "o"i ) HCOLON
 event_type        =  event_package:event_package
                      templates:( "." t:event_template {return t;} )*
                      {
-                       return Object.defineProperty({
+                       return defineNormalize({
                          event_package: event_package,
                          templates: templates
-                       }, 'normalize', {value:
-                         function () {
-                           return normalizeHelper([
-                               this.event_package
-                             , this.templates
-                           ]);
-                         }
-                       });
+                       }, ['event_package', 'templates']);
                      }
 event_package     =  token_nodot
 event_template    =  token_nodot
