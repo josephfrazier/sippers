@@ -1,4 +1,4 @@
-var assert = require('assert');
+var assert = require('assert-diff');
 var sippers = require('../../dist/sippers.js');
 var fs = require('fs');
 
@@ -22,6 +22,11 @@ function assertivelyParse (name, valid) {
   return parsed;
 }
 
+function roundTrip (parsed) {
+  var parsed2 = sippers.parse(parsed.normalize(), {startRule: 'SIP_message'});
+  assert.deepEqual(jsonClone(parsed), jsonClone(parsed2), 'normalize/parse round-trip came back different');
+}
+
 function jsonClone (obj) {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -35,6 +40,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
       });
 
       describe('3.1.1.2. Wide Range of Valid Characters', function () {
@@ -51,6 +58,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
 
         it('The Request-URI has sips:user@example.com embedded in its userpart.', function () {
           assert.equal('sips:user@example.com', parsed.Request_Line.Request_URI.userinfo.user);
@@ -79,6 +88,8 @@ describe('RFC 4475 Torture Tests', function () {
           parsed = assertivelyParse(name);
         });
 
+        it('round-trips', function () {roundTrip(parsed);});
+
         it('has From/To users of "null-%00-null"', function () {
           assert.equal('null-\u0000-null', parsed.message_headers.From.addr.userinfo.user);
           assert.equal('null-\u0000-null', parsed.message_headers.To.addr.userinfo.user);
@@ -100,6 +111,8 @@ describe('RFC 4475 Torture Tests', function () {
           parsed = assertivelyParse(name);
         });
 
+        it('round-trips', function () {roundTrip(parsed);});
+
         it('The request method is unknown.  It is NOT equivalent to REGISTER.', function () {
           assert.strictEqual('RE%47IST%45R', parsed.Request_Line.Method);
         });
@@ -120,6 +133,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
       });
 
       describe('3.1.1.7. Long Values in Header Fields', function () {
@@ -128,6 +143,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
       });
 
       describe('3.1.1.8. Extra Trailing Octets in a UDP Datagram', function () {
@@ -136,6 +153,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
 
         it('is a REGISTER request (not an INVITE)', function () {
           assert.strictEqual('REGISTER', parsed.Request_Line.Method);
@@ -149,6 +168,8 @@ describe('RFC 4475 Torture Tests', function () {
           parsed = assertivelyParse(name);
         });
 
+        it('round-trips', function () {roundTrip(parsed);});
+
         it('The Request-URI will parse so that the user part is "user;par=u@example.net".', function () {
           assert.equal('user;par=u@example.net', parsed.Request_Line.Request_URI.userinfo.user);
         });
@@ -160,6 +181,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
       });
 
       describe('3.1.1.11. Multipart MIME Message', function () {
@@ -168,6 +191,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
       });
 
       describe('3.1.1.12. Unusual Reason Phrase', function () {
@@ -184,6 +209,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
 
         it('contains no reason phrase', function () {
           assert.equal('', parsed.Status_Line.Reason_Phrase);

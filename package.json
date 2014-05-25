@@ -17,6 +17,7 @@
     "gulp-peg": "~0.1.1",
     "gulp-util": "~2.2.14",
     "gulp-jshint": "~1.6.1",
-    "gulp-mocha": "~0.4.1"
+    "gulp-mocha": "~0.4.1",
+    "assert-diff": "0.0.4"
   }
 }
