@@ -1,6 +1,6 @@
 {
   function mapList (append, list) {
-    return list.reduce(
+    var combined = list.reduce(
       function combine (map, item) {
         var name = item.name;
         var value = item.value;
@@ -12,6 +12,25 @@
       },
       {}
     );
+
+    Object.defineProperty(combined, 'toString', {
+      value: function (append) {
+        var keyToString = function (name) {
+          if (append) {
+            // cast to array
+            var values = [].concat(this[name]);
+            return name + ': ' + values.join(', ') + '\r\n';
+          }
+          else {
+            return ';' + name + '=' + this[name];
+          }
+        }.bind(this);
+
+        return Object.keys(this).map(keyToString).join('');
+      }.bind(combined, append)
+    });
+
+    return combined;
   }
 
   // See RFC 3261 Section 7.3
