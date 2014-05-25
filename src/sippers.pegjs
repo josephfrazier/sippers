@@ -87,7 +87,7 @@
       , headers: headers
     }, ['scheme', ':', 'userinfo', 'hostport', 'uri_parameters', 'headers'], {
       transform: function (addrSpecString) {
-        if (this.display_name) {
+        if (this.display_name || this._isNameAddr) {
           addrSpecString = normalize(this.display_name) + ' <' + addrSpecString + '>';
         }
         return addrSpecString;
@@ -790,6 +790,7 @@ name_addr      =  display_name:( display_name )?
                   LAQUOT addr_spec:addr_spec RAQUOT
                   {
                     addr_spec.display_name = display_name;
+                    Object.defineProperty(addr_spec, '_isNameAddr', {value: true});
                     return addr_spec;
                   }
 addr_spec      =  SIP_URI / SIPS_URI / absoluteURI
