@@ -24,7 +24,8 @@
           var values = [].concat(this[name]);
           values = values.map(function(i){return normalize(i);});
           if (isHeaders) {
-            var joined = values.join(', ');
+            var headerSep = name === 'User-Agent' ? ' ' : ', ';
+            var joined = values.join(headerSep);
             if (joined.length > 0) {
               joined = ' ' + joined;
             }
