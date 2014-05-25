@@ -61,7 +61,7 @@
     else {
       normalized = '';
     }
-    transform = transform || function(i){return i};
+    transform = transform || function(i){return i;};
     return transform(normalized);
   }
 
@@ -83,7 +83,7 @@
   }
 
   function defineNormalize (obj, propertyList, separator, transform) {
-    transform = transform || function(i){return i};
+    transform = transform || function(i){return i;};
     if (transform.constructor === String) {
       transform = function(s){return s + this;}.bind(transform);
     }
@@ -339,21 +339,21 @@ transport_param   =  "transport="
                      value:( "udp" / "tcp" / "sctp" / "tls"
                      / "wss" / "ws"
                      / other_transport)
-                     { return { name: 'transport', value: value }; }
+                     { return {name: 'transport', value: value}; }
 // end RFC 7118
 
 other_transport   =  token
 
 user_param        =  "user=" value:( "phone" / "ip" / other_user)
-                     { return { name: 'user', value: value }; }
+                     { return {name: 'user', value: value}; }
 other_user        =  token
 
 method_param      =  "method=" value:Method
-                     { return { name: 'method', value: value }; }
+                     { return {name: 'method', value: value}; }
 ttl_param         =  "ttl=" value:ttl
-                     { return { name: 'ttl', value: value }; }
+                     { return {name: 'ttl', value: value}; }
 maddr_param       =  "maddr=" value:host
-                     { return { name: 'maddr', value: value }; }
+                     { return {name: 'maddr', value: value}; }
 lr_param          =  "lr" {return {name: 'lr', value: null }; }
 other_param       =  name:pname value:( "=" v:pvalue {return v;} )?
                      {return {name: name, value: value};}
@@ -834,7 +834,7 @@ primary_tag       =  _1to8ALPHA
 subtag            =  _1to8ALPHA
 
 Content_Length   =  name:( "Content-Length"i / "l"i ) HCOLON value:_PDIGITS
-                    { return { name: "Content-Length" , value: value }; }
+                    { return {name: "Content-Length", value: value}; }
 Content_Type     =  name:( "Content-Type"i / "c"i ) HCOLON value:media_type
                     {return {name: "Content-Type", value: value};}
 media_type       =  m_type:m_type SLASH m_subtype:m_subtype
