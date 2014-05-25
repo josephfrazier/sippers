@@ -42,6 +42,14 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('round-trips', function () {roundTrip(parsed);});
+
+        it('has a CSeq number of 9', function () {
+          assert.equal(9, parsed ? parsed.message_headers.CSeq.sequenceNumber : 9);
+        });
+
+        it('has a Max-Forwards of 68', function () {
+          assert.equal(68, parsed ? parsed.message_headers['Max-Forwards'] : 68);
+        });
       });
 
       describe('3.1.1.2. Wide Range of Valid Characters', function () {
@@ -287,7 +295,7 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('The Retry-After field is unreasonably large', function () {
-          assert.strictEqual(parsed.message_headers['Retry-After'].delta_seconds, 949302838503028349304023988);
+          assert.equal(parsed.message_headers['Retry-After'].delta_seconds, 949302838503028349304023988);
         });
 
         it('The Warning field has a warning-value with more than 3 digits.', function () {
@@ -592,7 +600,7 @@ describe('RFC 4475 Torture Tests', function () {
       });
 
       it('This is a legal SIP request with the Max-Forwards header field value set to zero.', function () {
-        assert.strictEqual(parsed.message_headers['Max-Forwards'], 0);
+        assert.equal(parsed.message_headers['Max-Forwards'], 0);
       });
     });
 

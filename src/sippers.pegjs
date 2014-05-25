@@ -130,18 +130,27 @@
     return xparamsBuild(addr, 'addr', params, 'params');
   }
 
-  function defineDelimited (value, normalized) {
-    function ret (val) {return function () {return val;};}
-    return Object.defineProperties(new String(value), {
+  function ret (val) {return function () {return val;};}
+
+  function defineObject (type, value, normalized) {
+    return Object.defineProperties(new type(value), {
       valueOf: {value: ret(value)},
       normalize: {value: ret(normalized)}
     });
   }
 
+  var defineDelimited = defineObject.bind(null, String);
+
   function joinEscaped (chars) {
     var value = chars.join('');
     var normalized = normalize(chars);
     return defineDelimited(value, normalized);
+  }
+
+  function padInt (text, dontPad) {
+    var value = parseInt(text, 10);
+    var normalized = dontPad ? text : value;
+    return defineObject(Number, value, normalized);
   }
 }
 
@@ -154,10 +163,10 @@ CR             =  "\r" // carriage return
 CRLF           =  $ CR LF // Internet standard newline
 CTL            =  [\x00-\x1F] / "\x7F" // controls
 DIGIT          =  [0-9] // 0-9
-_PDIGITS       =  DIGIT+ {return parseInt(text(), 10);}
-_PDIGIT2       =  DIGIT DIGIT {return parseInt(text(), 10);}
-_PDIGIT3       =  DIGIT DIGIT DIGIT {return parseInt(text(), 10);}
-_PDIGIT4       =  DIGIT DIGIT DIGIT DIGIT {return parseInt(text(), 10);}
+_PDIGITS       =  DIGIT+ {return padInt(text(), true);}
+_PDIGIT2       =  DIGIT DIGIT {return padInt(text());}
+_PDIGIT3       =  DIGIT DIGIT DIGIT {return padInt(text());}
+_PDIGIT4       =  DIGIT DIGIT DIGIT DIGIT {return padInt(text());}
 DQUOTE         =  "\"" // " (Double Quote)
 HEXDIG         =  DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
 HTAB           =  "\t" // horizontal tab
