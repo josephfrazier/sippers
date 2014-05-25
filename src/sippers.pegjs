@@ -128,6 +128,20 @@
   function addrparamsBuild (addr, params) {
     return xparamsBuild(addr, 'addr', params, 'params');
   }
+
+  function defineDelimited (value, normalized) {
+    function ret (val) {return function () {return val;};}
+    return Object.defineProperties(new String(value), {
+      valueOf: {value: ret(value)},
+      normalize: {value: ret(normalized)}
+    });
+  }
+
+  function joinEscaped (chars) {
+    var value = chars.join('');
+    var normalized = normalize(chars);
+    return defineDelimited(value, normalized);
+  }
 }
 
 // begin RFC 2234
@@ -166,7 +180,10 @@ unreserved  =  alphanum / mark
 mark        =  "-" / "_" / "." / "!" / "~" / "*" / "'"
                / "(" / ")"
 escaped     =  "%" HEXDIG HEXDIG
-               {return decodeURIComponent(text());}
+               {
+                 var decoded = decodeURIComponent(text());
+                 return defineDelimited(decoded, text());
+               }
 
 /* RFC3261 25: A recipient MAY replace any linear white space with a single SP
  * before interpreting the field value or forwarding the message downstream
@@ -217,12 +234,7 @@ RDQUOT  =  DQUOTE SWS  {return '"';}// close double quotation mark
 // http://tools.ietf.org/html/rfc3261#page-222
 comment  =  LPAREN value:$((ctext / quoted_pair / comment)*) RPAREN
             {
-              return Object.defineProperties({}, {
-                valueOf: {value: function () {return this;}.bind(value)},
-                normalize: {value: function () {
-                  return '(' + this.valueOf() + ')';
-                }}
-              });
+              return defineDelimited(value, '(' + value + ')');
             }
 ctext    =  [\x21-\x27] / [\x2A-\x5B] / [\x5D-\x7E] / UTF8_NONASCII
             / LWS
@@ -230,12 +242,7 @@ ctext    =  [\x21-\x27] / [\x2A-\x5B] / [\x5D-\x7E] / UTF8_NONASCII
 
 quoted_string  =  SWS DQUOTE value:$((qdtext / quoted_pair )*) DQUOTE
                   {
-                    return Object.defineProperties({}, {
-                      valueOf: {value: function () {return this;}.bind(value)},
-                      normalize: {value: function () {
-                        return '"' + this.valueOf() + '"';
-                      }}
-                    });
+                    return defineDelimited(value, '"' + value + '"');
                   }
 qdtext         =  LWS / "\x21" / [\x23-\x5B] / [\x5D-\x7E]
                   / UTF8_NONASCII
@@ -274,12 +281,12 @@ userinfo         =  user:( user ) password:( ":" p:password {return p;} )? "@"
                       });
                     }
 user             =  chars:( unreserved / escaped / user_unreserved )+
-                    {return chars.join('');}
+                    {return joinEscaped(chars);}
 
 user_unreserved  =  "&" / "=" / "+" / "$" / "," / ";" / "?" / "/"
 password         =  chars:( unreserved / escaped /
                     "&" / "=" / "+" / "$" / "," )*
-                    {return chars.join('');}
+                    {return joinEscaped(chars);}
 
 hostport         =  host:host port:( ":" p:port {return p;} )?
                     {
@@ -372,7 +379,7 @@ other_param       =  name:pname value:( "=" v:pvalue {return v;} )?
                      {return {name: name, value: value};}
 pname             =  _paramchars
 pvalue            =  _paramchars
-_paramchars       =  chars:paramchar+ {return chars.join('');}
+_paramchars       =  chars:paramchar+ {return joinEscaped(chars);}
 paramchar         =  param_unreserved / unreserved / escaped
 param_unreserved  =  "[" / "]" / "/" / ":" / "&" / "+" / "$"
 
@@ -385,8 +392,8 @@ headers         =  "?" first:header rest:( "&" h:header {return h;} )*
                    }
 header          =  name:hname "=" value:hvalue
                    {return {name: name, value: value};}
-hname           =  chars:_hchar+ {return chars.join('');}
-hvalue          =  chars:_hchar* {return chars.join('');}
+hname           =  chars:_hchar+ {return joinEscaped(chars);}
+hvalue          =  chars:_hchar* {return joinEscaped(chars);}
 _hchar          =  hnv_unreserved / unreserved / escaped
 hnv_unreserved  =  "[" / "]" / "/" / "?" / ":" / "+" / "$"
 
@@ -444,7 +451,7 @@ abs_path       =  "/" path_segments:path_segments {return path_segments;}
 
 // http://tools.ietf.org/html/rfc3261#page-224
 opaque_part    =  ns:uric_no_slash chars:uric*
-                  {return ns + chars.join('');}
+                  {return joinEscaped([ns].concat(chars));}
 uric           =  reserved / unreserved / escaped
 uric_no_slash  =  unreserved / escaped / ";" / "?" / ":" / "@"
                   / "&" / "=" / "+" / "$" / ","
@@ -456,7 +463,7 @@ segment        =  value:_pchars
                     return xparamsBuild(value, 'value', params);
                   }
 param          =  _pchars
-_pchars        =  chars:pchar* {return chars.join('');}
+_pchars        =  chars:pchar* {return joinEscaped(chars);}
 pchar          =  unreserved / escaped /
                   ":" / "@" / "&" / "=" / "+" / "$" / ","
 scheme         =  $( ALPHA ( ALPHA / DIGIT / "+" / "-" / "." )* )
@@ -475,8 +482,8 @@ srvr           =  (
 
 reg_name       =  chars:( unreserved / escaped / "$" / ","
                   / ";" / ":" / "@" / "&" / "=" / "+" )+
-                  {return chars.join();}
-query          =  chars:uric* {return chars.join('');}
+                  {return joinEscaped(chars);}
+query          =  chars:uric* {return joinEscaped(chars);}
 SIP_Version    =  $("SIP"i "/" _version)
 _version       =  major:_PDIGITS "." minor:_PDIGITS
                   {
@@ -582,7 +589,7 @@ Status_Line     =  SIP_Version:SIP_Version SP Status_Code:Status_Code SP Reason_
 Status_Code     =  _PDIGIT3
 Reason_Phrase   =  chars:(reserved / unreserved / escaped
                    / UTF8_NONASCII / UTF8_CONT / SP / HTAB)*
-                   {return chars.join('');}
+                   {return joinEscaped(chars);}
 
 // http://tools.ietf.org/html/rfc3261#page-227
 Accept         =  name:"Accept"i HCOLON
@@ -807,7 +814,7 @@ c_p_instance       =  name:"+sip.instance" EQUAL
                       {return {name: name, value: value};}
 
 // defined in RFC 3261
-instance_val       =  chars:uric+ {return chars.join('');}
+instance_val       =  chars:uric+ {return joinEscaped(chars);}
 // end RFC 5626
 
 contact_extension  =  generic_param

@@ -22,6 +22,10 @@ function assertivelyParse (name, valid) {
   return parsed;
 }
 
+function jsonClone (obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
 describe('RFC 4475 Torture Tests', function () {
   describe('3.1. Parser Tests (syntax)', function () {
     describe('3.1.1. Valid Messages', function () {
@@ -49,17 +53,17 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('The Request-URI has sips:user@example.com embedded in its userpart.', function () {
-          assert.strictEqual('sips:user@example.com', parsed.Request_Line.Request_URI.userinfo.user);
+          assert.equal('sips:user@example.com', parsed.Request_Line.Request_URI.userinfo.user);
         });
 
         it('The From and To URIs have escaped characters in their userparts.', function () {
-          assert.strictEqual('I have spaces', parsed.message_headers.From.addr.userinfo.user);
-          assert.strictEqual('user', parsed.message_headers.To.addr.userinfo.user);
+          assert.equal('I have spaces', parsed.message_headers.From.addr.userinfo.user);
+          assert.equal('user', parsed.message_headers.To.addr.userinfo.user);
         });
 
         it('The Contact URI has escaped characters in the URI parameters.', function () {
           assert.deepEqual(
-            parsed.message_headers.Contact[0].addr.uri_parameters,
+            jsonClone(parsed.message_headers.Contact[0].addr.uri_parameters),
             {
               "lr": null,
               "name": "value%41"
@@ -76,16 +80,16 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('has From/To users of "null-%00-null"', function () {
-          assert.strictEqual('null-\u0000-null', parsed.message_headers.From.addr.userinfo.user);
-          assert.strictEqual('null-\u0000-null', parsed.message_headers.To.addr.userinfo.user);
+          assert.equal('null-\u0000-null', parsed.message_headers.From.addr.userinfo.user);
+          assert.equal('null-\u0000-null', parsed.message_headers.To.addr.userinfo.user);
         });
 
         it('has first Contact user of "%00"', function () {
-          assert.strictEqual('\u0000', parsed.message_headers.Contact[0].addr.userinfo.user);
+          assert.equal('\u0000', parsed.message_headers.Contact[0].addr.userinfo.user);
         });
 
         it('has second Contact user of "%00%00"', function () {
-          assert.strictEqual('\u0000\u0000', parsed.message_headers.Contact[1].addr.userinfo.user);
+          assert.equal('\u0000\u0000', parsed.message_headers.Contact[1].addr.userinfo.user);
         });
       });
 
@@ -101,8 +105,8 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('The display name portion of the To and From header fields is "%Z%45".', function () {
-          assert.equal('%Z%45', parsed.message_headers.To.addr.display_name.valueOf());
-          assert.equal('%Z%45', parsed.message_headers.From.addr.display_name.valueOf());
+          assert.equal('%Z%45', parsed.message_headers.To.addr.display_name);
+          assert.equal('%Z%45', parsed.message_headers.From.addr.display_name);
         });
 
         it('This message has two Contact header field values, not three.', function () {
@@ -146,7 +150,7 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('The Request-URI will parse so that the user part is "user;par=u@example.net".', function () {
-          assert.strictEqual('user;par=u@example.net', parsed.Request_Line.Request_URI.userinfo.user);
+          assert.equal('user;par=u@example.net', parsed.Request_Line.Request_URI.userinfo.user);
         });
       });
 
@@ -182,7 +186,7 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('contains no reason phrase', function () {
-          assert.strictEqual('', parsed.Status_Line.Reason_Phrase);
+          assert.equal('', parsed.Status_Line.Reason_Phrase);
         });
       });
     });
@@ -316,7 +320,7 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('the SIP Request-URI contains escaped headers', function () {
-          assert.strictEqual(parsed.Request_Line.Request_URI.headers.Route, "<sip:example.com>");
+          assert.equal(parsed.Request_Line.Request_URI.headers.Route, "<sip:example.com>");
         });
       });
 
@@ -340,7 +344,7 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('The SIP URI contained in the Contact Header field has an escaped header', function () {
-          assert.strictEqual(parsed.message_headers.Contact[0].addr.headers.Route, "<sip:sip.example.com>");
+          assert.equal(parsed.message_headers.Contact[0].addr.headers.Route, "<sip:sip.example.com>");
         });
       });
 
@@ -598,7 +602,7 @@ describe('RFC 4475 Torture Tests', function () {
       });
 
       it('This register request contains a contact where the URI has an escaped header', function () {
-        assert.strictEqual(parsed.message_headers.Contact[0].addr.headers.Route, '<sip:sip.example.com>');
+        assert.equal(parsed.message_headers.Contact[0].addr.headers.Route, '<sip:sip.example.com>');
       });
     });
 
