@@ -1109,12 +1109,12 @@ Server           =  name:"Server"i HCOLON
                     )
                     {return {name: "Server", value: value};}
 server_val       =  product / comment
-product          =  token:token product_version:(SLASH p:product_version {return p;})?
+product          =  product_name:token product_version:(SLASH p:product_version {return p;})?
                     {
                       return defineNormalize({
-                        token: token,
+                        product_name: product_name,
                         product_version: product_version
-                      }, ['token', 'product_version'], {separator: '/'});
+                      }, ['product_name', 'product_version'], {separator: '/'});
                     }
 product_version  =  token
 
