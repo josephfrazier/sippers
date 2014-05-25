@@ -1,5 +1,5 @@
 {
-  function mapList (append, list, paramSep) {
+  function mapList (append, list, paramSep, prepend) {
     var combined = list.reduce(
       function combine (map, item) {
         var name = item.name;
@@ -14,7 +14,7 @@
     );
 
     Object.defineProperty(combined, 'normalize', {
-      value: function (append, paramSep) {
+      value: function (append, paramSep, prepend) {
         var keyNormalize = function (name) {
           // cast to array
           var values = [].concat(this[name]);
@@ -31,8 +31,11 @@
         if (paramSep) {
           normalized = normalized.slice(paramSep.length);
         }
+        if (prepend) {
+          normalized = prepend + normalized;
+        }
         return normalized;
-      }.bind(combined, append, paramSep)
+      }.bind(combined, append, paramSep, prepend)
     });
 
     return combined;
@@ -364,7 +367,7 @@ paramchar         =  param_unreserved / unreserved / escaped
 param_unreserved  =  "[" / "]" / "/" / ":" / "&" / "+" / "$"
 
 headers         =  "?" first:header rest:( "&" h:header {return h;} )*
-                   { return combineParams([first].concat(rest), '&'); }
+                   { return combineParams([first].concat(rest), '&', '?'); }
 header          =  name:hname "=" value:hvalue
                    {return {name: name, value: value};}
 hname           =  chars:_hchar+ {return chars.join('');}
