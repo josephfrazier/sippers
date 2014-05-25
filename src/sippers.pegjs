@@ -1,5 +1,5 @@
 {
-  function mapList (append, list, paramSep, prepend) {
+  function mapList (append, list, normalizeOptions) {
     var combined = list.reduce(
       function combine (map, item) {
         var name = item.name;
@@ -14,28 +14,32 @@
     );
 
     Object.defineProperty(combined, 'normalize', {
-      value: function (append, paramSep, prepend) {
+      value: function (append, options) {
+        options = options || {};
+        var separator = options.separator;
+        var prepend = options.prepend;
+
         var keyNormalize = function (name) {
           // cast to array
           var values = [].concat(this[name]);
-          values = values.map(function(i){return normalizeHelper(i);});
+          values = values.map(function(i){return normalize(i);});
           if (append) {
             return name + ': ' + values.join(', ') + '\r\n';
           }
           else {
-            return (paramSep || ';') + name + (values[0] ? '=' + values[0] : '');
+            return (separator || ';') + name + (values[0] ? '=' + values[0] : '');
           }
         }.bind(this);
 
         var normalized = Object.keys(this).map(keyNormalize).join('');
-        if (paramSep) {
-          normalized = normalized.slice(paramSep.length);
+        if (separator) {
+          normalized = normalized.slice(separator.length);
         }
         if (prepend) {
           normalized = prepend + normalized;
         }
         return normalized;
-      }.bind(combined, append, paramSep, prepend)
+      }.bind(combined, append, normalizeOptions)
     });
 
     return combined;
@@ -46,13 +50,18 @@
   // non-RFC, just convenient
   var combineParams = mapList.bind(null, false);
 
-  function normalizeHelper (obj, separator, transform) {
+  function normalize (obj, options) {
+    options = options || {};
+    var separator = options.separator || '';
+    var suffix = options.suffix || '';
+    var transform = options.transform || function(i){return i;};
+    var normalized = '';
     if (obj) {
       if (Array.isArray(obj)) {
         normalized = obj
           .filter(function(i){return i != null;})
-          .map(function(i){return normalizeHelper(i);})
-          .join(separator || '');
+          .map(function(i){return normalize(i);})
+          .join(separator);
       }
       else if (obj.normalize) {
         normalized = obj.normalize();
@@ -61,11 +70,7 @@
         normalized = obj + '';
       }
     }
-    else {
-      normalized = '';
-    }
-    transform = transform || function(i){return i;};
-    return transform(normalized);
+    return transform(normalized + suffix);
   }
 
   function sipuriBuild (scheme, userinfo, hostport, uri_parameters, headers) {
@@ -75,31 +80,29 @@
       , hostport: hostport
       , uri_parameters: uri_parameters
       , headers: headers
-    }, ['scheme', ':', 'userinfo', 'hostport', 'uri_parameters', 'headers'], '',
-      function (addrSpecString) {
+    }, ['scheme', ':', 'userinfo', 'hostport', 'uri_parameters', 'headers'], {
+      transform: function (addrSpecString) {
         if (this.display_name) {
-          addrSpecString = normalizeHelper(this.display_name) + ' <' + addrSpecString + '>';
+          addrSpecString = normalize(this.display_name) + ' <' + addrSpecString + '>';
         }
         return addrSpecString;
       }
-    );
+    });
   }
 
-  function defineNormalize (obj, propertyList, separator, transform) {
-    transform = transform || function(i){return i;};
-    if (transform.constructor === String) {
-      transform = function(s){return s + this;}.bind(transform);
-    }
+  function defineNormalize (obj, propertyList, options) {
+    options = options || {};
+    options.transform = (options.transform || function(i){return i;}).bind(obj);
     return Object.defineProperty(obj, 'normalize', {value:
-      function (propertyList, separator, transform) {
+      function (propertyList, options) {
         function getProperty (property) {
           if (property in this) {
             return this[property];
           }
           return property;
         }
-        return normalizeHelper(propertyList.map(getProperty.bind(this)), separator, transform);
-      }.bind(obj, propertyList, separator, transform.bind(obj))
+        return normalize(propertyList.map(getProperty.bind(this)), options);
+      }.bind(obj, propertyList, options)
     });
   }
 
@@ -107,14 +110,14 @@
     return defineNormalize({
       host: host,
       port: port
-    }, ['host', 'port'], ':');
+    }, ['host', 'port'], {separator: ':'});
   }
 
-  function xparamsBuild (prop, propName, params, paramsName, paramSep) {
+  function xparamsBuild (prop, propName, params, paramsName, separator) {
     paramsName = paramsName || 'params';
     var ret = {};
     ret[propName] = prop;
-    ret[paramsName] = combineParams(params, paramSep);
+    ret[paramsName] = combineParams(params, {separator: separator});
     return defineNormalize(ret, [propName, paramsName]);
   }
 
@@ -261,7 +264,10 @@ userinfo         =  user:( user ) password:( ":" p:password {return p;} )? "@"
                       return defineNormalize({
                         user: user,
                         password: password
-                      }, ['user', 'password'], ':', '@');
+                      }, ['user', 'password'], {
+                        separator: ':',
+                        suffix: '@'
+                      });
                     }
 user             =  chars:( unreserved / escaped / user_unreserved )+
                     {return chars.join('');}
@@ -367,7 +373,12 @@ paramchar         =  param_unreserved / unreserved / escaped
 param_unreserved  =  "[" / "]" / "/" / ":" / "&" / "+" / "$"
 
 headers         =  "?" first:header rest:( "&" h:header {return h;} )*
-                   { return combineParams([first].concat(rest), '&', '?'); }
+                   {
+                     return combineParams([first].concat(rest), {
+                       separator: '&',
+                       prepend: '?'
+                     });
+                   }
 header          =  name:hname "=" value:hvalue
                    {return {name: name, value: value};}
 hname           =  chars:_hchar+ {return chars.join('');}
@@ -395,7 +406,10 @@ Request_Line   =  Method:Method SP Request_URI:Request_URI SP SIP_Version:SIP_Ve
                       Method: Method,
                       Request_URI: Request_URI,
                       SIP_Version: SIP_Version
-                    }, ['Method', 'Request_URI', 'SIP_Version'], ' ', '\r\n');
+                    }, ['Method', 'Request_URI', 'SIP_Version'], {
+                      separator: ' ',
+                      suffix: '\r\n'
+                    });
                   }
 
 Request_URI    =  SIP_URI / SIPS_URI / absoluteURI
@@ -404,7 +418,7 @@ absoluteURI    =  scheme:scheme ":" part:( hier_part / opaque_part )
                     return defineNormalize({
                       scheme: scheme,
                       part: part
-                    }, ['scheme', 'port'], ':');
+                    }, ['scheme', 'port'], {separator: ':'});
                   }
 
 hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )?
@@ -412,7 +426,7 @@ hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )
                     return defineNormalize({
                       path: path,
                       query: query
-                    }, ['path', 'query'], '?');
+                    }, ['path', 'query'], {separator: '?'});
                   }
 
 net_path       =  "//" authority:authority abs_path:( abs_path )?
@@ -465,7 +479,7 @@ _version       =  major:_PDIGITS "." minor:_PDIGITS
                     return defineNormalize({
                       major: major,
                       minor: minor
-                    }, ['major', 'minor'], '.');
+                    }, ['major', 'minor'], {separator: '.'});
                   }
 
 _message_headers = message_headers:( message_header )*
@@ -555,7 +569,10 @@ Status_Line     =  SIP_Version:SIP_Version SP Status_Code:Status_Code SP Reason_
                        SIP_Version: SIP_Version,
                        Status_Code: Status_Code,
                        Reason_Phrase: Reason_Phrase
-                     }, ['SIP_Version', 'Status_Code', 'Reason_Phrase'], ' ', '\r\n');
+                     }, ['SIP_Version', 'Status_Code', 'Reason_Phrase'], {
+                       separator: ' ',
+                       suffix: '\r\n'
+                     });
                    }
 
 Status_Code     =  _PDIGIT3
@@ -664,7 +681,7 @@ credentials       =  (
                        })
 digest_response   =  first:dig_resp
                      rest:(COMMA d:dig_resp {return d;})*
-                     { return combineParams([first].concat(rest), ', '); }
+                     { return combineParams([first].concat(rest), {separator: ', '}); }
 dig_resp          =  username / realm / nonce / digest_uri
                       / dresponse / algorithm / cnonce
                       / opaque / message_qop
@@ -708,7 +725,7 @@ Authentication_Info  =  name:"Authentication-Info"i HCOLON
                         value:(
                           first:ainfo
                           rest:(COMMA a:ainfo {return a;})*
-                          { return combineParams([first].concat(rest), ', '); }
+                          { return combineParams([first].concat(rest), {separator: ', '}); }
                         )
                         {return {name: "Authentication-Info", value: value};}
 ainfo                =  nextnonce / message_qop
@@ -864,7 +881,7 @@ CSeq  =  name:"CSeq"i HCOLON
              return defineNormalize({
                sequenceNumber: sequenceNumber,
                requestMethod: requestMethod
-             }, ['sequenceNumber', 'requestMethod'], ' ');
+             }, ['sequenceNumber', 'requestMethod'], {separator: ' '});
            }
          )
          {return {name: "CSeq", value: value};}
@@ -887,7 +904,7 @@ date1         =  day:_PDIGIT2 SP month:month SP year:_PDIGIT4
                      day: day,
                      month: month,
                      year: year
-                   }, ['day', 'month', 'year'], ' ');
+                   }, ['day', 'month', 'year'], {separator: ' '});
                  }
 time          =  hours:_PDIGIT2 ":" minutes:_PDIGIT2 ":" seconds:_PDIGIT2
                  // 00:00:00 _ 23:59:59
@@ -896,7 +913,7 @@ time          =  hours:_PDIGIT2 ":" minutes:_PDIGIT2 ":" seconds:_PDIGIT2
                      hours: hours,
                      minutes: minutes,
                      seconds: seconds
-                   }, ['hours', 'minutes', 'seconds'], ':');
+                   }, ['hours', 'minutes', 'seconds'], {separator: ':'});
                  }
 wkday         =  "Mon" / "Tue" / "Wed"
                  / "Thu" / "Fri" / "Sat" / "Sun"
@@ -1097,7 +1114,7 @@ product          =  token:token product_version:(SLASH p:product_version {return
                       return defineNormalize({
                         token: token,
                         product_version: product_version
-                      }, ['token', 'product_version'], '/');
+                      }, ['token', 'product_version'], {separator: '/'});
                     }
 product_version  =  token
 
@@ -1183,7 +1200,7 @@ sent_protocol     =  protocol_name:protocol_name SLASH protocol_version:protocol
                          protocol_name: protocol_name,
                          protocol_version: protocol_version,
                          transport: transport
-                       }, ['protocol_name', 'protocol_version', 'transport'], '/');
+                       }, ['protocol_name', 'protocol_version', 'transport'], {separator: '/'});
                      }
 protocol_name     =  "SIP" / token
 protocol_version  =  token
@@ -1219,7 +1236,7 @@ warning_value  =  warn_code:warn_code SP warn_agent:warn_agent SP warn_text:warn
                       warn_code: warn_code,
                       warn_agent: warn_agent,
                       warn_text: warn_text
-                    }, ['warn_code', 'warn_agent', 'warn_text'], ' ');
+                    }, ['warn_code', 'warn_agent', 'warn_text'], {separator: ' '});
                   }
 warn_code      =  _PDIGIT3
 warn_agent     =  hostport / pseudonym
@@ -1243,7 +1260,7 @@ RAck          =  name:"RAck"i HCOLON
                        response_num: response_num,
                        CSeq_num: CSeq_num,
                        Method: Method
-                     }, ['response_num', 'CSeq_num', 'Method'], ' ');
+                     }, ['response_num', 'CSeq_num', 'Method'], {separator: ' '});
                    }
                  )
                  {return {name: "RAck", value: value};}
