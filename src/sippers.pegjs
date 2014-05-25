@@ -24,7 +24,11 @@
           var values = [].concat(this[name]);
           values = values.map(function(i){return normalize(i);});
           if (append) {
-            return name + ': ' + values.join(', ') + '\r\n';
+            var joined = values.join(', ');
+            if (joined.length > 0) {
+              joined = ' ' + joined;
+            }
+            return name + ':' + joined + '\r\n';
           }
           else {
             return (separator || ';') + name + (values[0] ? '=' + values[0] : '');
