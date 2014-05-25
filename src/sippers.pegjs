@@ -1108,7 +1108,7 @@ Server           =  name:"Server"i HCOLON
                       { return [first].concat(rest); }
                     )
                     {return {name: "Server", value: value};}
-server_val       =  product / (c:comment {return {comment: c};})
+server_val       =  product / comment
 product          =  token:token product_version:(SLASH p:product_version {return p;})?
                     {
                       return defineNormalize({
