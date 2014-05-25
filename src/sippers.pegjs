@@ -1,10 +1,10 @@
 {
-  function mapList (append, list, normalizeOptions) {
+  function mapList (isHeaders, list, normalizeOptions) {
     var combined = list.reduce(
       function combine (map, item) {
         var name = item.name;
         var value = item.value;
-        if (append && Array.isArray(value)) {
+        if (isHeaders && Array.isArray(value)) {
           value = (map[name] || []).concat(value);
         }
         map[name] = value;
@@ -14,7 +14,7 @@
     );
 
     Object.defineProperty(combined, 'normalize', {
-      value: function (append, options) {
+      value: function (isHeaders, options) {
         options = options || {};
         var separator = options.separator;
         var prepend = options.prepend;
@@ -23,7 +23,7 @@
           // cast to array
           var values = [].concat(this[name]);
           values = values.map(function(i){return normalize(i);});
-          if (append) {
+          if (isHeaders) {
             var joined = values.join(', ');
             if (joined.length > 0) {
               joined = ' ' + joined;
@@ -43,7 +43,7 @@
           normalized = prepend + normalized;
         }
         return normalized;
-      }.bind(combined, append, normalizeOptions)
+      }.bind(combined, isHeaders, normalizeOptions)
     });
 
     return combined;
