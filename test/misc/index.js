@@ -35,4 +35,10 @@ describe('Miscellaneous Tests:', function () {
       }
     );
   });
+
+  it('parses folding Subject header', function () {
+    var message = "SIP/2.0 200 OK\r\nSubject:  \r\n \r\n ...finally\r\n\r\n";
+    var parsed = sippers.parse(message, {startRule: 'SIP_message'});
+    assert.strictEqual(parsed.message_headers.Subject, '...finally');
+  });
 });
