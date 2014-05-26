@@ -427,9 +427,11 @@ describe('RFC 4475 Torture Tests', function () {
       describe('3.1.2.15. Non-token Characters in Display Name', function () {
         var name = 'baddn';
         var parsed;
-        it('does not parse', function () {
-          parsed = assertivelyParse(name, false);
+        it('parses', function () {
+          parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
       });
 
       describe('3.1.2.16. Unknown Protocol Version', function () {
