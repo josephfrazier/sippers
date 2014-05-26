@@ -631,13 +631,14 @@ Reason_Phrase   =  chars:(reserved / unreserved / escaped
                    {return joinEscaped(chars);}
 
 // http://tools.ietf.org/html/rfc3261#page-227
+// RFC 3261 20.1: An empty Accept header field means that no formats are acceptable.
 Accept         =  name:"Accept"i HCOLON
                   value:(
                     first:accept_range
                     rest:(COMMA a:accept_range {return a;})*
                     { return [first].concat(rest); }
                   )?
-                  {return {name: "Accept", value: value};}
+                  {return {name: "Accept", value: value || []};}
 accept_range   =  media_range:media_range accept_params:(SEMI a:accept_param {return a;})*
                   {
                     return xparamsBuild(media_range, 'media_range', accept_params, 'accept_params');

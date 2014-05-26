@@ -36,6 +36,11 @@ describe('Miscellaneous Tests:', function () {
     );
   });
 
+  it('parses empty Accept header', function () {
+    var message = "SIP/2.0 200 OK\r\nAccept: \r\n\r\n";
+    assert.strictEqual(sippers.parse(message).message_headers.Accept.length, 0);
+  });
+
   it('parses folding Subject header', function () {
     var message = "SIP/2.0 200 OK\r\nSubject:  \r\n \r\n ...finally\r\n\r\n";
     var parsed = sippers.parse(message, {startRule: 'SIP_message'});
