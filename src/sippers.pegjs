@@ -89,7 +89,7 @@
     }, ['scheme', ':', 'userinfo', 'hostport', 'uri_parameters', 'headers'], {
       transform: function (addrSpecString) {
         if (this.display_name || this._isNameAddr) {
-          addrSpecString = normalize(this.display_name) + ' <' + addrSpecString + '>';
+          addrSpecString = normalize(this.display_name) + '<' + addrSpecString + '>';
         }
         return addrSpecString;
       }
