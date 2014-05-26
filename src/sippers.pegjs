@@ -57,6 +57,7 @@
 
   function normalize (obj, options) {
     options = options || {};
+    var prefix = options.prefix || '';
     var separator = options.separator || '';
     var suffix = options.suffix || '';
     var transform = options.transform || function(i){return i;};
@@ -118,11 +119,11 @@
     }, ['host', 'port'], {separator: ':'});
   }
 
-  function xparamsBuild (prop, propName, params, paramsName, separator) {
+  function xparamsBuild (prop, propName, params, paramsName, combineOptions) {
     paramsName = paramsName || 'params';
     var ret = {};
     ret[propName] = prop;
-    ret[paramsName] = combineParams(params, {separator: separator});
+    ret[paramsName] = combineParams(params, combineOptions);
     return defineNormalize(ret, [propName, paramsName]);
   }
 
@@ -130,7 +131,9 @@
     return xparamsBuild(addr, 'addr', params, 'params');
   }
 
-  function ret (val) {return function () {return val;};}
+  function ret (val) {return function (val) {
+    return val;
+  }.bind(null, val);}
 
   function defineObject (type, value, normalized) {
     return Object.defineProperties(new type(value), {
@@ -738,7 +741,10 @@ other_response    =  auth_scheme:auth_scheme LWS first:auth_param
                      rest:(COMMA a:auth_param {return a;})*
                      {
                        auth_params = [first].concat(rest);
-                       return xparamsBuild(auth_scheme, 'auth_scheme', auth_params, 'auth_params', ', ');
+                       return xparamsBuild(auth_scheme, 'auth_scheme', auth_params, 'auth_params', {
+                         separator: ', ',
+                         prefix: ' '
+                       });
                      }
 auth_scheme       =  token
 
