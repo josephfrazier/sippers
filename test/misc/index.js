@@ -41,4 +41,16 @@ describe('Miscellaneous Tests:', function () {
     var parsed = sippers.parse(message, {startRule: 'SIP_message'});
     assert.strictEqual(parsed.message_headers.Subject, '...finally');
   });
+
+  it('parses empty Subject header', function () {
+    var message = "SIP/2.0 200 OK\r\nSubject  :     \r\n\r\n";
+    var parsed = sippers.parse(message, {startRule: 'SIP_message'});
+    assert.strictEqual(parsed.message_headers.Subject, '');
+  });
+
+  it('parses empty folding Subject header', function () {
+    var message = "SIP/2.0 200 OK\r\nSubject:  \r\n \r\n\r\n";
+    var parsed = sippers.parse(message, {startRule: 'SIP_message'});
+    assert.strictEqual(parsed.message_headers.Subject, '');
+  });
 });
