@@ -467,7 +467,7 @@ absoluteURI    =  scheme:scheme ":" part:( hier_part / opaque_part )
                     return defineNormalize({
                       scheme: scheme,
                       part: part
-                    }, ['scheme', 'port'], {separator: ':'});
+                    }, ['scheme', 'part'], {separator: ':'});
                   }
 
 hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )?
