@@ -81,7 +81,7 @@
   }
 
   function sipuriBuild (scheme, userinfo, hostport, uri_parameters, headers) {
-    return defineSerialize({
+    return serializeable({
         scheme: scheme
       , userinfo: userinfo
       , hostport: hostport
@@ -97,7 +97,7 @@
     });
   }
 
-  function defineSerialize (obj, propertyList, options) {
+  function serializeable (obj, propertyList, options) {
     options = options || {};
     options.transform = (options.transform || function(i){return i;}).bind(obj);
     return Object.defineProperty(obj, 'serialize', {value:
@@ -114,7 +114,7 @@
   }
 
   function hostportBuild (host, port) {
-    return defineSerialize({
+    return serializeable({
       host: host,
       port: port
     }, ['host', 'port'], {separator: ':'});
@@ -125,7 +125,7 @@
     var ret = {};
     ret[propName] = prop;
     ret[paramsName] = combineParams(params, combineOptions);
-    return defineSerialize(ret, [propName, paramsName]);
+    return serializeable(ret, [propName, paramsName]);
   }
 
   function addrparamsBuild (addr, params) {
@@ -312,7 +312,7 @@ SIPS_URI          =  "sips:" userinfo:( userinfo )? hostport:hostport
 //userinfo         =  ( user / telephone_subscriber ) ( ":" password )? "@"
 userinfo         =  user:( user ) password:( ":" p:password {return p;} )? "@"
                     {
-                      return defineSerialize({
+                      return serializeable({
                         user: user,
                         password: password
                       }, ['user', 'password'], {
@@ -444,7 +444,7 @@ Request        =  Request_Line:Request_Line
                   CRLF
                   message_body:( message_body )?
                   {
-                    return defineSerialize({
+                    return serializeable({
                       Request_Line: Request_Line,
                       message_headers: message_headers,
                       message_body: message_body
@@ -453,7 +453,7 @@ Request        =  Request_Line:Request_Line
 
 Request_Line   =  Method:Method SP Request_URI:Request_URI SP SIP_Version:SIP_Version CRLF
                   {
-                    return defineSerialize({
+                    return serializeable({
                       Method: Method,
                       Request_URI: Request_URI,
                       SIP_Version: SIP_Version
@@ -466,7 +466,7 @@ Request_Line   =  Method:Method SP Request_URI:Request_URI SP SIP_Version:SIP_Ve
 Request_URI    =  SIP_URI / SIPS_URI / absoluteURI
 absoluteURI    =  scheme:scheme ":" part:( hier_part / opaque_part )
                   {
-                    return defineSerialize({
+                    return serializeable({
                       scheme: scheme,
                       part: part
                     }, ['scheme', 'part'], {separator: ':'});
@@ -474,7 +474,7 @@ absoluteURI    =  scheme:scheme ":" part:( hier_part / opaque_part )
 
 hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )?
                   {
-                    return defineSerialize({
+                    return serializeable({
                       path: path,
                       query: query
                     }, ['path', 'query'], {separator: '?'});
@@ -482,7 +482,7 @@ hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )
 
 net_path       =  "//" authority:authority abs_path:( abs_path )?
                   {
-                    return defineSerialize({
+                    return serializeable({
                       authority: authority,
                       abs_path: abs_path
                     }, ['//', 'authority', 'abs_path']);
@@ -513,7 +513,7 @@ srvr           =  (
                     userinfo:userinfo?
                     hostport: hostport
                     {
-                      return defineSerialize({
+                      return serializeable({
                         userinfo: userinfo,
                         hostport: hostport
                       }, ['userinfo', 'hostport']);
@@ -527,7 +527,7 @@ query          =  chars:uric* {return joinEscaped(chars);}
 SIP_Version    =  $("SIP"i "/" _version)
 _version       =  major:_PDIGITS "." minor:_PDIGITS
                   {
-                    return defineSerialize({
+                    return serializeable({
                       major: major,
                       minor: minor
                     }, ['major', 'minor'], {separator: '.'});
@@ -607,7 +607,7 @@ Response          =  Status_Line:Status_Line
                      CRLF
                      message_body:( message_body )?
                      {
-                       return defineSerialize({
+                       return serializeable({
                          Status_Line: Status_Line,
                          message_headers: message_headers,
                          message_body: message_body
@@ -616,7 +616,7 @@ Response          =  Status_Line:Status_Line
 
 Status_Line     =  SIP_Version:SIP_Version SP Status_Code:Status_Code SP Reason_Phrase:Reason_Phrase CRLF
                    {
-                     return defineSerialize({
+                     return serializeable({
                        SIP_Version: SIP_Version,
                        Status_Code: Status_Code,
                        Reason_Phrase: Reason_Phrase
@@ -720,13 +720,13 @@ Authorization     =  name:"Authorization"i HCOLON value:credentials
 credentials       =  (
                        "Digest" LWS d:digest_response
                        {
-                         return defineSerialize({
+                         return serializeable({
                            digest_response: d
                          }, ['Digest ', 'digest_response']);
                        }
                      )
                      / (o:other_response {
-                         return defineSerialize({
+                         return serializeable({
                            other_response: o
                          }, ['other_response']);
                        })
@@ -902,7 +902,7 @@ Content_Language  =  name:"Content-Language"i HCOLON
 language_tag      =  primary_tag:primary_tag
                      subtags:( "-" s:subtag {return s;})*
                      {
-                       return defineSerialize({
+                       return serializeable({
                          primary_tag: primary_tag,
                          subtags: subtags
                        }, ['primary_tag', 'subtags']);
@@ -918,7 +918,7 @@ media_type       =  m_type:m_type SLASH m_subtype:m_subtype
                     m_parameters:(SEMI p:m_parameter {return p;})*
                     {
                       m_parameters = combineParams(m_parameters);
-                      return defineSerialize({
+                      return serializeable({
                         m_type: m_type,
                         m_subtype: m_subtype,
                         m_parameters: m_parameters
@@ -935,7 +935,7 @@ CSeq  =  name:"CSeq"i HCOLON
          value:(
            sequenceNumber:_PDIGITS LWS requestMethod:Method
            {
-             return defineSerialize({
+             return serializeable({
                sequenceNumber: sequenceNumber,
                requestMethod: requestMethod
              }, ['sequenceNumber', 'requestMethod'], {separator: ' '});
@@ -948,7 +948,7 @@ Date          =  name:"Date"i HCOLON value:SIP_date
 SIP_date      =  rfc1123_date
 rfc1123_date  =  wkday:wkday "," SP date1:date1 SP time:time SP "GMT"
                  {
-                   return defineSerialize({
+                   return serializeable({
                      wkday: wkday,
                      date1: date1,
                      time: time
@@ -957,7 +957,7 @@ rfc1123_date  =  wkday:wkday "," SP date1:date1 SP time:time SP "GMT"
 date1         =  day:_PDIGIT2 SP month:month SP year:_PDIGIT4
                  // day month year (e.g., 02 Jun 1982)
                  {
-                   return defineSerialize({
+                   return serializeable({
                      day: day,
                      month: month,
                      year: year
@@ -966,7 +966,7 @@ date1         =  day:_PDIGIT2 SP month:month SP year:_PDIGIT4
 time          =  hours:_PDIGIT2 ":" minutes:_PDIGIT2 ":" seconds:_PDIGIT2
                  // 00:00:00 _ 23:59:59
                  {
-                   return defineSerialize({
+                   return serializeable({
                      hours: hours,
                      minutes: minutes,
                      seconds: seconds
@@ -1131,7 +1131,7 @@ Retry_After  =  name:"Retry-After"i HCOLON
                   retry_params:( SEMI r:retry_param {return r;} )*
                   {
                     retry_params = combineParams(retry_params);
-                    return defineSerialize({
+                    return serializeable({
                       delta_seconds: delta_seconds,
                       comment: comment,
                       retry_params: retry_params
@@ -1168,7 +1168,7 @@ Server           =  name:"Server"i HCOLON
 server_val       =  product / comment
 product          =  product_name:token product_version:(SLASH p:product_version {return p;})?
                     {
-                      return defineSerialize({
+                      return serializeable({
                         product_name: product_name,
                         product_version: product_version
                       }, ['product_name', 'product_version'], {separator: '/'});
@@ -1232,7 +1232,7 @@ via_parm          =  sent_protocol:sent_protocol LWS sent_by:sent_by
                      params:( SEMI v:via_params {return v;} )*
                      {
                        params = combineParams(params);
-                       return defineSerialize({
+                       return serializeable({
                          sent_protocol: sent_protocol,
                          sent_by: sent_by,
                          params: params
@@ -1253,7 +1253,7 @@ via_extension     =  generic_param
 sent_protocol     =  protocol_name:protocol_name SLASH protocol_version:protocol_version
                      SLASH transport:transport
                      {
-                       return defineSerialize({
+                       return serializeable({
                          protocol_name: protocol_name,
                          protocol_version: protocol_version,
                          transport: transport
@@ -1289,7 +1289,7 @@ Warning        =  name:"Warning"i HCOLON
                   {return {name: "Warning", value: value};}
 warning_value  =  warn_code:warn_code SP warn_agent:warn_agent SP warn_text:warn_text
                   {
-                    return defineSerialize({
+                    return serializeable({
                       warn_code: warn_code,
                       warn_agent: warn_agent,
                       warn_text: warn_text
@@ -1313,7 +1313,7 @@ RAck          =  name:"RAck"i HCOLON
                    CSeq_num:CSeq_num LWS
                    Method:Method
                    {
-                     return defineSerialize({
+                     return serializeable({
                        response_num: response_num,
                        CSeq_num: CSeq_num,
                        Method: Method
@@ -1401,7 +1401,7 @@ Event             =  name:( "Event"i / "o"i ) HCOLON
 event_type        =  event_package:event_package
                      templates:( "." t:event_template {return t;} )*
                      {
-                       return defineSerialize({
+                       return serializeable({
                          event_package: event_package,
                          templates: templates
                        }, ['event_package', 'templates']);
