@@ -24,7 +24,13 @@ function assertivelyParse (name, valid) {
 
 function roundTrip (parsed) {
   if (!parsed) return;
-  var parsed2 = sippers.parse(parsed.normalize(), {startRule: 'SIP_message'});
+  var parsed2;
+  try {
+    parsed2 = sippers.parse(parsed.normalize(), {startRule: 'SIP_message'});
+  } catch (e) {
+    e.message += ' at line ' + e.line + ', column ' + e.column + ' of \n\n' + parsed.normalize();
+    throw e;
+  }
   assert.deepEqual(jsonClone(parsed), jsonClone(parsed2), 'normalize/parse round-trip came back different');
 }
 
