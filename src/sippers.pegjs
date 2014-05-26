@@ -305,7 +305,7 @@ SIP_URI          =  "sip:" userinfo:( userinfo )? hostport:hostport
 SIPS_URI          =  "sips:" userinfo:( userinfo )? hostport:hostport
                      uri_parameters:uri_parameters headers:( headers )?
                      {
-                       return sipuriBuild('sip', userinfo, hostport, uri_parameters, headers);
+                       return sipuriBuild('sips', userinfo, hostport, uri_parameters, headers);
                     }
 
 //TODO telephone_subscriber
