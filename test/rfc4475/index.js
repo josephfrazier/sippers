@@ -58,6 +58,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
       });
 
       describe('3.1.1.3. Valid Use of the % Escaping Mechanism', function () {
@@ -209,6 +211,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
       });
 
       describe('3.1.1.13. Empty Reason Phrase', function () {
@@ -242,6 +246,8 @@ describe('RFC 4475 Torture Tests', function () {
           parsed = assertivelyParse(name);
         });
 
+        it('round-trips', function () {roundTrip(parsed);});
+
         it('has a Content Length that is larger than the actual length of the body', function () {
           assert(parsed.message_headers['Content-Length'] > parsed.message_body.length);
         });
@@ -254,6 +260,8 @@ describe('RFC 4475 Torture Tests', function () {
           parsed = assertivelyParse(name);
         });
 
+        it('round-trips', function () {roundTrip(parsed);});
+
         it('This request has a negative value for Content-Length.', function () {
           assert.strictEqual('-999', parsed.message_headers['Content-Length']);
         });
@@ -265,6 +273,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
 
         it('The CSeq sequence number is >2**32-1.', function () {
           assert(parsed.message_headers.CSeq.sequenceNumber > Math.pow(2, 32) - 1);
@@ -290,6 +300,8 @@ describe('RFC 4475 Torture Tests', function () {
           parsed = assertivelyParse(name);
         });
 
+        it('round-trips', function () {roundTrip(parsed);});
+
         it('The CSeq sequence number is >2**32-1.', function () {
           assert(parsed.message_headers.CSeq.sequenceNumber > Math.pow(2, 32) - 1);
         });
@@ -309,6 +321,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
 
         it('has an unterminated quote in the display name of the To field', function () {
           assert.strictEqual(parsed.message_headers.To, '"Mr. J. User <sip:j.user@example.com>');
@@ -354,6 +368,8 @@ describe('RFC 4475 Torture Tests', function () {
           parsed = assertivelyParse(name);
         });
 
+        it('round-trips', function () {roundTrip(parsed);});
+
         it('the SIP Request-URI contains escaped headers', function () {
           assert.equal(parsed.Request_Line.Request_URI.headers.Route, "<sip:example.com>");
         });
@@ -365,6 +381,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
 
         it('contains a non-GMT time zone in the SIP Date header field', function () {
           assert.strictEqual(parsed.message_headers.Date, "Fri, 01 Jan 2010 16:00:00 EST");
@@ -378,6 +396,8 @@ describe('RFC 4475 Torture Tests', function () {
           parsed = assertivelyParse(name);
         });
 
+        it('round-trips', function () {roundTrip(parsed);});
+
         it('The SIP URI contained in the Contact Header field has an escaped header', function () {
           assert.equal(parsed.message_headers.Contact[0].addr.headers.Route, "<sip:sip.example.com>");
         });
@@ -389,6 +409,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
 
         it('the addr-spec in the To header field contains spaces', function () {
           assert.strictEqual(parsed.message_headers.To, '"Watson, Thomas" < sip:t.watson@example.org >');
@@ -410,6 +432,8 @@ describe('RFC 4475 Torture Tests', function () {
           parsed = assertivelyParse(name);
         });
 
+        it('round-trips', function () {roundTrip(parsed);});
+
         it('has version number 7.0', function () {
           assert.strictEqual(parsed.Request_Line.SIP_Version, 'SIP/7.0');
         });
@@ -421,6 +445,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
 
         it('This request has mismatching values for the method in the start line and the CSeq header field.', function () {
           assert.strictEqual('OPTIONS', parsed.Request_Line.Method);
@@ -434,6 +460,8 @@ describe('RFC 4475 Torture Tests', function () {
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
 
         it('This request has mismatching values for the method in the start line and the CSeq header field.', function () {
           assert.strictEqual('NEWMETHOD', parsed.Request_Line.Method);
@@ -459,6 +487,8 @@ describe('RFC 4475 Torture Tests', function () {
         parsed = assertivelyParse(name);
       });
 
+      it('round-trips', function () {roundTrip(parsed);});
+
       it('has Via branch parameter of "z9hG4bK"', function () {
         assert.strictEqual('z9hG4bK', parsed.message_headers.Via[0].params.branch);
       });
@@ -472,6 +502,8 @@ describe('RFC 4475 Torture Tests', function () {
       it('parses', function () {
         parsed = assertivelyParse(name);
       });
+
+      it('round-trips', function () {roundTrip(parsed);});
 
       it('This request contains no Call-ID, From, or To header fields.', function () {
         ['Call-ID', 'From', 'To'].forEach(function (headerName) {
@@ -487,6 +519,8 @@ describe('RFC 4475 Torture Tests', function () {
         parsed = assertivelyParse(name);
       });
 
+      it('round-trips', function () {roundTrip(parsed);});
+
       it('This OPTIONS contains an unknown URI scheme in the Request-URI.', function () {
         assert.strictEqual(parsed.Request_Line.Request_URI.scheme, 'nobodyKnowsThisScheme');
       });
@@ -499,6 +533,8 @@ describe('RFC 4475 Torture Tests', function () {
         parsed = assertivelyParse(name);
       });
 
+      it('round-trips', function () {roundTrip(parsed);});
+
       it('This OPTIONS contains an Request-URI with an IANA-registered scheme that does not commonly appear in Request-URIs of SIP requests.', function () {
         assert.strictEqual(parsed.Request_Line.Request_URI.scheme, 'soap.beep');
       });
@@ -510,6 +546,8 @@ describe('RFC 4475 Torture Tests', function () {
       it('parses', function () {
         parsed = assertivelyParse(name);
       });
+
+      it('round-trips', function () {roundTrip(parsed);});
 
       it('This message contains registered schemes in the To, From, and Contact header fields of a request.', function () {
         assert.strictEqual(parsed.message_headers.To.addr.scheme, 'isbn');
@@ -524,6 +562,8 @@ describe('RFC 4475 Torture Tests', function () {
       it('parses', function () {
         parsed = assertivelyParse(name);
       });
+
+      it('round-trips', function () {roundTrip(parsed);});
     });
 
     describe('3.3.6. Unknown Content-Type', function () {
@@ -532,6 +572,8 @@ describe('RFC 4475 Torture Tests', function () {
       it('parses', function () {
         parsed = assertivelyParse(name);
       });
+
+      it('round-trips', function () {roundTrip(parsed);});
 
       it('This INVITE request contains a body of unknown type.', function () {
         assert.deepEqual(parsed.message_headers['Content-Type'],
@@ -549,7 +591,10 @@ describe('RFC 4475 Torture Tests', function () {
       var parsed;
       it('parses', function () {
         parsed = assertivelyParse(name);
+        console.log((parsed.message_headers.Authorization.normalize()));
       });
+
+      it('round-trips', function () {roundTrip(parsed);});
 
       it('This REGISTER request contains an Authorization header field with an unknown scheme.', function () {
         assert.strictEqual(parsed.message_headers.Authorization.other_response.auth_scheme, 'NoOneKnowsThisScheme');
@@ -563,6 +608,8 @@ describe('RFC 4475 Torture Tests', function () {
         parsed = assertivelyParse(name);
       });
 
+      it('round-trips', function () {roundTrip(parsed);});
+
       it('The message contains a request with multiple Call-ID, To, From, Max- Forwards, and CSeq values.', function () {
         assert.fail(null, null, 'this actually parses as if only the last of each header was present');
       });
@@ -574,6 +621,8 @@ describe('RFC 4475 Torture Tests', function () {
       it('parses', function () {
         parsed = assertivelyParse(name);
       });
+
+      it('round-trips', function () {roundTrip(parsed);});
 
       it('Multiple conflicting Content-Length header field values appear in this request.', function () {
         assert.fail(null, null, 'this actually parses as if only the last Content-Length header was present');
@@ -587,6 +636,8 @@ describe('RFC 4475 Torture Tests', function () {
         parsed = assertivelyParse(name);
       });
 
+      it('round-trips', function () {roundTrip(parsed);});
+
       it('This message is a response with a 2nd Via header field value\'s sent-by containing 255.255.255.255.', function () {
         assert.strictEqual(parsed.message_headers.Via[1].sent_by.host, '255.255.255.255');
       });
@@ -599,6 +650,8 @@ describe('RFC 4475 Torture Tests', function () {
         parsed = assertivelyParse(name);
       });
 
+      it('round-trips', function () {roundTrip(parsed);});
+
       it('This is a legal SIP request with the Max-Forwards header field value set to zero.', function () {
         assert.equal(parsed.message_headers['Max-Forwards'], 0);
       });
@@ -610,6 +663,8 @@ describe('RFC 4475 Torture Tests', function () {
       it('parses', function () {
         parsed = assertivelyParse(name);
       });
+
+      it('round-trips', function () {roundTrip(parsed);});
 
       it("This register request contains a contact where the 'unknownparam' parameter must be interpreted as a contact-param and not a url-param.", function () {
         assert.strictEqual(parsed.message_headers.Contact[0].addr.uri_parameters.unknownparam, undefined);
@@ -624,6 +679,8 @@ describe('RFC 4475 Torture Tests', function () {
         parsed = assertivelyParse(name);
       });
 
+      it('round-trips', function () {roundTrip(parsed);});
+
       it('This register request contains a contact where the URI has an unknown parameter.', function () {
         assert.strictEqual(parsed.message_headers.Contact[0].addr.uri_parameters.unknownparam, null);
       });
@@ -636,6 +693,8 @@ describe('RFC 4475 Torture Tests', function () {
         parsed = assertivelyParse(name);
       });
 
+      it('round-trips', function () {roundTrip(parsed);});
+
       it('This register request contains a contact where the URI has an escaped header', function () {
         assert.equal(parsed.message_headers.Contact[0].addr.headers.Route, '<sip:sip.example.com>');
       });
@@ -647,6 +706,8 @@ describe('RFC 4475 Torture Tests', function () {
       it('parses', function () {
         parsed = assertivelyParse(name);
       });
+
+      it('round-trips', function () {roundTrip(parsed);});
 
       it('This request indicates that the response must contain a body in an unknown type.', function () {
         assert.deepEqual(
@@ -668,6 +729,8 @@ describe('RFC 4475 Torture Tests', function () {
       it('parses', function () {
         parsed = assertivelyParse(name);
       });
+
+      it('round-trips', function () {roundTrip(parsed);});
 
       it('There is no branch parameter at all on the Via header field value.', function () {
         assert.strictEqual(undefined, parsed.message_headers.Via[0].params.branch);
