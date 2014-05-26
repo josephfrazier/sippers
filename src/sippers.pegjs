@@ -26,10 +26,7 @@
           if (isHeaders) {
             var headerSep = name === 'User-Agent' ? ' ' : ', ';
             var joined = values.join(headerSep);
-            if (joined.length > 0) {
-              joined = ' ' + joined;
-            }
-            return name + ':' + joined + '\r\n';
+            return name + ': ' + joined + '\r\n';
           }
           else {
             return (separator || ';') + name + (values[0] ? '=' + values[0] : '');
