@@ -17,7 +17,7 @@
       value: function (isHeaders, options) {
         options = options || {};
         var separator = options.separator;
-        var prepend = options.prepend;
+        var prefix = options.prefix;
 
         var keySerialize = function (name) {
           // cast to array
@@ -40,8 +40,8 @@
         if (separator) {
           serialized = serialized.slice(separator.length);
         }
-        if (prepend) {
-          serialized = prepend + serialized;
+        if (prefix) {
+          serialized = prefix + serialized;
         }
         return serialized;
       }.bind(combined, isHeaders, serializeOptions)
@@ -77,7 +77,7 @@
         serialized = obj + '';
       }
     }
-    return transform(serialized + suffix);
+    return transform(prefix + serialized + suffix);
   }
 
   function sipuriBuild (scheme, userinfo, hostport, uri_parameters, headers) {
@@ -427,7 +427,7 @@ headers         =  "?" first:header rest:( "&" h:header {return h;} )*
                    {
                      return combineParams([first].concat(rest), {
                        separator: '&',
-                       prepend: '?'
+                       prefix: '?'
                      });
                    }
 header          =  name:hname "=" value:hvalue
