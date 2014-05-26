@@ -829,7 +829,9 @@ contact_param  =  addr:(name_addr / addr_spec)
 name_addr      =  display_name:( display_name )?
                   LAQUOT addr_spec:addr_spec RAQUOT
                   {
-                    addr_spec.display_name = display_name;
+                    if (display_name) {
+                      addr_spec.display_name = display_name;
+                    }
                     Object.defineProperty(addr_spec, '_isNameAddr', {value: true});
                     return addr_spec;
                   }
