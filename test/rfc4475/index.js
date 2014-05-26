@@ -23,6 +23,7 @@ function assertivelyParse (name, valid) {
 }
 
 function roundTrip (parsed) {
+  if (!parsed) return;
   var parsed2 = sippers.parse(parsed.normalize(), {startRule: 'SIP_message'});
   assert.deepEqual(jsonClone(parsed), jsonClone(parsed2), 'normalize/parse round-trip came back different');
 }
