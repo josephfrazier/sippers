@@ -228,7 +228,9 @@ escaped     =  "%" HEXDIG HEXDIG
 /* RFC3261 25: A recipient MAY replace any linear white space with a single SP
  * before interpreting the field value or forwarding the message downstream
  */
-LWS  =  (WSP* CRLF)? WSP+ {return ' ';} // linear whitespace
+// gulpfile ensures folds are replaced by ' ' before passing input to parser.
+//LWS  =  (WSP* CRLF)? WSP+ {return ' ';} // linear whitespace
+LWS  =  WSP+ {return ' ';} // linear whitespace
 SWS  =  $ LWS? // sep whitespace
 
 HCOLON  =  ( SP / HTAB )* ":" SWS {return ':';}
