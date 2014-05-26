@@ -718,7 +718,7 @@ Allow  =  name:"Allow"i HCOLON
             rest:(COMMA m:Method {return m;})*
             { return [first].concat(rest); }
           )?
-          {return {name: "Allow", value: value};}
+          {return {name: "Allow", value: value || []};}
 
 Authorization     =  name:"Authorization"i HCOLON value:credentials
                      {return {name: "Authorization", value: value};}
