@@ -690,7 +690,7 @@ Accept_Language  =  name:"Accept-Language"i HCOLON
                       rest:(COMMA l:language {return l;})*
                       { return [first].concat(rest); }
                     )?
-                    {return {name: "Accept-Language", value: value};}
+                    {return {name: "Accept-Language", value: value || []};}
 language         =  language_range:language_range
                     accept_params:(SEMI a:accept_param {return a;})*
                     {
