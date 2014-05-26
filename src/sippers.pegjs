@@ -1183,13 +1183,14 @@ product_version  =  token
 Subject  =  name:( "Subject"i / "s"i ) HCOLON value:$(TEXT_UTF8_TRIM)?
             {return {name: "Subject", value: value};}
 
+// RFC 3261 20.37 If empty, it means that no extensions are supported.
 Supported  =  name:( "Supported"i / "k"i ) HCOLON
               value:(
                 first:option_tag
                 rest:(COMMA o:option_tag {return o;})*
                 { return [first].concat(rest); }
               )?
-              {return {name: "Supported", value: value};}
+              {return {name: "Supported", value: value || []};}
 
 Timestamp  =  name:"Timestamp"i HCOLON
               value:$(
