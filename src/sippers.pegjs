@@ -150,9 +150,34 @@
     return defineDelimited(value, normalized);
   }
 
-  function padInt (text, dontPad) {
+  // from http://stackoverflow.com/a/1685917
+  function toFixed(x) {
+    if (Math.abs(x) < 1.0) {
+      var e = parseInt(x.toString().split('e-')[1]);
+      if (e) {
+          x *= Math.pow(10,e-1);
+          x = '0.' + (new Array(e)).join('0') + x.toString().substring(2);
+      }
+    } else {
+      var e = parseInt(x.toString().split('+')[1]);
+      if (e > 20) {
+          e -= 20;
+          x /= Math.pow(10,e);
+          x += (new Array(e+1)).join('0');
+      }
+    }
+    return x;
+  }
+
+  function padInt (text, width) {
     var value = parseInt(text, 10);
-    var normalized = dontPad ? text : value;
+    var normalized;
+    if (width) {
+      normalized = ('0000' + value).slice(-width)
+    }
+    else {
+      normalized = toFixed(value);
+    }
     return defineObject(Number, value, normalized);
   }
 }
@@ -166,10 +191,10 @@ CR             =  "\r" // carriage return
 CRLF           =  $ CR LF // Internet standard newline
 CTL            =  [\x00-\x1F] / "\x7F" // controls
 DIGIT          =  [0-9] // 0-9
-_PDIGITS       =  DIGIT+ {return padInt(text(), true);}
-_PDIGIT2       =  DIGIT DIGIT {return padInt(text());}
-_PDIGIT3       =  DIGIT DIGIT DIGIT {return padInt(text());}
-_PDIGIT4       =  DIGIT DIGIT DIGIT DIGIT {return padInt(text());}
+_PDIGITS       =  DIGIT+ {return padInt(text());}
+_PDIGIT2       =  DIGIT DIGIT {return padInt(text(), 2);}
+_PDIGIT3       =  DIGIT DIGIT DIGIT {return padInt(text(), 3);}
+_PDIGIT4       =  DIGIT DIGIT DIGIT DIGIT {return padInt(text(), 4);}
 DQUOTE         =  "\"" // " (Double Quote)
 HEXDIG         =  DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
 HTAB           =  "\t" // horizontal tab
