@@ -1,5 +1,5 @@
 {
-  function mapList (isHeaders, list, normalizeOptions) {
+  function mapList (isHeaders, list, serializeOptions) {
     var combined = list.reduce(
       function combine (map, item) {
         var name = item.name;
@@ -13,16 +13,16 @@
       {}
     );
 
-    Object.defineProperty(combined, 'normalize', {
+    Object.defineProperty(combined, 'serialize', {
       value: function (isHeaders, options) {
         options = options || {};
         var separator = options.separator;
         var prepend = options.prepend;
 
-        var keyNormalize = function (name) {
+        var keySerialize = function (name) {
           // cast to array
           var values = [].concat(this[name]);
-          values = values.map(function(i){return normalize(i);});
+          values = values.map(function(i){return serialize(i);});
           if (isHeaders) {
             var headerSep = name === 'User-Agent' ? ' ' : ', ';
             var joined = values.join(headerSep);
@@ -36,15 +36,15 @@
           }
         }.bind(this);
 
-        var normalized = Object.keys(this).map(keyNormalize).join('');
+        var serialized = Object.keys(this).map(keySerialize).join('');
         if (separator) {
-          normalized = normalized.slice(separator.length);
+          serialized = serialized.slice(separator.length);
         }
         if (prepend) {
-          normalized = prepend + normalized;
+          serialized = prepend + serialized;
         }
-        return normalized;
-      }.bind(combined, isHeaders, normalizeOptions)
+        return serialized;
+      }.bind(combined, isHeaders, serializeOptions)
     });
 
     return combined;
@@ -55,33 +55,33 @@
   // non-RFC, just convenient
   var combineParams = mapList.bind(null, false);
 
-  function normalize (obj, options) {
+  function serialize (obj, options) {
     options = options || {};
     var prefix = options.prefix || '';
     var separator = options.separator || '';
     var suffix = options.suffix || '';
     var transform = options.transform || function(i){return i;};
-    var normalized = '';
+    var serialized = '';
     if (obj) {
       if (Array.isArray(obj)) {
-        normalized = obj
+        serialized = obj
           // jshint eqnull:true
           .filter(function(i){return i != null;})
-          .map(function(i){return normalize(i);})
+          .map(function(i){return serialize(i);})
           .join(separator);
       }
-      else if (obj.normalize) {
-        normalized = obj.normalize();
+      else if (obj.serialize) {
+        serialized = obj.serialize();
       }
       else {
-        normalized = obj + '';
+        serialized = obj + '';
       }
     }
-    return transform(normalized + suffix);
+    return transform(serialized + suffix);
   }
 
   function sipuriBuild (scheme, userinfo, hostport, uri_parameters, headers) {
-    return defineNormalize({
+    return defineSerialize({
         scheme: scheme
       , userinfo: userinfo
       , hostport: hostport
@@ -90,17 +90,17 @@
     }, ['scheme', ':', 'userinfo', 'hostport', 'uri_parameters', 'headers'], {
       transform: function (addrSpecString) {
         if (this.display_name || this._isNameAddr) {
-          addrSpecString = normalize(this.display_name) + '<' + addrSpecString + '>';
+          addrSpecString = serialize(this.display_name) + '<' + addrSpecString + '>';
         }
         return addrSpecString;
       }
     });
   }
 
-  function defineNormalize (obj, propertyList, options) {
+  function defineSerialize (obj, propertyList, options) {
     options = options || {};
     options.transform = (options.transform || function(i){return i;}).bind(obj);
-    return Object.defineProperty(obj, 'normalize', {value:
+    return Object.defineProperty(obj, 'serialize', {value:
       function (propertyList, options) {
         function getProperty (property) {
           if (property in this) {
@@ -108,13 +108,13 @@
           }
           return property;
         }
-        return normalize(propertyList.map(getProperty.bind(this)), options);
+        return serialize(propertyList.map(getProperty.bind(this)), options);
       }.bind(obj, propertyList, options)
     });
   }
 
   function hostportBuild (host, port) {
-    return defineNormalize({
+    return defineSerialize({
       host: host,
       port: port
     }, ['host', 'port'], {separator: ':'});
@@ -125,7 +125,7 @@
     var ret = {};
     ret[propName] = prop;
     ret[paramsName] = combineParams(params, combineOptions);
-    return defineNormalize(ret, [propName, paramsName]);
+    return defineSerialize(ret, [propName, paramsName]);
   }
 
   function addrparamsBuild (addr, params) {
@@ -136,10 +136,10 @@
     return val;
   }.bind(null, val);}
 
-  function defineObject (type, value, normalized) {
+  function defineObject (type, value, serialized) {
     return Object.defineProperties(new type(value), {
       valueOf: {value: ret(value)},
-      normalize: {value: ret(normalized)}
+      serialize: {value: ret(serialized)}
     });
   }
 
@@ -147,8 +147,8 @@
 
   function joinEscaped (chars) {
     var value = chars.join('');
-    var normalized = normalize(chars);
-    return defineDelimited(value, normalized);
+    var serialized = serialize(chars);
+    return defineDelimited(value, serialized);
   }
 
   // adapted from http://stackoverflow.com/a/1685917
@@ -173,14 +173,14 @@
 
   function padInt (text, width) {
     var value = parseInt(text, 10);
-    var normalized;
+    var serialized;
     if (width) {
-      normalized = ('0000' + value).slice(-width);
+      serialized = ('0000' + value).slice(-width);
     }
     else {
-      normalized = toFixed(value);
+      serialized = toFixed(value);
     }
-    return defineObject(Number, value, normalized);
+    return defineObject(Number, value, serialized);
   }
 }
 
@@ -312,7 +312,7 @@ SIPS_URI          =  "sips:" userinfo:( userinfo )? hostport:hostport
 //userinfo         =  ( user / telephone_subscriber ) ( ":" password )? "@"
 userinfo         =  user:( user ) password:( ":" p:password {return p;} )? "@"
                     {
-                      return defineNormalize({
+                      return defineSerialize({
                         user: user,
                         password: password
                       }, ['user', 'password'], {
@@ -444,7 +444,7 @@ Request        =  Request_Line:Request_Line
                   CRLF
                   message_body:( message_body )?
                   {
-                    return defineNormalize({
+                    return defineSerialize({
                       Request_Line: Request_Line,
                       message_headers: message_headers,
                       message_body: message_body
@@ -453,7 +453,7 @@ Request        =  Request_Line:Request_Line
 
 Request_Line   =  Method:Method SP Request_URI:Request_URI SP SIP_Version:SIP_Version CRLF
                   {
-                    return defineNormalize({
+                    return defineSerialize({
                       Method: Method,
                       Request_URI: Request_URI,
                       SIP_Version: SIP_Version
@@ -466,7 +466,7 @@ Request_Line   =  Method:Method SP Request_URI:Request_URI SP SIP_Version:SIP_Ve
 Request_URI    =  SIP_URI / SIPS_URI / absoluteURI
 absoluteURI    =  scheme:scheme ":" part:( hier_part / opaque_part )
                   {
-                    return defineNormalize({
+                    return defineSerialize({
                       scheme: scheme,
                       part: part
                     }, ['scheme', 'part'], {separator: ':'});
@@ -474,7 +474,7 @@ absoluteURI    =  scheme:scheme ":" part:( hier_part / opaque_part )
 
 hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )?
                   {
-                    return defineNormalize({
+                    return defineSerialize({
                       path: path,
                       query: query
                     }, ['path', 'query'], {separator: '?'});
@@ -482,7 +482,7 @@ hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )
 
 net_path       =  "//" authority:authority abs_path:( abs_path )?
                   {
-                    return defineNormalize({
+                    return defineSerialize({
                       authority: authority,
                       abs_path: abs_path
                     }, ['//', 'authority', 'abs_path']);
@@ -513,7 +513,7 @@ srvr           =  (
                     userinfo:userinfo?
                     hostport: hostport
                     {
-                      return defineNormalize({
+                      return defineSerialize({
                         userinfo: userinfo,
                         hostport: hostport
                       }, ['userinfo', 'hostport']);
@@ -527,7 +527,7 @@ query          =  chars:uric* {return joinEscaped(chars);}
 SIP_Version    =  $("SIP"i "/" _version)
 _version       =  major:_PDIGITS "." minor:_PDIGITS
                   {
-                    return defineNormalize({
+                    return defineSerialize({
                       major: major,
                       minor: minor
                     }, ['major', 'minor'], {separator: '.'});
@@ -607,7 +607,7 @@ Response          =  Status_Line:Status_Line
                      CRLF
                      message_body:( message_body )?
                      {
-                       return defineNormalize({
+                       return defineSerialize({
                          Status_Line: Status_Line,
                          message_headers: message_headers,
                          message_body: message_body
@@ -616,7 +616,7 @@ Response          =  Status_Line:Status_Line
 
 Status_Line     =  SIP_Version:SIP_Version SP Status_Code:Status_Code SP Reason_Phrase:Reason_Phrase CRLF
                    {
-                     return defineNormalize({
+                     return defineSerialize({
                        SIP_Version: SIP_Version,
                        Status_Code: Status_Code,
                        Reason_Phrase: Reason_Phrase
@@ -720,13 +720,13 @@ Authorization     =  name:"Authorization"i HCOLON value:credentials
 credentials       =  (
                        "Digest" LWS d:digest_response
                        {
-                         return defineNormalize({
+                         return defineSerialize({
                            digest_response: d
                          }, ['Digest ', 'digest_response']);
                        }
                      )
                      / (o:other_response {
-                         return defineNormalize({
+                         return defineSerialize({
                            other_response: o
                          }, ['other_response']);
                        })
@@ -902,7 +902,7 @@ Content_Language  =  name:"Content-Language"i HCOLON
 language_tag      =  primary_tag:primary_tag
                      subtags:( "-" s:subtag {return s;})*
                      {
-                       return defineNormalize({
+                       return defineSerialize({
                          primary_tag: primary_tag,
                          subtags: subtags
                        }, ['primary_tag', 'subtags']);
@@ -918,7 +918,7 @@ media_type       =  m_type:m_type SLASH m_subtype:m_subtype
                     m_parameters:(SEMI p:m_parameter {return p;})*
                     {
                       m_parameters = combineParams(m_parameters);
-                      return defineNormalize({
+                      return defineSerialize({
                         m_type: m_type,
                         m_subtype: m_subtype,
                         m_parameters: m_parameters
@@ -935,7 +935,7 @@ CSeq  =  name:"CSeq"i HCOLON
          value:(
            sequenceNumber:_PDIGITS LWS requestMethod:Method
            {
-             return defineNormalize({
+             return defineSerialize({
                sequenceNumber: sequenceNumber,
                requestMethod: requestMethod
              }, ['sequenceNumber', 'requestMethod'], {separator: ' '});
@@ -948,7 +948,7 @@ Date          =  name:"Date"i HCOLON value:SIP_date
 SIP_date      =  rfc1123_date
 rfc1123_date  =  wkday:wkday "," SP date1:date1 SP time:time SP "GMT"
                  {
-                   return defineNormalize({
+                   return defineSerialize({
                      wkday: wkday,
                      date1: date1,
                      time: time
@@ -957,7 +957,7 @@ rfc1123_date  =  wkday:wkday "," SP date1:date1 SP time:time SP "GMT"
 date1         =  day:_PDIGIT2 SP month:month SP year:_PDIGIT4
                  // day month year (e.g., 02 Jun 1982)
                  {
-                   return defineNormalize({
+                   return defineSerialize({
                      day: day,
                      month: month,
                      year: year
@@ -966,7 +966,7 @@ date1         =  day:_PDIGIT2 SP month:month SP year:_PDIGIT4
 time          =  hours:_PDIGIT2 ":" minutes:_PDIGIT2 ":" seconds:_PDIGIT2
                  // 00:00:00 _ 23:59:59
                  {
-                   return defineNormalize({
+                   return defineSerialize({
                      hours: hours,
                      minutes: minutes,
                      seconds: seconds
@@ -1131,7 +1131,7 @@ Retry_After  =  name:"Retry-After"i HCOLON
                   retry_params:( SEMI r:retry_param {return r;} )*
                   {
                     retry_params = combineParams(retry_params);
-                    return defineNormalize({
+                    return defineSerialize({
                       delta_seconds: delta_seconds,
                       comment: comment,
                       retry_params: retry_params
@@ -1168,7 +1168,7 @@ Server           =  name:"Server"i HCOLON
 server_val       =  product / comment
 product          =  product_name:token product_version:(SLASH p:product_version {return p;})?
                     {
-                      return defineNormalize({
+                      return defineSerialize({
                         product_name: product_name,
                         product_version: product_version
                       }, ['product_name', 'product_version'], {separator: '/'});
@@ -1232,7 +1232,7 @@ via_parm          =  sent_protocol:sent_protocol LWS sent_by:sent_by
                      params:( SEMI v:via_params {return v;} )*
                      {
                        params = combineParams(params);
-                       return defineNormalize({
+                       return defineSerialize({
                          sent_protocol: sent_protocol,
                          sent_by: sent_by,
                          params: params
@@ -1253,7 +1253,7 @@ via_extension     =  generic_param
 sent_protocol     =  protocol_name:protocol_name SLASH protocol_version:protocol_version
                      SLASH transport:transport
                      {
-                       return defineNormalize({
+                       return defineSerialize({
                          protocol_name: protocol_name,
                          protocol_version: protocol_version,
                          transport: transport
@@ -1289,7 +1289,7 @@ Warning        =  name:"Warning"i HCOLON
                   {return {name: "Warning", value: value};}
 warning_value  =  warn_code:warn_code SP warn_agent:warn_agent SP warn_text:warn_text
                   {
-                    return defineNormalize({
+                    return defineSerialize({
                       warn_code: warn_code,
                       warn_agent: warn_agent,
                       warn_text: warn_text
@@ -1313,7 +1313,7 @@ RAck          =  name:"RAck"i HCOLON
                    CSeq_num:CSeq_num LWS
                    Method:Method
                    {
-                     return defineNormalize({
+                     return defineSerialize({
                        response_num: response_num,
                        CSeq_num: CSeq_num,
                        Method: Method
@@ -1401,7 +1401,7 @@ Event             =  name:( "Event"i / "o"i ) HCOLON
 event_type        =  event_package:event_package
                      templates:( "." t:event_template {return t;} )*
                      {
-                       return defineNormalize({
+                       return defineSerialize({
                          event_package: event_package,
                          templates: templates
                        }, ['event_package', 'templates']);
