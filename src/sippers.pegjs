@@ -664,13 +664,18 @@ generic_param  =  name:token value:( EQUAL g:gen_value {return g;} )?
                   {return {name: name, value: value};}
 gen_value      =  token / host / quoted_string
 
+/* RFC 3261 20.2
+    An empty Accept-Encoding header field is permissible.  It is equivalent to
+    Accept-Encoding: identity, that is, only the identity encoding, meaning no
+    encoding, is permissible.
+*/
 Accept_Encoding  =  name:"Accept-Encoding"i HCOLON
                     value:(
                       first:encoding
                       rest:(COMMA e:encoding {return e;})*
                       { return [first].concat(rest); }
                     )?
-                    {return {name: "Accept-Encoding", value: value};}
+                    {return {name: "Accept-Encoding", value: value || [parse('identity', {startRule: 'encoding'})]};}
 encoding         =  codings:codings
                     accept_params:(SEMI a:accept_param {return a;})*
                     {

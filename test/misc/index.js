@@ -58,4 +58,14 @@ describe('Miscellaneous Tests:', function () {
     var parsed = sippers.parse(message, {startRule: 'SIP_message'});
     assert.strictEqual(parsed.message_headers.Subject, '');
   });
+
+  it('parses empty Accept-Encoding as equivalent to "identity"', function () {
+    function firstEncoding(message) {
+      return sippers.parse(message, {startRule: 'SIP_message'}).message_headers['Accept-Encoding'][0];
+    }
+    var coding1 = firstEncoding("SIP/2.0 200 OK\r\nAccept-Encoding:  \r\n \r\n\r\n");
+    var coding2 = firstEncoding("SIP/2.0 200 OK\r\nAccept-Encoding:  \r\n identity\r\n\r\n");
+    assert.notEqual(coding1, null);
+    assert.deepEqual(coding1, coding2);
+  });
 });

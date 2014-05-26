@@ -12,6 +12,7 @@ var options = {
   peg: {
     'allowedStartRules': [
       'SIP_message'
+      ,'encoding'
     ]
   },
   jshint: {
