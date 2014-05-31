@@ -683,7 +683,8 @@ contact_params     =  c_p_q / c_p_expires
                       / contact_extension
 c_p_q              =  name:"q" EQUAL value:qvalue
                       {return {name: name, value: value};}
-c_p_expires        =  name:"expires" EQUAL value:delta_seconds
+c_p_expires        =  name:"expires" EQUAL
+                      value:(delta_seconds / (gen_value {return helpers.padInt(3600);}))
                       {return {name: name, value: value};}
 // begin RFC 5626
 // http://tools.ietf.org/html/rfc5626#appendix-B
