@@ -419,7 +419,7 @@ message_header  =  message_header:(Accept
                 // end RFC 6665
                 /  extension_header) CRLF
                 {
-                  return message_header;
+                  return helpers.header(message_header.name, message_header.value);
                 }
 
 Method            =  token

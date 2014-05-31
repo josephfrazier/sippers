@@ -83,6 +83,13 @@ function list (first, rest, options) {
   return serializeable([first].concat(rest), ['this'], options);
 }
 
+function header (name, value) {
+  return serializeable({
+    name: name,
+    value: value
+  }, ['name', ': ', 'value']);
+}
+
 function sipuriBuild (scheme, userinfo, hostport, uri_parameters, headers) {
   return serializeable({
       scheme: scheme
@@ -201,4 +208,5 @@ module.exports = {
   ,xparamsBuild: xparamsBuild
   ,defineDelimited: defineDelimited
   ,list: list
+  ,header: header
 };
