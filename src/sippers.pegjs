@@ -95,7 +95,7 @@
 
   function serializeable (obj, propertyList, options) {
     options = options || {};
-    options.transform = (options.transform || function(i){return i;}).bind(obj);
+    options.transform = options.transform && options.transform.bind(obj);
     return Object.defineProperty(obj, 'serialize', {value:
       function (propertyList, options) {
         function getProperty (property) {
