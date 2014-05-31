@@ -357,67 +357,73 @@ _version       =  major:_PDIGITS "." minor:_PDIGITS
 
 _message_headers = message_headers:( message_header )*
                    { return message_headers; }
-message_header  =  message_header:(Accept
-                /  Accept_Encoding
-                /  Accept_Language
-                /  Alert_Info
-                /  Allow
-                /  Authentication_Info
-                /  Authorization
-                /  Call_ID
-                /  Call_Info
-                /  Contact
-                /  Content_Disposition
-                /  Content_Encoding
-                /  Content_Language
-                /  Content_Length
-                /  Content_Type
-                /  CSeq
-                /  Date
-                /  Error_Info
-                /  Expires
-                /  From
-                /  In_Reply_To
-                /  Max_Forwards
-                /  MIME_Version
-                /  Min_Expires
-                /  Organization
-                /  Priority
-                /  Proxy_Authenticate
-                /  Proxy_Authorization
-                /  Proxy_Require
-                /  Record_Route
-                /  Reply_To
+message_header  =  message_header:(
+                   (h:Accept CRLF {return h;})
+                /  (h:Accept_Encoding CRLF {return h;})
+                /  (h:Accept_Language CRLF {return h;})
+                /  (h:Alert_Info CRLF {return h;})
+                /  (h:Allow CRLF {return h;})
+                /  (h:Authentication_Info CRLF {return h;})
+                /  (h:Authorization CRLF {return h;})
+                /  (h:Call_ID CRLF {return h;})
+                /  (h:Call_Info CRLF {return h;})
+                /  (h:Contact CRLF {return h;})
+                /  (h:Content_Disposition CRLF {return h;})
+                /  (h:Content_Encoding CRLF {return h;})
+                /  (h:Content_Language CRLF {return h;})
+                /  (h:Content_Length CRLF {return h;})
+                /  (h:Content_Type CRLF {return h;})
+                /  (h:CSeq CRLF {return h;})
+                /  (h:Date CRLF {return h;})
+                /  (h:Error_Info CRLF {return h;})
+                /  (h:Expires CRLF {return h;})
+                /  (h:From CRLF {return h;})
+                /  (h:In_Reply_To CRLF {return h;})
+                /  (h:Max_Forwards CRLF {return h;})
+                /  (h:MIME_Version CRLF {return h;})
+                /  (h:Min_Expires CRLF {return h;})
+                /  (h:Organization CRLF {return h;})
+                /  (h:Priority CRLF {return h;})
+                /  (h:Proxy_Authenticate CRLF {return h;})
+                /  (h:Proxy_Authorization CRLF {return h;})
+                /  (h:Proxy_Require CRLF {return h;})
+                /  (h:Record_Route CRLF {return h;})
+                /  (h:Reply_To CRLF {return h;})
 // http://tools.ietf.org/html/rfc3261#page-225
-                /  Require
-                /  Retry_After
-                /  Route
-                /  Server
-                /  Subject
-                /  Supported
-                /  Timestamp
-                /  To
-                /  Unsupported
-                /  User_Agent
-                /  Via
-                /  Warning
-                /  WWW_Authenticate
+                /  (h:Require CRLF {return h;})
+                /  (h:Retry_After CRLF {return h;})
+                /  (h:Route CRLF {return h;})
+                /  (h:Server CRLF {return h;})
+                /  (h:Subject CRLF {return h;})
+                /  (h:Supported CRLF {return h;})
+                /  (h:Timestamp CRLF {return h;})
+                /  (h:To CRLF {return h;})
+                /  (h:Unsupported CRLF {return h;})
+                /  (h:User_Agent CRLF {return h;})
+                /  (h:Via CRLF {return h;})
+                /  (h:Warning CRLF {return h;})
+                /  (h:WWW_Authenticate CRLF {return h;})
                 // begin RFC 3262
                 // http://tools.ietf.org/html/rfc3262#section-10
-                /  RAck
-                /  RSeq
+                /  (h:RAck CRLF {return h;})
+                /  (h:RSeq CRLF {return h;})
                 // end RFC 3262
-                /  Reason // RFC 3326 // http://tools.ietf.org/html/rfc3326#section-2
-                /  Path // RFC 3327 // http://tools.ietf.org/html/rfc3327#section-4
-                /  Refer_To // RFC 3515 // http://tools.ietf.org/html/rfc3515#section-2.1
-                /  Flow_Timer // RFC 5626 // http://tools.ietf.org/html/rfc5626#appendix-B
+                // RFC 3326 // http://tools.ietf.org/html/rfc3326#section-2
+                /  (h:Reason CRLF {return h;})
+                // RFC 3327 // http://tools.ietf.org/html/rfc3327#section-4
+                /  (h:Path CRLF {return h;})
+                // RFC 3515 // http://tools.ietf.org/html/rfc3515#section-2.1
+                /  (h:Refer_To CRLF {return h;})
+                // RFC 5626 // http://tools.ietf.org/html/rfc5626#appendix-B
+                /  (h:Flow_Timer CRLF {return h;})
                 // begin RFC 6665
                 // http://tools.ietf.org/html/rfc6665#section-8.4
-                /  Allow_Events
-                /  Event
-                /  Subscription_State
+                /  (h:Allow_Events CRLF {return h;})
+                /  (h:Event CRLF {return h;})
+                /  (h:Subscription_State CRLF {return h;})
                 // end RFC 6665
-                /  extension_header) CRLF
+                /  (h:extension_header CRLF {return h;})
+                )
                 {
                   return helpers.header(message_header.name, message_header.value);
                 }
