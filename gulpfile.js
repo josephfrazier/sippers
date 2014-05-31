@@ -29,17 +29,23 @@ gulp.task('build', function() {
   return gulp
     .src('src/sippers.pegjs')
     .pipe(peg(options.peg).on('error', gutil.log))
-    // RFC 3261 25.1:
-    // All linear white space, including folding, has the same semantics as SP.
+    // modify generated parse method
     .pipe(replace('parse:       parse',
       'parse: function (input, options){' +
+        // allow startRule to be passed as string, default to 'SIP_message'
+        'options = options || "SIP_message";' +
+        'if (options.constructor === String) {' +
+          'options = {startRule: options};' +
+        '}' +
+        // RFC 3261 25.1:
+        // All linear white space, including folding, has the same semantics as SP.
         'var emptyLine = "\\r\\n\\r\\n";' +
         'var folding = /[\\t ]*\\r\\n[\\t ]+/g;' +
         'var headersBody = input.split(emptyLine, 2);' +
         'var headers = headersBody[0].replace(folding, " ");' +
         'var body = headersBody[1] || "";' +
         'var result = headers + emptyLine + body;' +
-        'return parse(result, options || {});' +
+        'return parse(result, options);' +
       '}'))
     .pipe(gulp.dest('dist'))
   ;
