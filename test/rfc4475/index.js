@@ -11,12 +11,7 @@ function assertivelyParse (name, valid) {
 
   var assertion = valid === false ? 'throws' : 'doesNotThrow';
   assert[assertion](function () {
-    try {
-      parsed = sippers.parse(raw);
-    } catch (e) {
-      e.message += ' at line ' + e.line + ', column ' + e.column + ' of ' + path;
-      throw e;
-    }
+    parsed = sippers.parse(raw);
   });
 
   return parsed;
@@ -24,13 +19,7 @@ function assertivelyParse (name, valid) {
 
 function roundTrip (parsed) {
   if (!parsed) return;
-  var parsed2;
-  try {
-    parsed2 = sippers.parse(parsed.serialize(), {startRule: 'SIP_message'});
-  } catch (e) {
-    e.message += ' at line ' + e.line + ', column ' + e.column + ' of \n\n' + parsed.serialize();
-    throw e;
-  }
+  var parsed2 = sippers.parse(parsed.serialize(), {startRule: 'SIP_message'});
   assert.deepEqual(jsonClone(parsed), jsonClone(parsed2), 'serialize/parse round-trip came back different');
 }
 

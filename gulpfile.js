@@ -37,7 +37,13 @@ gulp.task('build', function() {
         'if (options.constructor === String) {' +
           'options = {startRule: options};' +
         '}' +
-        'return parse(this.foldLWS(input), options);' +
+        'input = this.foldLWS(input);' +
+        'try {' +
+          'return parse(input, options);' +
+        '} catch (e) {' +
+          'e.message += [" at line", e.line, "column", e.column, "of (LWS folded): << EOM", "\\n" + input + "EOM"].join(" ");' +
+          'throw e;' +
+        '}' +
       '},' +
       'foldLWS: function foldLWS (input) {' +
         // RFC 3261 25.1:
