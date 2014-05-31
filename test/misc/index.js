@@ -68,4 +68,16 @@ describe('Miscellaneous Tests:', function () {
     assert.notEqual(coding1, null);
     assert.deepEqual(coding1, coding2);
   });
+
+  it('parses malformed Contact "expires" parameters as equivalent to 3600', function () {
+    function contactExpires (message) {
+      return sippers.parse(message).message_headers.Contact[0].params.expires;
+    }
+
+    var expires1 = contactExpires("SIP/2.0 200 OK\r\nContact: <sip:user@host.com>;expires=malformed\r\n\r\n");
+    var expires2 = contactExpires("SIP/2.0 200 OK\r\nContact: <sip:user@host.com>;expires=3600\r\n\r\n");
+    assert.notEqual(expires1, null);
+    assert.equal(expires1, 3600);
+    assert.equal(expires2, 3600);
+  });
 });
