@@ -45,8 +45,6 @@ function mapList (isHeaders, list, serializeOptions) {
   });
 }
 
-// See RFC 3261 Section 7.3
-var combineHeaders = mapList.bind(null, true);
 // non-RFC, just convenient
 var combineParams = mapList.bind(null, false);
 
@@ -201,8 +199,8 @@ module.exports = {
   ,joinEscaped: joinEscaped
   ,serializeable: serializeable
   ,hostportBuild: hostportBuild
+  ,mapList: mapList
   ,combineParams: combineParams
-  ,combineHeaders: combineHeaders
   ,sipuriBuild: sipuriBuild
   ,addrparamsBuild: addrparamsBuild
   ,xparamsBuild: xparamsBuild

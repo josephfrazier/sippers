@@ -1,5 +1,8 @@
 var grammar = require('./grammar');
 
+// See RFC 3261 Section 7.3
+var combineHeaders = require('./helpers').mapList.bind(null, true);
+
 function parse (input, options){
   // allow startRule to be passed as string, default to SIP_message
   options = options || 'SIP_message';
@@ -10,7 +13,9 @@ function parse (input, options){
   input = foldLWS(input);
 
   try {
-    return grammar.parse(input, options);
+    var parsed = grammar.parse(input, options);
+    parsed.message_headers = combineHeaders(parsed.message_headers);
+    return parsed;
   } catch (e) {
     // add debugging info
     e.message += [
