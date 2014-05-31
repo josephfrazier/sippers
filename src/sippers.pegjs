@@ -1,50 +1,49 @@
 {
   function mapList (isHeaders, list, serializeOptions) {
-    var combined = list.reduce(
-      function combine (map, item) {
-        var name = item.name;
-        var value = item.value;
-        if (isHeaders && Array.isArray(value)) {
-          value = (map[name] || []).concat(value);
-        }
-        map[name] = value;
-        return map;
-      },
-      {}
-    );
+    function combine (map, item) {
+      var name = item.name;
+      var value = item.value;
+      if (isHeaders && Array.isArray(value)) {
+        value = (map[name] || []).concat(value);
+      }
+      map[name] = value;
+      return map;
+    }
 
-    Object.defineProperty(combined, 'serialize', {
-      value: function (isHeaders, options) {
-        options = options || {};
-        var separator = options.separator;
-        var prefix = options.prefix;
+    var combined = list.reduce(combine, {});
 
-        var keySerialize = function (name) {
-          // cast to array
-          var values = [].concat(this[name]);
-          values = values.map(function(i){return serialize(i);});
-          if (isHeaders) {
-            var headerSep = name === 'User-Agent' ? ' ' : ', ';
-            var joined = values.join(headerSep);
-            return name + ': ' + joined + '\r\n';
-          }
-          else {
-            return (separator || ';') + name + (values[0] ? '=' + values[0] : '');
-          }
-        }.bind(this);
+    function serializeList (isHeaders, options) {
+      options = options || {};
+      var separator = options.separator;
+      var prefix = options.prefix;
 
-        var serialized = Object.keys(this).map(keySerialize).join('');
-        if (separator) {
-          serialized = serialized.slice(separator.length);
+      var keySerialize = function (name) {
+        // cast to array
+        var values = [].concat(this[name]);
+        values = values.map(function(i){return serialize(i);});
+        if (isHeaders) {
+          var headerSep = name === 'User-Agent' ? ' ' : ', ';
+          var joined = values.join(headerSep);
+          return name + ': ' + joined + '\r\n';
         }
-        if (prefix) {
-          serialized = prefix + serialized;
+        else {
+          return (separator || ';') + name + (values[0] ? '=' + values[0] : '');
         }
-        return serialized;
-      }.bind(combined, isHeaders, serializeOptions)
+      }.bind(this);
+
+      var serialized = Object.keys(this).map(keySerialize).join('');
+      if (separator) {
+        serialized = serialized.slice(separator.length);
+      }
+      if (prefix) {
+        serialized = prefix + serialized;
+      }
+      return serialized;
+    }
+
+    return Object.defineProperty(combined, 'serialize', {
+      value: serializeList.bind(combined, isHeaders, serializeOptions)
     });
-
-    return combined;
   }
 
   // See RFC 3261 Section 7.3
