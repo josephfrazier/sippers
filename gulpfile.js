@@ -40,11 +40,12 @@ gulp.task('build', function() {
         // RFC 3261 25.1:
         // All linear white space, including folding, has the same semantics as SP.
         'var emptyLine = "\\r\\n\\r\\n";' +
+        'var hadEmptyLine = input.indexOf(emptyLine) > -1;' +
         'var folding = /[\\t ]*\\r\\n[\\t ]+/g;' +
         'var headersBody = input.split(emptyLine, 2);' +
         'var headers = headersBody[0].replace(folding, " ");' +
         'var body = headersBody[1] || "";' +
-        'var result = headers + emptyLine + body;' +
+        'var result = headers + (hadEmptyLine ? emptyLine : "") + body;' +
         'return parse(result, options);' +
       '}'))
     .pipe(gulp.dest('dist'))
