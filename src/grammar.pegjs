@@ -247,7 +247,7 @@ param_unreserved  =  "[" / "]" / "/" / ":" / "&" / "+" / "$"
 
 headers         =  "?" first:header rest:( "&" h:header {return h;} )*
                    {
-                     return helpers.combineParams([first].concat(rest), {
+                     return helpers.combineParams(helpers.list(first, rest, '&'), {
                        separator: '&',
                        prefix: '?'
                      });
@@ -318,7 +318,7 @@ uric           =  reserved / unreserved / escaped
 uric_no_slash  =  unreserved / escaped / ";" / "?" / ":" / "@"
                   / "&" / "=" / "+" / "$" / ","
 path_segments  =  first:segment rest:( "/" s:segment {return s;} )*
-                  { return [first].concat(rest); }
+                  { return helpers.list(first, rest, '/'); }
 segment        =  value:_pchars
                   params:( ";" p:param {return p;} )*
                   {
@@ -459,7 +459,7 @@ Accept         =  name:"Accept"i HCOLON
                   value:(
                     first:accept_range
                     rest:(COMMA a:accept_range {return a;})*
-                    { return [first].concat(rest); }
+                    { return helpers.list(first, rest); }
                   )?
                   {return {name: "Accept", value: value || []};}
 accept_range   =  media_range:media_range accept_params:(SEMI a:accept_param {return a;})*
@@ -496,7 +496,7 @@ Accept_Encoding  =  name:"Accept-Encoding"i HCOLON
                     value:(
                       first:encoding
                       rest:(COMMA e:encoding {return e;})*
-                      { return [first].concat(rest); }
+                      { return helpers.list(first, rest); }
                     )?
                     {return {name: "Accept-Encoding", value: value || [parse('identity', {startRule: 'encoding'})]};}
 encoding         =  codings:codings
@@ -511,7 +511,7 @@ Accept_Language  =  name:"Accept-Language"i HCOLON
                     value:(
                       first:language
                       rest:(COMMA l:language {return l;})*
-                      { return [first].concat(rest); }
+                      { return helpers.list(first, rest); }
                     )?
                     {return {name: "Accept-Language", value: value || []};}
 language         =  language_range:language_range
@@ -526,7 +526,7 @@ Alert_Info   =  name:"Alert-Info"i HCOLON
                 value:(
                   first:alert_param
                   rest:(COMMA a:alert_param {return a;})*
-                  { return [first].concat(rest); }
+                  { return helpers.list(first, rest); }
                 )
                 {return {name: "Alert-Info", value: value};}
 alert_param  =  LAQUOT absoluteURI:absoluteURI RAQUOT
@@ -539,7 +539,7 @@ Allow  =  name:"Allow"i HCOLON
           value:(
             first:Method
             rest:(COMMA m:Method {return m;})*
-            { return [first].concat(rest); }
+            { return helpers.list(first, rest); }
           )?
           {return {name: "Allow", value: value || []};}
 
@@ -560,7 +560,7 @@ credentials       =  (
                        })
 digest_response   =  first:dig_resp
                      rest:(COMMA d:dig_resp {return d;})*
-                     { return helpers.combineParams([first].concat(rest), {separator: ', '}); }
+                     { return helpers.combineParams(helpers.list(first, rest), {separator: ', '}); }
 dig_resp          =  username / realm / nonce / digest_uri
                       / dresponse / algorithm / cnonce
                       / opaque / message_qop
@@ -595,7 +595,7 @@ auth_param_name   =  token
 other_response    =  auth_scheme:auth_scheme LWS first:auth_param
                      rest:(COMMA a:auth_param {return a;})*
                      {
-                       auth_params = [first].concat(rest);
+                       auth_params = helpers.list(first, rest);
                        return helpers.xparamsBuild(auth_scheme, 'auth_scheme', auth_params, 'auth_params', {
                          separator: ', ',
                          prefix: ' '
@@ -607,7 +607,7 @@ Authentication_Info  =  name:"Authentication-Info"i HCOLON
                         value:(
                           first:ainfo
                           rest:(COMMA a:ainfo {return a;})*
-                          { return helpers.combineParams([first].concat(rest), {separator: ', '}); }
+                          { return helpers.combineParams(helpers.list(first, rest), {separator: ', '}); }
                         )
                         {return {name: "Authentication-Info", value: value};}
 ainfo                =  nextnonce / message_qop
@@ -627,7 +627,7 @@ Call_Info   =  name:"Call-Info"i HCOLON
                value:(
                  first:info
                  rest:(COMMA i:info {return i;})*
-                 { return [first].concat(rest); }
+                 { return helpers.list(first, rest); }
                )
                {return {name: "Call-Info", value: value};}
 info        =  LAQUOT absoluteURI:absoluteURI RAQUOT
@@ -647,7 +647,7 @@ Contact        =  name:("Contact"i / "m"i ) HCOLON
                     (
                       first:contact_param
                       rest:(COMMA c:contact_param {return c;})*
-                      { return [first].concat(rest); }
+                      { return helpers.list(first, rest); }
                     )
                   )
                   {return {name: "Contact", value: value};}
@@ -716,7 +716,7 @@ Content_Encoding  =  name:( "Content-Encoding"i / "e"i ) HCOLON
                      value:(
                        first:content_coding
                        rest:(COMMA c:content_coding {return c;})*
-                       { return [first].concat(rest); }
+                       { return helpers.list(first, rest); }
                      )
                      {return {name: "Content-Encoding", value: value};}
 
@@ -724,7 +724,7 @@ Content_Language  =  name:"Content-Language"i HCOLON
                      value:(
                        first:language_tag
                        rest:(COMMA l:language_tag {return c;})*
-                       { return [first].concat(rest); }
+                       { return helpers.list(first, rest); }
                      )
                      {return {name: "Content-Language", value: value};}
 language_tag      =  primary_tag:primary_tag
@@ -810,7 +810,7 @@ Error_Info  =  name:"Error-Info"i HCOLON
                value:(
                  first:error_uri
                  rest:(COMMA e:error_uri {return e;})*
-                 { return [first].concat(rest); }
+                 { return helpers.list(first, rest); }
                )
                {return {name: "Error-Info", value: value};}
 
@@ -838,7 +838,7 @@ In_Reply_To  =  name:"In-Reply-To"i HCOLON
                 value:(
                   first:callid
                   rest:(COMMA c:callid {return c;})*
-                  { return [first].concat(rest); }
+                  { return helpers.list(first, rest); }
                 )
                 {return {name: "In-Reply-To", value: value};}
 
@@ -867,13 +867,13 @@ challenge           =  (
                          "Digest" LWS
                          first:digest_cln
                          rest:(COMMA d:digest_cln {return d;})*
-                         { return {digest_clns: [first].concat(rest)}; }
+                         { return {digest_clns: helpers.list(first, rest)}; }
                        )
                        / (o:other_challenge {return {other_challenge: o};})
 other_challenge     =  auth_scheme:auth_scheme LWS first:auth_param
                        rest:(COMMA a:auth_param {return a;})*
                        {
-                         auth_params = [first].concat(rest);
+                         auth_params = helpers.list(first, rest);
                          return helpers.xparamsBuild(auth_scheme, 'auth_scheme', auth_params, 'auth_params', ', ');
                        }
 digest_cln          =  realm / domain / nonce
@@ -885,7 +885,7 @@ realm_value         =  quoted_string
 domain              =  name:"domain" EQUAL LDQUOT
                        value:(
                          first:URI rest:( SP+ u:URI {return u;} )*
-                         { return [first].concat(rest); }
+                         { return helpers.list(first, rest, ' '); }
                        )
                        RDQUOT
                        {return {name: name, value: value};}
@@ -903,7 +903,7 @@ algorithm           =  name:"algorithm" EQUAL value:( "MD5" / "MD5-sess"
 qop_options         =  name:"qop" EQUAL LDQUOT
                        value:(
                          first:qop_value rest:( "," v:qop_value {return v;} )*
-                         { return [first].concat(rest); }
+                         { return helpers.list(first, rest, ','); }
                        )
                        RDQUOT
                        {return {name: name, value: value};}
@@ -917,7 +917,7 @@ Proxy_Require  =  name:"Proxy-Require"i HCOLON
                   value:(
                     first:option_tag
                     rest:(COMMA o:option_tag {return o;})*
-                    { return [first].concat(rest); }
+                    { return helpers.list(first, rest); }
                   )
                   {return {name: "Proxy-Require", value: value};}
 option_tag     =  token
@@ -926,7 +926,7 @@ Record_Route  =  name:"Record-Route"i HCOLON
                   value:(
                     first:rec_route
                     rest:(COMMA r:rec_route {return r;})*
-                    { return [first].concat(rest); }
+                    { return helpers.list(first, rest); }
                   )
                   {return {name: "Record-Route", value: value};}
 rec_route     =  addr:name_addr
@@ -948,7 +948,7 @@ Require       =  name:"Require"i HCOLON
                  value:(
                    first:option_tag
                    rest:(COMMA o:option_tag {return o;})*
-                   { return [first].concat(rest); }
+                   { return helpers.list(first, rest); }
                  )
                  {return {name: "Require", value: value};}
 
@@ -978,7 +978,7 @@ Route        =  name:"Route"i HCOLON
                 value:(
                   first:route_param
                   rest:(COMMA r:route_param {return r;})*
-                  { return [first].concat(rest); }
+                  { return helpers.list(first, rest); }
                 )
                 {return {name: "Route", value: value};}
 route_param  =  addr:name_addr params:( SEMI r:rr_param {return r;} )*
@@ -990,7 +990,7 @@ Server           =  name:"Server"i HCOLON
                     value:(
                       first:server_val
                       rest:(LWS server_val)*
-                      { return [first].concat(rest); }
+                      { return helpers.list(first, rest, ' '); }
                     )
                     {return {name: "Server", value: value};}
 server_val       =  product / comment
@@ -1011,7 +1011,7 @@ Supported  =  name:( "Supported"i / "k"i ) HCOLON
               value:(
                 first:option_tag
                 rest:(COMMA o:option_tag {return o;})*
-                { return [first].concat(rest); }
+                { return helpers.list(first, rest); }
               )?
               {return {name: "Supported", value: value || []};}
 
@@ -1038,14 +1038,14 @@ Unsupported  =  name:"Unsupported"i HCOLON
                 value:(
                   first:option_tag
                   rest:(COMMA o:option_tag {return o;})*
-                  { return [first].concat(rest); }
+                  { return helpers.list(first, rest); }
                 )
                 {return {name: "Unsupported", value: value};}
 User_Agent  =  name:"User-Agent"i HCOLON
                 value:(
                   first:server_val
                   rest:(LWS s:server_val {return s;})*
-                  { return [first].concat(rest); }
+                  { return helpers.list(first, rest, ' '); }
                 )
                 {return {name: "User-Agent", value: value};}
 
@@ -1054,7 +1054,7 @@ Via               =  name:( "Via"i / "v"i ) HCOLON
                      value:(
                        first:via_parm
                        rest:(COMMA v:via_parm {return v;})*
-                       { return [first].concat(rest); }
+                       { return helpers.list(first, rest); }
                      )
                      {return {name: "Via", value: value};}
 via_parm          =  sent_protocol:sent_protocol LWS sent_by:sent_by
@@ -1113,7 +1113,7 @@ Warning        =  name:"Warning"i HCOLON
                   value:(
                     first:warning_value
                     rest:(COMMA w:warning_value {return w;})*
-                    { return [first].concat(rest); }
+                    { return helpers.list(first, rest); }
                   )
                   {return {name: "Warning", value: value};}
 warning_value  =  warn_code:warn_code SP warn_agent:warn_agent SP warn_text:warn_text
@@ -1162,7 +1162,7 @@ Reason            =  name:"Reason"i HCOLON
                      value:(
                        first:reason_value
                        rest:(COMMA r:reason_value {return r;})*
-                       { return [first].concat(rest); }
+                       { return helpers.list(first, rest); }
                      )
                      {return {name: "Reason", value: value};}
 reason_value      =  protocol:protocol
@@ -1187,7 +1187,7 @@ Path       = name:"Path"i HCOLON
              value:(
                first:path_value
                rest:( COMMA p:path_value {return p;} )*
-               { return [first].concat(rest); }
+               { return helpers.list(first, rest); }
              )
              {return {name: "Path", value: value};}
 path_value = addr:name_addr
@@ -1250,7 +1250,7 @@ Allow_Events      =  name:( "Allow-Events"i / "u"i ) HCOLON
                      value:(
                        first:event_type
                        rest:(COMMA t:event_type {return t;})*
-                       { return [first].concat(rest); }
+                       { return helpers.list(first, rest); }
                      )
                      {return {name: "Allow-Events", value: value};}
 

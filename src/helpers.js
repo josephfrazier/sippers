@@ -75,6 +75,14 @@ function serialize (obj, options) {
   return transform(prefix + serialized + suffix);
 }
 
+function list (first, rest, options) {
+  options = options || ', ';
+  if (options.constructor === String) {
+    options = {separator: options};
+  }
+  return serializeable([first].concat(rest), ['this'], options);
+}
+
 function sipuriBuild (scheme, userinfo, hostport, uri_parameters, headers) {
   return serializeable({
       scheme: scheme
@@ -98,6 +106,9 @@ function serializeable (obj, propertyList, options) {
   return Object.defineProperty(obj, 'serialize', {value:
     function (propertyList, options) {
       function getProperty (property) {
+        if (property === 'this') {
+          return serialize(this, options);
+        }
         if (property in this) {
           return this[property];
         }
@@ -189,4 +200,5 @@ module.exports = {
   ,addrparamsBuild: addrparamsBuild
   ,xparamsBuild: xparamsBuild
   ,defineDelimited: defineDelimited
+  ,list: list
 };
