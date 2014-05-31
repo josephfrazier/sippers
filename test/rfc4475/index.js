@@ -230,9 +230,11 @@ describe('RFC 4475 Torture Tests', function () {
       describe('3.1.2.1. Extraneous Header Field Separators', function () {
         var name = 'badinv01';
         var parsed;
-        it('does not parse', function () {
-          parsed = assertivelyParse(name, false);
+        it('parses', function () {
+          parsed = assertivelyParse(name);
         });
+
+        it('round-trips', function () {roundTrip(parsed);});
       });
 
       describe('3.1.2.2. Content Length Larger Than Message', function () {
