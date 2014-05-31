@@ -1,183 +1,5 @@
 {
-  function mapList (isHeaders, list, serializeOptions) {
-    function combine (map, item) {
-      var name = item.name;
-      var value = item.value;
-      if (isHeaders && Array.isArray(value)) {
-        value = (map[name] || []).concat(value);
-      }
-      map[name] = value;
-      return map;
-    }
-
-    var combined = list.reduce(combine, {});
-
-    function serializeList (isHeaders, options) {
-      options = options || {};
-      var separator = options.separator;
-      var prefix = options.prefix;
-
-      var keySerialize = function (name) {
-        // cast to array
-        var values = [].concat(this[name]);
-        values = values.map(function(i){return serialize(i);});
-        if (isHeaders) {
-          var headerSep = name === 'User-Agent' ? ' ' : ', ';
-          var joined = values.join(headerSep);
-          return name + ': ' + joined + '\r\n';
-        }
-        else {
-          return (separator || ';') + name + (values[0] ? '=' + values[0] : '');
-        }
-      }.bind(this);
-
-      var serialized = Object.keys(this).map(keySerialize).join('');
-      if (separator) {
-        serialized = serialized.slice(separator.length);
-      }
-      if (prefix) {
-        serialized = prefix + serialized;
-      }
-      return serialized;
-    }
-
-    return Object.defineProperty(combined, 'serialize', {
-      value: serializeList.bind(combined, isHeaders, serializeOptions)
-    });
-  }
-
-  // See RFC 3261 Section 7.3
-  var combineHeaders = mapList.bind(null, true);
-  // non-RFC, just convenient
-  var combineParams = mapList.bind(null, false);
-
-  function serialize (obj, options) {
-    options = options || {};
-    var prefix = options.prefix || '';
-    var separator = options.separator || '';
-    var suffix = options.suffix || '';
-    var transform = options.transform || function(i){return i;};
-    var serialized = '';
-    if (obj) {
-      if (Array.isArray(obj)) {
-        serialized = obj
-          // jshint eqnull:true
-          .filter(function(i){return i != null;})
-          .map(function(i){return serialize(i);})
-          .join(separator);
-      }
-      else if (obj.serialize) {
-        serialized = obj.serialize();
-      }
-      else {
-        serialized = obj + '';
-      }
-    }
-    return transform(prefix + serialized + suffix);
-  }
-
-  function sipuriBuild (scheme, userinfo, hostport, uri_parameters, headers) {
-    return serializeable({
-        scheme: scheme
-      , userinfo: userinfo
-      , hostport: hostport
-      , uri_parameters: uri_parameters
-      , headers: headers
-    }, ['scheme', ':', 'userinfo', 'hostport', 'uri_parameters', 'headers'], {
-      transform: function (addrSpecString) {
-        if (this.display_name || this._isNameAddr) {
-          addrSpecString = serialize(this.display_name) + '<' + addrSpecString + '>';
-        }
-        return addrSpecString;
-      }
-    });
-  }
-
-  function serializeable (obj, propertyList, options) {
-    options = options || {};
-    options.transform = options.transform && options.transform.bind(obj);
-    return Object.defineProperty(obj, 'serialize', {value:
-      function (propertyList, options) {
-        function getProperty (property) {
-          if (property in this) {
-            return this[property];
-          }
-          return property;
-        }
-        return serialize(propertyList.map(getProperty.bind(this)), options);
-      }.bind(obj, propertyList, options)
-    });
-  }
-
-  function hostportBuild (host, port) {
-    return serializeable({
-      host: host,
-      port: port
-    }, ['host', 'port'], {separator: ':'});
-  }
-
-  function xparamsBuild (prop, propName, params, paramsName, combineOptions) {
-    paramsName = paramsName || 'params';
-    var ret = {};
-    ret[propName] = prop;
-    ret[paramsName] = combineParams(params, combineOptions);
-    return serializeable(ret, [propName, paramsName]);
-  }
-
-  function addrparamsBuild (addr, params) {
-    return xparamsBuild(addr, 'addr', params, 'params');
-  }
-
-  function ret (val) {return function (val) {
-    return val;
-  }.bind(null, val);}
-
-  function defineObject (type, value, serialized) {
-    return Object.defineProperties(new type(value), {
-      valueOf: {value: ret(value)},
-      serialize: {value: ret(serialized)}
-    });
-  }
-
-  var defineDelimited = defineObject.bind(null, String);
-
-  function joinEscaped (chars) {
-    var value = chars.join('');
-    var serialized = serialize(chars);
-    return defineDelimited(value, serialized);
-  }
-
-  // adapted from http://stackoverflow.com/a/1685917
-  function toFixed(x) {
-    var e;
-    if (Math.abs(x) < 1.0) {
-      e = parseInt(x.toString().split('e-')[1]);
-      if (e) {
-          x *= Math.pow(10,e-1);
-          x = '0.' + (new Array(e)).join('0') + x.toString().substring(2);
-      }
-    } else {
-      e = parseInt(x.toString().split('+')[1]);
-      if (e > 20) {
-          e -= 20;
-          x /= Math.pow(10,e);
-          x += (new Array(e+1)).join('0');
-      }
-    }
-    return x;
-  }
-
-  function padInt (text, width) {
-    var value = parseInt(text, 10);
-    var serialized;
-    if (width) {
-      serialized = ('0000' + value).slice(-width);
-    }
-    else {
-      serialized = toFixed(value);
-    }
-    return defineObject(Number, value, serialized);
-  }
+  var helpers = require('./helpers');
 }
 
 // begin RFC 2234
@@ -189,10 +11,10 @@ CR             =  "\r" // carriage return
 CRLF           =  $ CR LF // Internet standard newline
 CTL            =  [\x00-\x1F] / "\x7F" // controls
 DIGIT          =  [0-9] // 0-9
-_PDIGITS       =  DIGIT+ {return padInt(text());}
-_PDIGIT2       =  DIGIT DIGIT {return padInt(text(), 2);}
-_PDIGIT3       =  DIGIT DIGIT DIGIT {return padInt(text(), 3);}
-_PDIGIT4       =  DIGIT DIGIT DIGIT DIGIT {return padInt(text(), 4);}
+_PDIGITS       =  DIGIT+ {return helpers.padInt(text());}
+_PDIGIT2       =  DIGIT DIGIT {return helpers.padInt(text(), 2);}
+_PDIGIT3       =  DIGIT DIGIT DIGIT {return helpers.padInt(text(), 3);}
+_PDIGIT4       =  DIGIT DIGIT DIGIT DIGIT {return helpers.padInt(text(), 4);}
 DQUOTE         =  "\"" // " (Double Quote)
 HEXDIG         =  DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
 HTAB           =  "\t" // horizontal tab
@@ -218,7 +40,7 @@ mark        =  "-" / "_" / "." / "!" / "~" / "*" / "'"
 escaped     =  "%" HEXDIG HEXDIG
                {
                  var decoded = decodeURIComponent(text());
-                 return defineDelimited(decoded, text());
+                 return helpers.defineDelimited(decoded, text());
                }
 
 /* RFC3261 25: A recipient MAY replace any linear white space with a single SP
@@ -274,7 +96,7 @@ RDQUOT  =  DQUOTE SWS  {return '"';}// close double quotation mark
 // http://tools.ietf.org/html/rfc3261#page-222
 comment  =  LPAREN value:$((ctext / quoted_pair / comment)*) RPAREN
             {
-              return defineDelimited(value, '(' + value + ')');
+              return helpers.defineDelimited(value, '(' + value + ')');
             }
 ctext    =  [\x21-\x27] / [\x2A-\x5B] / [\x5D-\x7E] / UTF8_NONASCII
             / LWS
@@ -282,7 +104,7 @@ ctext    =  [\x21-\x27] / [\x2A-\x5B] / [\x5D-\x7E] / UTF8_NONASCII
 
 quoted_string  =  SWS DQUOTE value:$((qdtext / quoted_pair )*) DQUOTE
                   {
-                    return defineDelimited(value, '"' + value + '"');
+                    return helpers.defineDelimited(value, '"' + value + '"');
                   }
 qdtext         =  LWS / "\x21" / [\x23-\x5B] / [\x5D-\x7E]
                   / UTF8_NONASCII
@@ -299,20 +121,20 @@ quoted_pair  =  "\\" ([\x00-\x09] / [\x0B-\x0C]
 SIP_URI          =  "sip:" userinfo:( userinfo )? hostport:hostport
                     uri_parameters:uri_parameters headers:( headers )?
                     {
-                      return sipuriBuild('sip', userinfo, hostport, uri_parameters, headers);
+                      return helpers.sipuriBuild('sip', userinfo, hostport, uri_parameters, headers);
                     }
 
 SIPS_URI          =  "sips:" userinfo:( userinfo )? hostport:hostport
                      uri_parameters:uri_parameters headers:( headers )?
                      {
-                       return sipuriBuild('sips', userinfo, hostport, uri_parameters, headers);
+                       return helpers.sipuriBuild('sips', userinfo, hostport, uri_parameters, headers);
                     }
 
 //TODO telephone_subscriber
 //userinfo         =  ( user / telephone_subscriber ) ( ":" password )? "@"
 userinfo         =  user:( user ) password:( ":" p:password {return p;} )? "@"
                     {
-                      return serializeable({
+                      return helpers.serializeable({
                         user: user,
                         password: password
                       }, ['user', 'password'], {
@@ -321,16 +143,16 @@ userinfo         =  user:( user ) password:( ":" p:password {return p;} )? "@"
                       });
                     }
 user             =  chars:( unreserved / escaped / user_unreserved )+
-                    {return joinEscaped(chars);}
+                    {return helpers.joinEscaped(chars);}
 
 user_unreserved  =  "&" / "=" / "+" / "$" / "," / ";" / "?" / "/"
 password         =  chars:( unreserved / escaped /
                     "&" / "=" / "+" / "$" / "," )*
-                    {return joinEscaped(chars);}
+                    {return helpers.joinEscaped(chars);}
 
 hostport         =  host:host port:( ":" p:port {return p;} )?
                     {
-                      return hostportBuild(host, port);
+                      return helpers.hostportBuild(host, port);
                     }
 host             =  $( hostname / IPv4address / IPv6reference )
 hostname         =  ( domainlabel "." )* toplabel ( "." )?
@@ -389,7 +211,7 @@ hex4           =  HEXDIG HEXDIG? HEXDIG? HEXDIG?
 port           =  _PDIGITS
 
 uri_parameters    =  parameters:( ";" up:uri_parameter {return up;})*
-                     { return combineParams(parameters); }
+                     { return helpers.combineParams(parameters); }
 uri_parameter     =  transport_param / user_param / method_param
                      / ttl_param / maddr_param / lr_param / other_param
 
@@ -419,21 +241,21 @@ other_param       =  name:pname value:( "=" v:pvalue {return v;} )?
                      {return {name: name, value: value};}
 pname             =  _paramchars
 pvalue            =  _paramchars
-_paramchars       =  chars:paramchar+ {return joinEscaped(chars);}
+_paramchars       =  chars:paramchar+ {return helpers.joinEscaped(chars);}
 paramchar         =  param_unreserved / unreserved / escaped
 param_unreserved  =  "[" / "]" / "/" / ":" / "&" / "+" / "$"
 
 headers         =  "?" first:header rest:( "&" h:header {return h;} )*
                    {
-                     return combineParams([first].concat(rest), {
+                     return helpers.combineParams([first].concat(rest), {
                        separator: '&',
                        prefix: '?'
                      });
                    }
 header          =  name:hname "=" value:hvalue
                    {return {name: name, value: value};}
-hname           =  chars:_hchar+ {return joinEscaped(chars);}
-hvalue          =  chars:_hchar* {return joinEscaped(chars);}
+hname           =  chars:_hchar+ {return helpers.joinEscaped(chars);}
+hvalue          =  chars:_hchar* {return helpers.joinEscaped(chars);}
 _hchar          =  hnv_unreserved / unreserved / escaped
 hnv_unreserved  =  "[" / "]" / "/" / "?" / ":" / "+" / "$"
 
@@ -444,7 +266,7 @@ Request        =  Request_Line:Request_Line
                   CRLF
                   message_body:( message_body )?
                   {
-                    return serializeable({
+                    return helpers.serializeable({
                       Request_Line: Request_Line,
                       message_headers: message_headers,
                       message_body: message_body
@@ -453,7 +275,7 @@ Request        =  Request_Line:Request_Line
 
 Request_Line   =  Method:Method SP Request_URI:Request_URI SP SIP_Version:SIP_Version CRLF
                   {
-                    return serializeable({
+                    return helpers.serializeable({
                       Method: Method,
                       Request_URI: Request_URI,
                       SIP_Version: SIP_Version
@@ -466,7 +288,7 @@ Request_Line   =  Method:Method SP Request_URI:Request_URI SP SIP_Version:SIP_Ve
 Request_URI    =  SIP_URI / SIPS_URI / absoluteURI
 absoluteURI    =  scheme:scheme ":" part:( hier_part / opaque_part )
                   {
-                    return serializeable({
+                    return helpers.serializeable({
                       scheme: scheme,
                       part: part
                     }, ['scheme', 'part'], {separator: ':'});
@@ -474,7 +296,7 @@ absoluteURI    =  scheme:scheme ":" part:( hier_part / opaque_part )
 
 hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )?
                   {
-                    return serializeable({
+                    return helpers.serializeable({
                       path: path,
                       query: query
                     }, ['path', 'query'], {separator: '?'});
@@ -482,7 +304,7 @@ hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )
 
 net_path       =  "//" authority:authority abs_path:( abs_path )?
                   {
-                    return serializeable({
+                    return helpers.serializeable({
                       authority: authority,
                       abs_path: abs_path
                     }, ['//', 'authority', 'abs_path']);
@@ -491,7 +313,7 @@ abs_path       =  "/" path_segments:path_segments {return path_segments;}
 
 // http://tools.ietf.org/html/rfc3261#page-224
 opaque_part    =  ns:uric_no_slash chars:uric*
-                  {return joinEscaped([ns].concat(chars));}
+                  {return helpers.joinEscaped([ns].concat(chars));}
 uric           =  reserved / unreserved / escaped
 uric_no_slash  =  unreserved / escaped / ";" / "?" / ":" / "@"
                   / "&" / "=" / "+" / "$" / ","
@@ -500,10 +322,10 @@ path_segments  =  first:segment rest:( "/" s:segment {return s;} )*
 segment        =  value:_pchars
                   params:( ";" p:param {return p;} )*
                   {
-                    return xparamsBuild(value, 'value', params);
+                    return helpers.xparamsBuild(value, 'value', params);
                   }
 param          =  _pchars
-_pchars        =  chars:pchar* {return joinEscaped(chars);}
+_pchars        =  chars:pchar* {return helpers.joinEscaped(chars);}
 pchar          =  unreserved / escaped /
                   ":" / "@" / "&" / "=" / "+" / "$" / ","
 scheme         =  $( ALPHA ( ALPHA / DIGIT / "+" / "-" / "." )* )
@@ -513,7 +335,7 @@ srvr           =  (
                     userinfo:userinfo?
                     hostport: hostport
                     {
-                      return serializeable({
+                      return helpers.serializeable({
                         userinfo: userinfo,
                         hostport: hostport
                       }, ['userinfo', 'hostport']);
@@ -522,19 +344,19 @@ srvr           =  (
 
 reg_name       =  chars:( unreserved / escaped / "$" / ","
                   / ";" / ":" / "@" / "&" / "=" / "+" )+
-                  {return joinEscaped(chars);}
-query          =  chars:uric* {return joinEscaped(chars);}
+                  {return helpers.joinEscaped(chars);}
+query          =  chars:uric* {return helpers.joinEscaped(chars);}
 SIP_Version    =  $("SIP"i "/" _version)
 _version       =  major:_PDIGITS "." minor:_PDIGITS
                   {
-                    return serializeable({
+                    return helpers.serializeable({
                       major: major,
                       minor: minor
                     }, ['major', 'minor'], {separator: '.'});
                   }
 
 _message_headers = message_headers:( message_header )*
-                   { return combineHeaders(message_headers); }
+                   { return helpers.combineHeaders(message_headers); }
 message_header  =  message_header:(Accept
                 /  Accept_Encoding
                 /  Accept_Language
@@ -607,7 +429,7 @@ Response          =  Status_Line:Status_Line
                      CRLF
                      message_body:( message_body )?
                      {
-                       return serializeable({
+                       return helpers.serializeable({
                          Status_Line: Status_Line,
                          message_headers: message_headers,
                          message_body: message_body
@@ -616,7 +438,7 @@ Response          =  Status_Line:Status_Line
 
 Status_Line     =  SIP_Version:SIP_Version SP Status_Code:Status_Code SP Reason_Phrase:Reason_Phrase CRLF
                    {
-                     return serializeable({
+                     return helpers.serializeable({
                        SIP_Version: SIP_Version,
                        Status_Code: Status_Code,
                        Reason_Phrase: Reason_Phrase
@@ -629,7 +451,7 @@ Status_Line     =  SIP_Version:SIP_Version SP Status_Code:Status_Code SP Reason_
 Status_Code     =  _PDIGIT3
 Reason_Phrase   =  chars:(reserved / unreserved / escaped
                    / UTF8_NONASCII / UTF8_CONT / SP / HTAB)*
-                   {return joinEscaped(chars);}
+                   {return helpers.joinEscaped(chars);}
 
 // http://tools.ietf.org/html/rfc3261#page-227
 // RFC 3261 20.1: An empty Accept header field means that no formats are acceptable.
@@ -642,7 +464,7 @@ Accept         =  name:"Accept"i HCOLON
                   {return {name: "Accept", value: value || []};}
 accept_range   =  media_range:media_range accept_params:(SEMI a:accept_param {return a;})*
                   {
-                    return xparamsBuild(media_range, 'media_range', accept_params, 'accept_params');
+                    return helpers.xparamsBuild(media_range, 'media_range', accept_params, 'accept_params');
                   }
 //media_range    =  ( "*/*"
 //                  / ( m_type SLASH "*" )
@@ -680,7 +502,7 @@ Accept_Encoding  =  name:"Accept-Encoding"i HCOLON
 encoding         =  codings:codings
                     accept_params:(SEMI a:accept_param {return a;})*
                     {
-                      return xparamsBuild(codings, 'codings', accept_params, 'accept_params');
+                      return helpers.xparamsBuild(codings, 'codings', accept_params, 'accept_params');
                     }
 codings          =  content_coding / "*"
 content_coding   =  token
@@ -695,7 +517,7 @@ Accept_Language  =  name:"Accept-Language"i HCOLON
 language         =  language_range:language_range
                     accept_params:(SEMI a:accept_param {return a;})*
                     {
-                      return xparamsBuild(language_range, 'language_range', accept_params, 'accept_params');
+                      return helpers.xparamsBuild(language_range, 'language_range', accept_params, 'accept_params');
                     }
 language_range   =  $ ( ( _1to8ALPHA ( "-" _1to8ALPHA )* ) / "*" )
 _1to8ALPHA       = ALPHA ALPHA? ALPHA? ALPHA? ALPHA? ALPHA? ALPHA? ALPHA?
@@ -710,7 +532,7 @@ Alert_Info   =  name:"Alert-Info"i HCOLON
 alert_param  =  LAQUOT absoluteURI:absoluteURI RAQUOT
                 params:( SEMI g:generic_param {return g;} )*
                 {
-                  return xparamsBuild(absoluteURI, 'absoluteURI', params);
+                  return helpers.xparamsBuild(absoluteURI, 'absoluteURI', params);
                 }
 
 Allow  =  name:"Allow"i HCOLON
@@ -726,19 +548,19 @@ Authorization     =  name:"Authorization"i HCOLON value:credentials
 credentials       =  (
                        "Digest" LWS d:digest_response
                        {
-                         return serializeable({
+                         return helpers.serializeable({
                            digest_response: d
                          }, ['Digest ', 'digest_response']);
                        }
                      )
                      / (o:other_response {
-                         return serializeable({
+                         return helpers.serializeable({
                            other_response: o
                          }, ['other_response']);
                        })
 digest_response   =  first:dig_resp
                      rest:(COMMA d:dig_resp {return d;})*
-                     { return combineParams([first].concat(rest), {separator: ', '}); }
+                     { return helpers.combineParams([first].concat(rest), {separator: ', '}); }
 dig_resp          =  username / realm / nonce / digest_uri
                       / dresponse / algorithm / cnonce
                       / opaque / message_qop
@@ -774,7 +596,7 @@ other_response    =  auth_scheme:auth_scheme LWS first:auth_param
                      rest:(COMMA a:auth_param {return a;})*
                      {
                        auth_params = [first].concat(rest);
-                       return xparamsBuild(auth_scheme, 'auth_scheme', auth_params, 'auth_params', {
+                       return helpers.xparamsBuild(auth_scheme, 'auth_scheme', auth_params, 'auth_params', {
                          separator: ', ',
                          prefix: ' '
                        });
@@ -785,7 +607,7 @@ Authentication_Info  =  name:"Authentication-Info"i HCOLON
                         value:(
                           first:ainfo
                           rest:(COMMA a:ainfo {return a;})*
-                          { return combineParams([first].concat(rest), {separator: ', '}); }
+                          { return helpers.combineParams([first].concat(rest), {separator: ', '}); }
                         )
                         {return {name: "Authentication-Info", value: value};}
 ainfo                =  nextnonce / message_qop
@@ -811,7 +633,7 @@ Call_Info   =  name:"Call-Info"i HCOLON
 info        =  LAQUOT absoluteURI:absoluteURI RAQUOT
                info_params:( SEMI i:info_param {return i;} )*
                {
-                 return xparamsBuild(absoluteURI, 'absoluteURI', info_params, 'info_params');
+                 return helpers.xparamsBuild(absoluteURI, 'absoluteURI', info_params, 'info_params');
                }
 info_param  =  (
                  name:"purpose" EQUAL
@@ -832,7 +654,7 @@ Contact        =  name:("Contact"i / "m"i ) HCOLON
 contact_param  =  addr:(name_addr / addr_spec)
                   params:(SEMI c:contact_params {return c;})*
                   {
-                    return addrparamsBuild(addr, params);
+                    return helpers.addrparamsBuild(addr, params);
                   }
 name_addr      =  display_name:( display_name )?
                   LAQUOT addr_spec:addr_spec RAQUOT
@@ -866,7 +688,7 @@ c_p_instance       =  name:"+sip.instance" EQUAL
                       {return {name: name, value: value};}
 
 // defined in RFC 3261
-instance_val       =  chars:uric+ {return joinEscaped(chars);}
+instance_val       =  chars:uric+ {return helpers.joinEscaped(chars);}
 // end RFC 5626
 
 contact_extension  =  generic_param
@@ -877,7 +699,7 @@ Content_Disposition   =  name:"Content-Disposition"i HCOLON
                            disp_type:disp_type
                            disp_params:( SEMI d:disp_param {return d;} )*
                            {
-                             return xparamsBuild(disp_type, 'disp_type', disp_params, 'disp_params');
+                             return helpers.xparamsBuild(disp_type, 'disp_type', disp_params, 'disp_params');
                            }
                          )
                          {return {name: "Content-Disposition", value: value};}
@@ -908,7 +730,7 @@ Content_Language  =  name:"Content-Language"i HCOLON
 language_tag      =  primary_tag:primary_tag
                      subtags:( "-" s:subtag {return s;})*
                      {
-                       return serializeable({
+                       return helpers.serializeable({
                          primary_tag: primary_tag,
                          subtags: subtags
                        }, ['primary_tag', 'subtags']);
@@ -923,8 +745,8 @@ Content_Type     =  name:( "Content-Type"i / "c"i ) HCOLON value:media_type
 media_type       =  m_type:m_type SLASH m_subtype:m_subtype
                     m_parameters:(SEMI p:m_parameter {return p;})*
                     {
-                      m_parameters = combineParams(m_parameters);
-                      return serializeable({
+                      m_parameters = helpers.combineParams(m_parameters);
+                      return helpers.serializeable({
                         m_type: m_type,
                         m_subtype: m_subtype,
                         m_parameters: m_parameters
@@ -941,7 +763,7 @@ CSeq  =  name:"CSeq"i HCOLON
          value:(
            sequenceNumber:_PDIGITS LWS requestMethod:Method
            {
-             return serializeable({
+             return helpers.serializeable({
                sequenceNumber: sequenceNumber,
                requestMethod: requestMethod
              }, ['sequenceNumber', 'requestMethod'], {separator: ' '});
@@ -954,7 +776,7 @@ Date          =  name:"Date"i HCOLON value:SIP_date
 SIP_date      =  rfc1123_date
 rfc1123_date  =  wkday:wkday "," SP date1:date1 SP time:time SP "GMT"
                  {
-                   return serializeable({
+                   return helpers.serializeable({
                      wkday: wkday,
                      date1: date1,
                      time: time
@@ -963,7 +785,7 @@ rfc1123_date  =  wkday:wkday "," SP date1:date1 SP time:time SP "GMT"
 date1         =  day:_PDIGIT2 SP month:month SP year:_PDIGIT4
                  // day month year (e.g., 02 Jun 1982)
                  {
-                   return serializeable({
+                   return helpers.serializeable({
                      day: day,
                      month: month,
                      year: year
@@ -972,7 +794,7 @@ date1         =  day:_PDIGIT2 SP month:month SP year:_PDIGIT4
 time          =  hours:_PDIGIT2 ":" minutes:_PDIGIT2 ":" seconds:_PDIGIT2
                  // 00:00:00 _ 23:59:59
                  {
-                   return serializeable({
+                   return helpers.serializeable({
                      hours: hours,
                      minutes: minutes,
                      seconds: seconds
@@ -996,7 +818,7 @@ Error_Info  =  name:"Error-Info"i HCOLON
 error_uri   =  LAQUOT absoluteURI:absoluteURI RAQUOT
                params:( SEMI g:generic_param {return g;} )*
                {
-                 return xparamsBuild(absoluteURI, 'absoluteURI', params);
+                 return helpers.xparamsBuild(absoluteURI, 'absoluteURI', params);
                }
 
 Expires     =  name:"Expires"i HCOLON value:delta_seconds
@@ -1006,7 +828,7 @@ From        =  name:( "From"i / "f"i ) HCOLON value:from_spec
 from_spec   =  addr:(name_addr / addr_spec)
                params:(SEMI f:from_param {return f;})*
                {
-                 return addrparamsBuild(addr, params);
+                 return helpers.addrparamsBuild(addr, params);
                }
 from_param  =  tag_param / generic_param
 tag_param   =  name:"tag" EQUAL value:token
@@ -1052,7 +874,7 @@ other_challenge     =  auth_scheme:auth_scheme LWS first:auth_param
                        rest:(COMMA a:auth_param {return a;})*
                        {
                          auth_params = [first].concat(rest);
-                         return xparamsBuild(auth_scheme, 'auth_scheme', auth_params, 'auth_params', ', ');
+                         return helpers.xparamsBuild(auth_scheme, 'auth_scheme', auth_params, 'auth_params', ', ');
                        }
 digest_cln          =  realm / domain / nonce
                         / opaque / stale / algorithm
@@ -1110,7 +932,7 @@ Record_Route  =  name:"Record-Route"i HCOLON
 rec_route     =  addr:name_addr
                  params:( SEMI r:rr_param {return r;} )*
                  {
-                   return addrparamsBuild(addr, params);
+                   return helpers.addrparamsBuild(addr, params);
                  }
 rr_param      =  generic_param
 
@@ -1119,7 +941,7 @@ Reply_To      =  name:"Reply-To"i HCOLON value:rplyto_spec
 rplyto_spec   =  addr:( name_addr / addr_spec )
                  params:( SEMI r:rplyto_param {return r;} )*
                  {
-                   return addrparamsBuild(addr, params);
+                   return helpers.addrparamsBuild(addr, params);
                  }
 rplyto_param  =  generic_param
 Require       =  name:"Require"i HCOLON
@@ -1136,8 +958,8 @@ Retry_After  =  name:"Retry-After"i HCOLON
                   comment:( comment )?
                   retry_params:( SEMI r:retry_param {return r;} )*
                   {
-                    retry_params = combineParams(retry_params);
-                    return serializeable({
+                    retry_params = helpers.combineParams(retry_params);
+                    return helpers.serializeable({
                       delta_seconds: delta_seconds,
                       comment: comment,
                       retry_params: retry_params
@@ -1161,7 +983,7 @@ Route        =  name:"Route"i HCOLON
                 {return {name: "Route", value: value};}
 route_param  =  addr:name_addr params:( SEMI r:rr_param {return r;} )*
                 {
-                  return addrparamsBuild(addr, params);
+                  return helpers.addrparamsBuild(addr, params);
                 }
 
 Server           =  name:"Server"i HCOLON
@@ -1174,7 +996,7 @@ Server           =  name:"Server"i HCOLON
 server_val       =  product / comment
 product          =  product_name:token product_version:(SLASH p:product_version {return p;})?
                     {
-                      return serializeable({
+                      return helpers.serializeable({
                         product_name: product_name,
                         product_version: product_version
                       }, ['product_name', 'product_version'], {separator: '/'});
@@ -1206,7 +1028,7 @@ To        =  name:( "To"i / "t"i ) HCOLON
                addr:( name_addr / addr_spec )
                params:( SEMI t:to_param {return t;} )*
                {
-                 return addrparamsBuild(addr, params);
+                 return helpers.addrparamsBuild(addr, params);
                }
              )
              {return {name: "To", value: value};}
@@ -1238,8 +1060,8 @@ Via               =  name:( "Via"i / "v"i ) HCOLON
 via_parm          =  sent_protocol:sent_protocol LWS sent_by:sent_by
                      params:( SEMI v:via_params {return v;} )*
                      {
-                       params = combineParams(params);
-                       return serializeable({
+                       params = helpers.combineParams(params);
+                       return helpers.serializeable({
                          sent_protocol: sent_protocol,
                          sent_by: sent_by,
                          params: params
@@ -1260,7 +1082,7 @@ via_extension     =  generic_param
 sent_protocol     =  protocol_name:protocol_name SLASH protocol_version:protocol_version
                      SLASH transport:transport
                      {
-                       return serializeable({
+                       return helpers.serializeable({
                          protocol_name: protocol_name,
                          protocol_version: protocol_version,
                          transport: transport
@@ -1278,7 +1100,7 @@ transport         =  "UDP" / "TCP" / "TLS" / "SCTP"
 
 sent_by           =  host:host port:( COLON p:port {return p;} )?
                      {
-                       return hostportBuild(host, port);
+                       return helpers.hostportBuild(host, port);
                      }
 // ttl               =  1*3DIGIT // 0 to 255
 ttl             = "25" [\x30-\x35]          // 250-255
@@ -1296,7 +1118,7 @@ Warning        =  name:"Warning"i HCOLON
                   {return {name: "Warning", value: value};}
 warning_value  =  warn_code:warn_code SP warn_agent:warn_agent SP warn_text:warn_text
                   {
-                    return serializeable({
+                    return helpers.serializeable({
                       warn_code: warn_code,
                       warn_agent: warn_agent,
                       warn_text: warn_text
@@ -1320,7 +1142,7 @@ RAck          =  name:"RAck"i HCOLON
                    CSeq_num:CSeq_num LWS
                    Method:Method
                    {
-                     return serializeable({
+                     return helpers.serializeable({
                        response_num: response_num,
                        CSeq_num: CSeq_num,
                        Method: Method
@@ -1346,7 +1168,7 @@ Reason            =  name:"Reason"i HCOLON
 reason_value      =  protocol:protocol
                      params:(SEMI r:reason_params {return r;})*
                      {
-                       return xparamsBuild(protocol, 'protocol', params);
+                       return helpers.xparamsBuild(protocol, 'protocol', params);
                      }
 protocol          =  "SIP" / "Q.850" / token
 reason_params     =  protocol_cause / reason_text
@@ -1371,7 +1193,7 @@ Path       = name:"Path"i HCOLON
 path_value = addr:name_addr
              params:( SEMI p:rr_param {return p;} )*
              {
-               return addrparamsBuild(addr, params);
+               return helpers.addrparamsBuild(addr, params);
              }
 // end RFC 3327
 
@@ -1382,7 +1204,7 @@ Refer_To = name:("Refer-To"i / "r"i) HCOLON
              addr:( name_addr / addr_spec )
              params:(SEMI p:generic_param {return p;})*
              {
-               return addrparamsBuild(addr, params);
+               return helpers.addrparamsBuild(addr, params);
              }
            )
            {return {name: "Refer-To", value: value};}
@@ -1401,14 +1223,14 @@ Event             =  name:( "Event"i / "o"i ) HCOLON
                        type:event_type
                        params:( SEMI p:event_param {return p;} )*
                        {
-                         return xparamsBuild(type, 'type', params);
+                         return helpers.xparamsBuild(type, 'type', params);
                        }
                      )
                      {return {name: name, value: value};}
 event_type        =  event_package:event_package
                      templates:( "." t:event_template {return t;} )*
                      {
-                       return serializeable({
+                       return helpers.serializeable({
                          event_package: event_package,
                          templates: templates
                        }, ['event_package', 'templates']);
@@ -1437,7 +1259,7 @@ Subscription_State   = name:"Subscription-State"i HCOLON
                          substate_value:substate_value
                          params:( SEMI p:subexp_params {return p;} )*
                          {
-                           return xparamsBuild(substate_value, 'substate_value', params);
+                           return helpers.xparamsBuild(substate_value, 'substate_value', params);
                          }
                        )
                        {return {name: "Subscription-State", value: value};}

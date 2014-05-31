@@ -25,7 +25,7 @@ var options = {
 };
 
 gulp.task('build', function() {
-  gulp.src('src/sippers.js')
+  gulp.src('src/*.js')
     .pipe(gulp.dest('dist'))
   ;
 
