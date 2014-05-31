@@ -37,6 +37,9 @@ gulp.task('build', function() {
         'if (options.constructor === String) {' +
           'options = {startRule: options};' +
         '}' +
+        'return parse(this.foldLWS(input), options);' +
+      '},' +
+      'foldLWS: function foldLWS (input) {' +
         // RFC 3261 25.1:
         // All linear white space, including folding, has the same semantics as SP.
         'var emptyLine = "\\r\\n\\r\\n";' +
@@ -45,8 +48,7 @@ gulp.task('build', function() {
         'var headersBody = input.split(emptyLine, 2);' +
         'var headers = headersBody[0].replace(folding, " ");' +
         'var body = headersBody[1] || "";' +
-        'var result = headers + (hadEmptyLine ? emptyLine : "") + body;' +
-        'return parse(result, options);' +
+        'return headers + (hadEmptyLine ? emptyLine : "") + body;' +
       '}'))
     .pipe(gulp.dest('dist'))
   ;
