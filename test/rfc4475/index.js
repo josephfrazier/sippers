@@ -68,12 +68,12 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('The Request-URI has sips:user@example.com embedded in its userpart.', function () {
-          assert.equal('sips:user@example.com', parsed.Request_Line.URI.userinfo.user);
+          assert.equal('sips:user@example.com', parsed.Request_Line.URI.user);
         });
 
         it('The From and To URIs have escaped characters in their userparts.', function () {
-          assert.equal('I have spaces', parsed.headers.From.addr.userinfo.user);
-          assert.equal('user', parsed.headers.To.addr.userinfo.user);
+          assert.equal('I have spaces', parsed.headers.From.addr.user);
+          assert.equal('user', parsed.headers.To.addr.user);
         });
 
         it('The Contact URI has escaped characters in the URI parameters.', function () {
@@ -97,16 +97,16 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('has From/To users of "null-%00-null"', function () {
-          assert.equal('null-\u0000-null', parsed.headers.From.addr.userinfo.user);
-          assert.equal('null-\u0000-null', parsed.headers.To.addr.userinfo.user);
+          assert.equal('null-\u0000-null', parsed.headers.From.addr.user);
+          assert.equal('null-\u0000-null', parsed.headers.To.addr.user);
         });
 
         it('has first Contact user of "%00"', function () {
-          assert.equal('\u0000', parsed.headers.Contact[0].addr.userinfo.user);
+          assert.equal('\u0000', parsed.headers.Contact[0].addr.user);
         });
 
         it('has second Contact user of "%00%00"', function () {
-          assert.equal('\u0000\u0000', parsed.headers.Contact[1].addr.userinfo.user);
+          assert.equal('\u0000\u0000', parsed.headers.Contact[1].addr.user);
         });
       });
 
@@ -177,7 +177,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('The Request-URI will parse so that the user part is "user;par=u@example.net".', function () {
-          assert.equal('user;par=u@example.net', parsed.Request_Line.URI.userinfo.user);
+          assert.equal('user;par=u@example.net', parsed.Request_Line.URI.user);
         });
       });
 

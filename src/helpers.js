@@ -98,11 +98,13 @@ function header (name, value) {
 function sipuriBuild (scheme, userinfo, hostport, params, headers) {
   return serializeable({
       scheme: scheme
-    , userinfo: userinfo
-    , hostport: hostport
+    , user: userinfo && userinfo.user
+    , password: userinfo && userinfo.password
+    , host: hostport && hostport.host
+    , port: hostport && hostport.port
     , params: params
     , headers: headers
-  }, ['scheme', ':', 'userinfo', 'hostport', 'params', 'headers'], {
+  }, ['scheme', ':', userinfo, hostport, 'params', 'headers'], {
     transform: function (addrSpecString) {
       if (this.display_name || this._isNameAddr) {
         addrSpecString = serialize(this.display_name) + '<' + addrSpecString + '>';
