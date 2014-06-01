@@ -54,19 +54,19 @@ describe('Miscellaneous Tests:', function () {
   });
 
   it('parses folding Subject header', function () {
-    var message = make200("CSeq:1\r\nSubject:  \r\n \r\n ...finally");
+    var message = make200("Subject:  \r\n \r\n ...finally");
     var parsed = sippers.parse(message, {startRule: 'SIP_message'});
     assert.strictEqual(parsed.message_headers.Subject, '...finally');
   });
 
   it('parses empty Subject header', function () {
-    var message = make200("CSeq:1\r\nSubject  :     ");
+    var message = make200("Subject  :     ");
     var parsed = sippers.parse(message, {startRule: 'SIP_message'});
     assert.strictEqual(parsed.message_headers.Subject, '');
   });
 
   it('parses empty folding Subject header', function () {
-    var message = make200("CSeq:1\r\nSubject:  \r\n ");
+    var message = make200("Subject:  \r\n ");
     var parsed = sippers.parse(message, {startRule: 'SIP_message'});
     assert.strictEqual(parsed.message_headers.Subject, '');
   });
