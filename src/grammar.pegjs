@@ -276,13 +276,13 @@ Request        =  Request_Line:Request_Line
                     }, ['Request_Line', 'headers', '\r\n', 'body']);
                   }
 
-Request_Line   =  Method:Method SP URI:Request_URI SP SIP_Version:SIP_Version CRLF
+Request_Line   =  Method:Method SP URI:Request_URI SP Version:SIP_Version CRLF
                   {
                     return helpers.serializeable({
                       Method: Method,
                       URI: URI,
-                      SIP_Version: SIP_Version
-                    }, ['Method', 'URI', 'SIP_Version'], {
+                      Version: Version
+                    }, ['Method', 'URI', 'Version'], {
                       separator: ' ',
                       suffix: '\r\n'
                     });
@@ -447,13 +447,13 @@ Response          =  Status_Line:Status_Line
                        }, ['Status_Line', 'headers', '\r\n', 'body']);
                      }
 
-Status_Line     =  SIP_Version:SIP_Version SP Status_Code:Status_Code SP Reason_Phrase:Reason_Phrase CRLF
+Status_Line     =  Version:SIP_Version SP Status_Code:Status_Code SP Reason_Phrase:Reason_Phrase CRLF
                    {
                      return helpers.serializeable({
-                       SIP_Version: SIP_Version,
+                       Version: Version,
                        Status_Code: Status_Code,
                        Reason_Phrase: Reason_Phrase
-                     }, ['SIP_Version', 'Status_Code', 'Reason_Phrase'], {
+                     }, ['Version', 'Status_Code', 'Reason_Phrase'], {
                        separator: ' ',
                        suffix: '\r\n'
                      });

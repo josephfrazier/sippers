@@ -403,7 +403,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('has version number 7.0', function () {
-          assert.strictEqual(parsed.Request_Line.SIP_Version, 'SIP/7.0');
+          assert.strictEqual(parsed.Request_Line.Version, 'SIP/7.0');
         });
       });
 
