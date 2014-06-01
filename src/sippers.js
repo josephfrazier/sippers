@@ -31,7 +31,7 @@ function parse (input, options){
   }
 
   try {
-    parsed.message_headers = combineHeaders(parsed.message_headers);
+    parsed.headers = combineHeaders(parsed.headers);
   } catch (e) {
     throw new ParsedError(parsed, 400, "Multiple " + e.message + " values");
   }
@@ -66,7 +66,7 @@ function mandateHeaders (parsed, headers) {
 }
 
 function mandateHeader (parsed, headerName) {
-  var headerValue = parsed.message_headers[headerName];
+  var headerValue = parsed.headers[headerName];
   var reasonPrefix;
   if (!headerValue) {
     reasonPrefix = 'Missing';
@@ -82,7 +82,7 @@ function mandateHeader (parsed, headerName) {
 }
 
 function checkCSeq (parsed) {
-  if (parsed.message_headers.CSeq.sequenceNumber >= Math.pow(2, 32)) {
+  if (parsed.headers.CSeq.sequenceNumber >= Math.pow(2, 32)) {
     throw new ParsedError(parsed, 400, 'Invalid CSeq sequence number');
   }
 }

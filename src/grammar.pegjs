@@ -265,15 +265,15 @@ hnv_unreserved  =  "[" / "]" / "/" / "?" / ":" / "+" / "$"
 SIP_message    =  Request / Response
 
 Request        =  Request_Line:Request_Line
-                  message_headers:_message_headers
+                  headers:_message_headers
                   CRLF
-                  message_body:( message_body )?
+                  body:( message_body )?
                   {
                     return helpers.serializeable({
                       Request_Line: Request_Line,
-                      message_headers: message_headers,
-                      message_body: message_body
-                    }, ['Request_Line', 'message_headers', '\r\n', 'message_body']);
+                      headers: headers,
+                      body: body
+                    }, ['Request_Line', 'headers', '\r\n', 'body']);
                   }
 
 Request_Line   =  Method:Method SP Request_URI:Request_URI SP SIP_Version:SIP_Version CRLF
@@ -436,15 +436,15 @@ message_header  =  message_header:(
 Method            =  token
 
 Response          =  Status_Line:Status_Line
-                     message_headers:_message_headers
+                     headers:_message_headers
                      CRLF
-                     message_body:( message_body )?
+                     body:( message_body )?
                      {
                        return helpers.serializeable({
                          Status_Line: Status_Line,
-                         message_headers: message_headers,
-                         message_body: message_body
-                       }, ['Status_Line', 'message_headers', '\r\n', 'message_body']);
+                         headers: headers,
+                         body: body
+                       }, ['Status_Line', 'headers', '\r\n', 'body']);
                      }
 
 Status_Line     =  SIP_Version:SIP_Version SP Status_Code:Status_Code SP Reason_Phrase:Reason_Phrase CRLF
