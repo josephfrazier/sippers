@@ -361,7 +361,7 @@ _version       =  major:_PDIGITS "." minor:_PDIGITS
                   }
 
 _message_headers = message_headers:( message_header )*
-                   { return helpers.combineHeaders(message_headers); }
+                   { return message_headers; }
 message_header  =  message_header:(
                    (h:Accept CRLF {return h;})
                 /  (h:Accept_Encoding CRLF {return h;})
