@@ -1152,15 +1152,15 @@ WWW_Authenticate  =  name:"WWW-Authenticate"i HCOLON value:challenge
 // http://tools.ietf.org/html/rfc3262#section-10
 RAck          =  name:"RAck"i HCOLON
                  value:(
-                   response_num:response_num LWS
-                   CSeq_num:CSeq_num LWS
+                   RSeq:response_num LWS
+                   CSeq:CSeq_num LWS
                    Method:Method
                    {
                      return helpers.serializeable({
-                       response_num: response_num,
-                       CSeq_num: CSeq_num,
+                       RSeq: RSeq,
+                       CSeq: CSeq,
                        Method: Method
-                     }, ['response_num', 'CSeq_num', 'Method'], {separator: ' '});
+                     }, ['RSeq', 'CSeq', 'Method'], {separator: ' '});
                    }
                  )
                  {return {name: "RAck", value: value};}
