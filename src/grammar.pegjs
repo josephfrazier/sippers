@@ -311,10 +311,18 @@ net_path       =  "//" authority:authority abs_path:( abs_path )?
                   {
                     return helpers.serializeable({
                       authority: authority,
-                      abs_path: abs_path
-                    }, ['//', 'authority', 'abs_path']);
+                      segments: abs_path && abs_path.segments
+                    }, ['authority', 'segments'], {
+                      prefix: '//',
+                      separator: '/'
+                    });
                   }
-abs_path       =  "/" path_segments:path_segments {return path_segments;}
+abs_path       =  "/" segments:path_segments
+                  {
+                    return helpers.serializeable({
+                      segments: segments,
+                    }, ['/', 'segments']);
+                  }
 
 // http://tools.ietf.org/html/rfc3261#page-224
 opaque_part    =  ns:uric_no_slash chars:uric*

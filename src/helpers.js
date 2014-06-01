@@ -63,15 +63,15 @@ function serialize (obj, options) {
   var transform = options.transform || function(i){return i;};
   var serialized = '';
   if (obj) {
-    if (Array.isArray(obj)) {
+    if (obj.serialize) {
+      serialized = obj.serialize();
+    }
+    else if (Array.isArray(obj)) {
       serialized = obj
         // jshint eqnull:true
         .filter(function(i){return i != null;})
         .map(function(i){return serialize(i);})
         .join(separator);
-    }
-    else if (obj.serialize) {
-      serialized = obj.serialize();
     }
     else {
       serialized = obj + '';
