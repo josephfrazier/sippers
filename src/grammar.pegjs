@@ -968,16 +968,16 @@ Require       =  name:"Require"i HCOLON
 
 Retry_After  =  name:"Retry-After"i HCOLON
                 value:(
-                  delta_seconds:delta_seconds
+                  seconds:delta_seconds
                   comment:( comment )?
                   parameters:( SEMI r:retry_param {return r;} )*
                   {
                     parameters = helpers.combineParams(parameters);
                     return helpers.serializeable({
-                      delta_seconds: delta_seconds,
+                      seconds: seconds,
                       comment: comment,
                       parameters: parameters
-                    }, ['delta_seconds', 'comment', 'parameters']);
+                    }, ['seconds', 'comment', 'parameters']);
                   }
                 )
                 {return {name: "Retry-After", value: value};}
