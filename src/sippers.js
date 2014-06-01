@@ -19,7 +19,6 @@ function parse (input, options){
 
   try {
     var parsed = grammar.parse(input, options);
-    parsed.message_headers = combineHeaders(parsed.message_headers);
   } catch (e) {
     // add debugging info
     e.message += [
@@ -29,6 +28,12 @@ function parse (input, options){
     ].join(' ');
 
     throw e;
+  }
+
+  try {
+    parsed.message_headers = combineHeaders(parsed.message_headers);
+  } catch (e) {
+    throw new ParsedError(parsed, 400, "Multiple " + e.message + " values");
   }
 
   if (parsed.Request_Line) {

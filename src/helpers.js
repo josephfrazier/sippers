@@ -2,8 +2,15 @@ function mapList (isHeaders, list, serializeOptions) {
   function combine (map, item) {
     var name = item.name;
     var value = item.value;
-    if (isHeaders && Array.isArray(value)) {
-      value = (map[name] || []).concat(value);
+    if (isHeaders) {
+      var prevValue = map[name];
+      var prevArray = Array.isArray(prevValue);
+      if (prevArray) {
+        value = prevValue.concat(value);
+      }
+      else if (prevValue) {
+        throw new Error(name);
+      }
     }
     map[name] = value;
     return map;
