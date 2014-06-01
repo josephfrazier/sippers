@@ -78,7 +78,7 @@ describe('RFC 4475 Torture Tests', function () {
 
         it('The Contact URI has escaped characters in the URI parameters.', function () {
           assert.deepEqual(
-            jsonClone(parsed.headers.Contact[0].addr.params),
+            jsonClone(parsed.headers.Contact[0].addr.parameters),
             {
               "lr": null,
               "name": "value%41"
@@ -458,7 +458,7 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it('has Via branch parameter of "z9hG4bK"', function () {
-        assert.strictEqual('z9hG4bK', parsed.headers.Via[0].params.branch);
+        assert.strictEqual('z9hG4bK', parsed.headers.Via[0].parameters.branch);
       });
     });
   });
@@ -616,8 +616,8 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it("This register request contains a contact where the 'unknownparam' parameter must be interpreted as a contact-param and not a url-param.", function () {
-        assert.strictEqual(parsed.headers.Contact[0].addr.params.unknownparam, undefined);
-        assert.strictEqual(parsed.headers.Contact[0].params.unknownparam, null);
+        assert.strictEqual(parsed.headers.Contact[0].addr.parameters.unknownparam, undefined);
+        assert.strictEqual(parsed.headers.Contact[0].parameters.unknownparam, null);
       });
     });
 
@@ -631,7 +631,7 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it('This register request contains a contact where the URI has an unknown parameter.', function () {
-        assert.strictEqual(parsed.headers.Contact[0].addr.params.unknownparam, null);
+        assert.strictEqual(parsed.headers.Contact[0].addr.parameters.unknownparam, null);
       });
     });
 
@@ -682,11 +682,11 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it('There is no branch parameter at all on the Via header field value.', function () {
-        if (parsed) assert.strictEqual(undefined, parsed.headers.Via[0].params.branch);
+        if (parsed) assert.strictEqual(undefined, parsed.headers.Via[0].parameters.branch);
       });
 
       it('There is no From tag.', function () {
-        if (parsed) assert.strictEqual(undefined, parsed.headers.From.params.tag);
+        if (parsed) assert.strictEqual(undefined, parsed.headers.From.parameters.tag);
       });
 
       it('There is no explicit Content-Length.', function () {

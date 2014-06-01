@@ -83,7 +83,7 @@ describe('Miscellaneous Tests:', function () {
 
   it('parses malformed Contact "expires" parameters as equivalent to 3600', function () {
     function contactExpires (message) {
-      return sippers.parse(message).headers.Contact[0].params.expires;
+      return sippers.parse(message).headers.Contact[0].parameters.expires;
     }
 
     var expires1 = contactExpires(make200("Contact: <sip:user@host.com>;expires=malformed"));

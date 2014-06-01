@@ -119,9 +119,9 @@ quoted_pair  =  "\\" ([\x00-\x09] / [\x0B-\x0C]
 */
 
 _SIP_URI          = scheme:$("sip" "s"?) ":" userinfo:( userinfo )? hostport:hostport
-                    params:uri_parameters headers:( headers )?
+                    parameters:uri_parameters headers:( headers )?
                     {
-                      return helpers.sipuriBuild(scheme, userinfo, hostport, params, headers);
+                      return helpers.sipuriBuild(scheme, userinfo, hostport, parameters, headers);
                     }
 
 _SIP_URI_noparams = scheme:$("sip" "s"?) ":" userinfo:( userinfo )? hostport:hostport
@@ -325,9 +325,9 @@ uric_no_slash  =  unreserved / escaped / ";" / "?" / ":" / "@"
 path_segments  =  first:segment rest:( "/" s:segment {return s;} )*
                   { return helpers.list(first, rest, '/'); }
 segment        =  value:_pchars
-                  params:( ";" p:param {return p;} )*
+                  parameters:( ";" p:param {return p;} )*
                   {
-                    return helpers.xparamsBuild(value, 'value', params);
+                    return helpers.xparamsBuild(value, 'value', parameters);
                   }
 param          =  _pchars
 _pchars        =  chars:pchar* {return helpers.joinEscaped(chars);}
@@ -473,9 +473,9 @@ Accept         =  name:"Accept"i HCOLON
                     { return helpers.list(first, rest); }
                   )?
                   {return {name: "Accept", value: value || []};}
-accept_range   =  media_range:media_range accept_params:(SEMI a:accept_param {return a;})*
+accept_range   =  media_range:media_range parameters:(SEMI a:accept_param {return a;})*
                   {
-                    return helpers.xparamsBuild(media_range, 'media_range', accept_params, 'accept_params');
+                    return helpers.xparamsBuild(media_range, 'media_range', parameters, 'parameters');
                   }
 //media_range    =  ( "*/*"
 //                  / ( m_type SLASH "*" )
@@ -511,9 +511,9 @@ Accept_Encoding  =  name:"Accept-Encoding"i HCOLON
                     )?
                     {return {name: "Accept-Encoding", value: value || [parse('identity', {startRule: 'encoding'})]};}
 encoding         =  codings:codings
-                    accept_params:(SEMI a:accept_param {return a;})*
+                    parameters:(SEMI a:accept_param {return a;})*
                     {
-                      return helpers.xparamsBuild(codings, 'codings', accept_params, 'accept_params');
+                      return helpers.xparamsBuild(codings, 'codings', parameters, 'parameters');
                     }
 codings          =  content_coding / "*"
 content_coding   =  token
@@ -526,9 +526,9 @@ Accept_Language  =  name:"Accept-Language"i HCOLON
                     )?
                     {return {name: "Accept-Language", value: value || []};}
 language         =  language_range:language_range
-                    accept_params:(SEMI a:accept_param {return a;})*
+                    parameters:(SEMI a:accept_param {return a;})*
                     {
-                      return helpers.xparamsBuild(language_range, 'language_range', accept_params, 'accept_params');
+                      return helpers.xparamsBuild(language_range, 'language_range', parameters, 'parameters');
                     }
 language_range   =  $ ( ( _1to8ALPHA ( "-" _1to8ALPHA )* ) / "*" )
 _1to8ALPHA       = ALPHA ALPHA? ALPHA? ALPHA? ALPHA? ALPHA? ALPHA? ALPHA?
@@ -541,9 +541,9 @@ Alert_Info   =  name:"Alert-Info"i HCOLON
                 )
                 {return {name: "Alert-Info", value: value};}
 alert_param  =  LAQUOT absoluteURI:absoluteURI RAQUOT
-                params:( SEMI g:generic_param {return g;} )*
+                parameters:( SEMI g:generic_param {return g;} )*
                 {
-                  return helpers.xparamsBuild(absoluteURI, 'absoluteURI', params);
+                  return helpers.xparamsBuild(absoluteURI, 'absoluteURI', parameters);
                 }
 
 Allow  =  name:"Allow"i HCOLON
@@ -606,8 +606,8 @@ auth_param_name   =  token
 other_response    =  auth_scheme:auth_scheme LWS first:auth_param
                      rest:(COMMA a:auth_param {return a;})*
                      {
-                       auth_params = helpers.list(first, rest);
-                       return helpers.xparamsBuild(auth_scheme, 'auth_scheme', auth_params, 'auth_params', {
+                       parameters = helpers.list(first, rest);
+                       return helpers.xparamsBuild(auth_scheme, 'auth_scheme', parameters, 'parameters', {
                          separator: ', ',
                          prefix: ' '
                        });
@@ -642,9 +642,9 @@ Call_Info   =  name:"Call-Info"i HCOLON
                )
                {return {name: "Call-Info", value: value};}
 info        =  LAQUOT absoluteURI:absoluteURI RAQUOT
-               info_params:( SEMI i:info_param {return i;} )*
+               parameters:( SEMI i:info_param {return i;} )*
                {
-                 return helpers.xparamsBuild(absoluteURI, 'absoluteURI', info_params, 'info_params');
+                 return helpers.xparamsBuild(absoluteURI, 'absoluteURI', parameters, 'parameters');
                }
 info_param  =  (
                  name:"purpose" EQUAL
@@ -663,9 +663,9 @@ Contact        =  name:("Contact"i / "m"i ) HCOLON
                   )
                   {return {name: "Contact", value: value};}
 contact_param  =  addr:(name_addr / _addr_spec_noparams)
-                  params:(SEMI c:contact_params {return c;})*
+                  parameters:(SEMI c:contact_params {return c;})*
                   {
-                    return helpers.addrparamsBuild(addr, params);
+                    return helpers.addrparamsBuild(addr, parameters);
                   }
 name_addr      =  display_name:( display_name )?
                   LAQUOT addr_spec:addr_spec RAQUOT
@@ -710,9 +710,9 @@ delta_seconds      =  _PDIGITS
 Content_Disposition   =  name:"Content-Disposition"i HCOLON
                          value:(
                            disp_type:disp_type
-                           disp_params:( SEMI d:disp_param {return d;} )*
+                           parameters:( SEMI d:disp_param {return d;} )*
                            {
-                             return helpers.xparamsBuild(disp_type, 'disp_type', disp_params, 'disp_params');
+                             return helpers.xparamsBuild(disp_type, 'disp_type', parameters, 'parameters');
                            }
                          )
                          {return {name: "Content-Disposition", value: value};}
@@ -829,9 +829,9 @@ Error_Info  =  name:"Error-Info"i HCOLON
 
 // http://tools.ietf.org/html/rfc3261#page-230
 error_uri   =  LAQUOT absoluteURI:absoluteURI RAQUOT
-               params:( SEMI g:generic_param {return g;} )*
+               parameters:( SEMI g:generic_param {return g;} )*
                {
-                 return helpers.xparamsBuild(absoluteURI, 'absoluteURI', params);
+                 return helpers.xparamsBuild(absoluteURI, 'absoluteURI', parameters);
                }
 
 Expires     =  name:"Expires"i HCOLON
@@ -840,9 +840,9 @@ Expires     =  name:"Expires"i HCOLON
 From        =  name:( "From"i / "f"i ) HCOLON value:from_spec
                {return {name: "From", value: value};}
 from_spec   =  addr:(name_addr / _addr_spec_noparams)
-               params:(SEMI f:from_param {return f;})*
+               parameters:(SEMI f:from_param {return f;})*
                {
-                 return helpers.addrparamsBuild(addr, params);
+                 return helpers.addrparamsBuild(addr, parameters);
                }
 from_param  =  tag_param / generic_param
 tag_param   =  name:"tag" EQUAL value:token
@@ -887,8 +887,8 @@ challenge           =  (
 other_challenge     =  auth_scheme:auth_scheme LWS first:auth_param
                        rest:(COMMA a:auth_param {return a;})*
                        {
-                         auth_params = helpers.list(first, rest);
-                         return helpers.xparamsBuild(auth_scheme, 'auth_scheme', auth_params, 'auth_params', ', ');
+                         parameters = helpers.list(first, rest);
+                         return helpers.xparamsBuild(auth_scheme, 'auth_scheme', parameters, 'parameters', ', ');
                        }
 digest_cln          =  realm / domain / nonce
                         / opaque / stale / algorithm
@@ -944,18 +944,18 @@ Record_Route  =  name:"Record-Route"i HCOLON
                   )
                   {return {name: "Record-Route", value: value};}
 rec_route     =  addr:name_addr
-                 params:( SEMI r:rr_param {return r;} )*
+                 parameters:( SEMI r:rr_param {return r;} )*
                  {
-                   return helpers.addrparamsBuild(addr, params);
+                   return helpers.addrparamsBuild(addr, parameters);
                  }
 rr_param      =  generic_param
 
 Reply_To      =  name:"Reply-To"i HCOLON value:rplyto_spec
                  {return {name: "Reply-To", value: value};}
 rplyto_spec   =  addr:( name_addr / addr_spec )
-                 params:( SEMI r:rplyto_param {return r;} )*
+                 parameters:( SEMI r:rplyto_param {return r;} )*
                  {
-                   return helpers.addrparamsBuild(addr, params);
+                   return helpers.addrparamsBuild(addr, parameters);
                  }
 rplyto_param  =  generic_param
 Require       =  name:"Require"i HCOLON
@@ -970,14 +970,14 @@ Retry_After  =  name:"Retry-After"i HCOLON
                 value:(
                   delta_seconds:delta_seconds
                   comment:( comment )?
-                  retry_params:( SEMI r:retry_param {return r;} )*
+                  parameters:( SEMI r:retry_param {return r;} )*
                   {
-                    retry_params = helpers.combineParams(retry_params);
+                    parameters = helpers.combineParams(parameters);
                     return helpers.serializeable({
                       delta_seconds: delta_seconds,
                       comment: comment,
-                      retry_params: retry_params
-                    }, ['delta_seconds', 'comment', 'retry_params']);
+                      parameters: parameters
+                    }, ['delta_seconds', 'comment', 'parameters']);
                   }
                 )
                 {return {name: "Retry-After", value: value};}
@@ -995,9 +995,9 @@ Route        =  name:"Route"i HCOLON
                   { return helpers.list(first, rest); }
                 )
                 {return {name: "Route", value: value};}
-route_param  =  addr:name_addr params:( SEMI r:rr_param {return r;} )*
+route_param  =  addr:name_addr parameters:( SEMI r:rr_param {return r;} )*
                 {
-                  return helpers.addrparamsBuild(addr, params);
+                  return helpers.addrparamsBuild(addr, parameters);
                 }
 
 Server           =  name:"Server"i HCOLON
@@ -1040,9 +1040,9 @@ delay      =  (DIGIT)* ( "." (DIGIT)* )?
 To        =  name:( "To"i / "t"i ) HCOLON
              value:(
                addr:( name_addr / _addr_spec_noparams )
-               params:( SEMI t:to_param {return t;} )*
+               parameters:( SEMI t:to_param {return t;} )*
                {
-                 return helpers.addrparamsBuild(addr, params);
+                 return helpers.addrparamsBuild(addr, parameters);
                }
              )
              {return {name: "To", value: value};}
@@ -1072,14 +1072,14 @@ Via               =  name:( "Via"i / "v"i ) HCOLON
                      )
                      {return {name: "Via", value: value};}
 via_parm          =  sent_protocol:sent_protocol LWS sent_by:sent_by
-                     params:( SEMI v:via_params {return v;} )*
+                     parameters:( SEMI v:via_params {return v;} )*
                      {
-                       params = helpers.combineParams(params);
+                       parameters = helpers.combineParams(parameters);
                        return helpers.serializeable({
                          sent_protocol: sent_protocol,
                          sent_by: sent_by,
-                         params: params
-                       }, ['sent_protocol', ' ', 'sent_by', 'params']);
+                         parameters: parameters
+                       }, ['sent_protocol', ' ', 'sent_by', 'parameters']);
                      }
 via_params        =  via_ttl / via_maddr
                      / via_received / via_branch
@@ -1180,9 +1180,9 @@ Reason            =  name:"Reason"i HCOLON
                      )
                      {return {name: "Reason", value: value};}
 reason_value      =  protocol:protocol
-                     params:(SEMI r:reason_params {return r;})*
+                     parameters:(SEMI r:reason_params {return r;})*
                      {
-                       return helpers.xparamsBuild(protocol, 'protocol', params);
+                       return helpers.xparamsBuild(protocol, 'protocol', parameters);
                      }
 protocol          =  "SIP" / "Q.850" / token
 reason_params     =  protocol_cause / reason_text
@@ -1205,9 +1205,9 @@ Path       = name:"Path"i HCOLON
              )
              {return {name: "Path", value: value};}
 path_value = addr:name_addr
-             params:( SEMI p:rr_param {return p;} )*
+             parameters:( SEMI p:rr_param {return p;} )*
              {
-               return helpers.addrparamsBuild(addr, params);
+               return helpers.addrparamsBuild(addr, parameters);
              }
 // end RFC 3327
 
@@ -1216,9 +1216,9 @@ path_value = addr:name_addr
 Refer_To = name:("Refer-To"i / "r"i) HCOLON
            value:(
              addr:( name_addr / addr_spec )
-             params:(SEMI p:generic_param {return p;})*
+             parameters:(SEMI p:generic_param {return p;})*
              {
-               return helpers.addrparamsBuild(addr, params);
+               return helpers.addrparamsBuild(addr, parameters);
              }
            )
            {return {name: "Refer-To", value: value};}
@@ -1235,9 +1235,9 @@ Flow_Timer     = name:"Flow-Timer"i HCOLON value:_PDIGITS
 Event             =  name:( "Event"i / "o"i ) HCOLON
                      value:(
                        type:event_type
-                       params:( SEMI p:event_param {return p;} )*
+                       parameters:( SEMI p:event_param {return p;} )*
                        {
-                         return helpers.xparamsBuild(type, 'type', params);
+                         return helpers.xparamsBuild(type, 'type', parameters);
                        }
                      )
                      {return {name: name, value: value};}
@@ -1271,9 +1271,9 @@ Allow_Events      =  name:( "Allow-Events"i / "u"i ) HCOLON
 Subscription_State   = name:"Subscription-State"i HCOLON
                        value:(
                          substate_value:substate_value
-                         params:( SEMI p:subexp_params {return p;} )*
+                         parameters:( SEMI p:subexp_params {return p;} )*
                          {
-                           return helpers.xparamsBuild(substate_value, 'substate_value', params);
+                           return helpers.xparamsBuild(substate_value, 'substate_value', parameters);
                          }
                        )
                        {return {name: "Subscription-State", value: value};}

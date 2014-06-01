@@ -95,16 +95,16 @@ function header (name, value) {
   }, ['name', ': ', 'value']);
 }
 
-function sipuriBuild (scheme, userinfo, hostport, params, headers) {
+function sipuriBuild (scheme, userinfo, hostport, parameters, headers) {
   return serializeable({
       scheme: scheme
     , user: userinfo && userinfo.user
     , password: userinfo && userinfo.password
     , host: hostport && hostport.host
     , port: hostport && hostport.port
-    , params: params
+    , parameters: parameters
     , headers: headers
-  }, ['scheme', ':', userinfo, hostport, 'params', 'headers'], {
+  }, ['scheme', ':', userinfo, hostport, 'parameters', 'headers'], {
     transform: function (addrSpecString) {
       if (this.display_name || this._isNameAddr) {
         addrSpecString = serialize(this.display_name) + '<' + addrSpecString + '>';
@@ -140,16 +140,16 @@ function hostportBuild (host, port) {
   }, ['host', 'port'], {separator: ':'});
 }
 
-function xparamsBuild (prop, propName, params, paramsName, combineOptions) {
-  paramsName = paramsName || 'params';
+function xparamsBuild (prop, propName, parameters, paramsName, combineOptions) {
+  paramsName = paramsName || 'parameters';
   var ret = {};
   ret[propName] = prop;
-  ret[paramsName] = combineParams(params, combineOptions);
+  ret[paramsName] = combineParams(parameters, combineOptions);
   return serializeable(ret, [propName, paramsName]);
 }
 
-function addrparamsBuild (addr, params) {
-  return xparamsBuild(addr, 'addr', params, 'params');
+function addrparamsBuild (addr, parameters) {
+  return xparamsBuild(addr, 'addr', parameters, 'parameters');
 }
 
 function ret (val) {return function (val) {
