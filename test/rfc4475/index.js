@@ -68,7 +68,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('The Request-URI has sips:user@example.com embedded in its userpart.', function () {
-          assert.equal('sips:user@example.com', parsed.Request_Line.URI.user);
+          assert.equal('sips:user@example.com', parsed.Request.URI.user);
         });
 
         it('The From and To URIs have escaped characters in their userparts.', function () {
@@ -120,7 +120,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('The request method is unknown.  It is NOT equivalent to REGISTER.', function () {
-          assert.strictEqual('RE%47IST%45R', parsed.Request_Line.Method);
+          assert.strictEqual('RE%47IST%45R', parsed.Request.Method);
         });
 
         it('The display name portion of the To and From header fields is "%Z%45".', function () {
@@ -163,7 +163,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('is a REGISTER request (not an INVITE)', function () {
-          assert.strictEqual('REGISTER', parsed.Request_Line.Method);
+          assert.strictEqual('REGISTER', parsed.Request.Method);
         });
       });
 
@@ -177,7 +177,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('The Request-URI will parse so that the user part is "user;par=u@example.net".', function () {
-          assert.equal('user;par=u@example.net', parsed.Request_Line.URI.user);
+          assert.equal('user;par=u@example.net', parsed.Request.URI.user);
         });
       });
 
@@ -221,7 +221,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('contains no reason phrase', function () {
-          assert.equal('', parsed.Status_Line.Reason_Phrase);
+          assert.equal('', parsed.Status.Reason_Phrase);
         });
       });
     });
@@ -337,7 +337,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('the SIP Request-URI contains escaped headers', function () {
-          assert.equal(parsed.Request_Line.URI.headers.Route, "<sip:example.com>");
+          assert.equal(parsed.Request.URI.headers.Route, "<sip:example.com>");
         });
       });
 
@@ -403,7 +403,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('has version number 7.0', function () {
-          assert.strictEqual(parsed.Request_Line.Version, 'SIP/7.0');
+          assert.strictEqual(parsed.Request.Version, 'SIP/7.0');
         });
       });
 
@@ -417,7 +417,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('This request has mismatching values for the method in the start line and the CSeq header field.', function () {
-          assert.strictEqual('OPTIONS', parsed.Request_Line.Method);
+          assert.strictEqual('OPTIONS', parsed.Request.Method);
           assert.strictEqual('INVITE', parsed.headers.CSeq.method);
         });
       });
@@ -432,7 +432,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('This request has mismatching values for the method in the start line and the CSeq header field.', function () {
-          assert.strictEqual('NEWMETHOD', parsed.Request_Line.Method);
+          assert.strictEqual('NEWMETHOD', parsed.Request.Method);
           assert.strictEqual('INVITE', parsed.headers.CSeq.method);
         });
       });
@@ -484,7 +484,7 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it('This OPTIONS contains an unknown URI scheme in the Request-URI.', function () {
-        assert.strictEqual(parsed.Request_Line.URI.scheme, 'nobodyKnowsThisScheme');
+        assert.strictEqual(parsed.Request.URI.scheme, 'nobodyKnowsThisScheme');
       });
     });
 
@@ -498,7 +498,7 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it('This OPTIONS contains an Request-URI with an IANA-registered scheme that does not commonly appear in Request-URIs of SIP requests.', function () {
-        assert.strictEqual(parsed.Request_Line.URI.scheme, 'soap.beep');
+        assert.strictEqual(parsed.Request.URI.scheme, 'soap.beep');
       });
     });
 

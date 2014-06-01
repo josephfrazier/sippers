@@ -36,7 +36,7 @@ function parse (input, options){
     throw new ParsedError(parsed, 400, "Multiple " + e.message + " values");
   }
 
-  if (parsed.Request_Line) {
+  if (parsed.Request) {
     mandateRequestHeaders(parsed);
   }
 
