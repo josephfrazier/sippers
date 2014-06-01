@@ -540,10 +540,10 @@ Alert_Info   =  name:"Alert-Info"i HCOLON
                   { return helpers.list(first, rest); }
                 )
                 {return {name: "Alert-Info", value: value};}
-alert_param  =  LAQUOT absoluteURI:absoluteURI RAQUOT
+alert_param  =  LAQUOT URI:absoluteURI RAQUOT
                 parameters:( SEMI g:generic_param {return g;} )*
                 {
-                  return helpers.xparamsBuild(absoluteURI, 'absoluteURI', parameters);
+                  return helpers.xparamsBuild(URI, 'URI', parameters);
                 }
 
 Allow  =  name:"Allow"i HCOLON
@@ -641,10 +641,10 @@ Call_Info   =  name:"Call-Info"i HCOLON
                  { return helpers.list(first, rest); }
                )
                {return {name: "Call-Info", value: value};}
-info        =  LAQUOT absoluteURI:absoluteURI RAQUOT
+info        =  LAQUOT URI:absoluteURI RAQUOT
                parameters:( SEMI i:info_param {return i;} )*
                {
-                 return helpers.xparamsBuild(absoluteURI, 'absoluteURI', parameters, 'parameters');
+                 return helpers.xparamsBuild(URI, 'URI', parameters, 'parameters');
                }
 info_param  =  (
                  name:"purpose" EQUAL
@@ -828,10 +828,10 @@ Error_Info  =  name:"Error-Info"i HCOLON
                {return {name: "Error-Info", value: value};}
 
 // http://tools.ietf.org/html/rfc3261#page-230
-error_uri   =  LAQUOT absoluteURI:absoluteURI RAQUOT
+error_uri   =  LAQUOT URI:absoluteURI RAQUOT
                parameters:( SEMI g:generic_param {return g;} )*
                {
-                 return helpers.xparamsBuild(absoluteURI, 'absoluteURI', parameters);
+                 return helpers.xparamsBuild(URI, 'URI', parameters);
                }
 
 Expires     =  name:"Expires"i HCOLON
