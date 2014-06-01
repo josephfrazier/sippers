@@ -85,7 +85,8 @@ function list (first, rest, options) {
   if (options.constructor === String) {
     options = {separator: options};
   }
-  return serializeable([first].concat(rest), ['this'], options);
+  var catted = [first].concat(rest);
+  return serializeable(catted, catted, options);
 }
 
 function header (name, value) {
@@ -120,9 +121,6 @@ function serializeable (obj, propertyList, options) {
   return Object.defineProperty(obj, 'serialize', {value:
     function (propertyList, options) {
       function getProperty (property) {
-        if (property === 'this') {
-          return serialize(this, options);
-        }
         if (property in this) {
           return this[property];
         }
