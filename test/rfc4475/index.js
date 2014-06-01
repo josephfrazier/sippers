@@ -660,7 +660,7 @@ describe('RFC 4475 Torture Tests', function () {
 
       it('This request indicates that the response must contain a body in an unknown type.', function () {
         assert.deepEqual(
-          parsed.headers.Accept[0].media_range,
+          parsed.headers.Accept[0].range,
           {
             "type": "text",
             "subtype": "nobodyKnowsThis",

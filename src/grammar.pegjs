@@ -473,9 +473,9 @@ Accept         =  name:"Accept"i HCOLON
                     { return helpers.list(first, rest); }
                   )?
                   {return {name: "Accept", value: value || []};}
-accept_range   =  media_range:media_range parameters:(SEMI a:accept_param {return a;})*
+accept_range   =  range:media_range parameters:(SEMI a:accept_param {return a;})*
                   {
-                    return helpers.xparamsBuild(media_range, 'media_range', parameters, 'parameters');
+                    return helpers.xparamsBuild(range, 'range', parameters, 'parameters');
                   }
 //media_range    =  ( "*/*"
 //                  / ( m_type SLASH "*" )
@@ -525,10 +525,10 @@ Accept_Language  =  name:"Accept-Language"i HCOLON
                       { return helpers.list(first, rest); }
                     )?
                     {return {name: "Accept-Language", value: value || []};}
-language         =  language_range:language_range
+language         =  range:language_range
                     parameters:(SEMI a:accept_param {return a;})*
                     {
-                      return helpers.xparamsBuild(language_range, 'language_range', parameters, 'parameters');
+                      return helpers.xparamsBuild(range, 'range', parameters, 'parameters');
                     }
 language_range   =  $ ( ( _1to8ALPHA ( "-" _1to8ALPHA )* ) / "*" )
 _1to8ALPHA       = ALPHA ALPHA? ALPHA? ALPHA? ALPHA? ALPHA? ALPHA? ALPHA?

@@ -27,7 +27,7 @@ describe('Miscellaneous Tests:', function () {
   it('parses Accept containing */*', function () {
     var message = make200("Accept: */*");
     assert.deepEqual(
-      sippers.parse(message).headers.Accept[0].media_range,
+      sippers.parse(message).headers.Accept[0].range,
       {
         type: '*',
         subtype: '*',
@@ -39,7 +39,7 @@ describe('Miscellaneous Tests:', function () {
   it('parses Accept containing x-tension/*', function () {
     var message = make200("Accept: x-tension/*");
     assert.deepEqual(
-      sippers.parse(message).headers.Accept[0].media_range,
+      sippers.parse(message).headers.Accept[0].range,
       {
         type: 'x-tension',
         subtype: '*',
