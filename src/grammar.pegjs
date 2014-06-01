@@ -557,17 +557,17 @@ Allow  =  name:"Allow"i HCOLON
 Authorization     =  name:"Authorization"i HCOLON value:credentials
                      {return {name: "Authorization", value: value};}
 credentials       =  (
-                       "Digest" LWS d:digest_response
+                       "Digest" LWS digest:digest_response
                        {
                          return helpers.serializeable({
-                           digest_response: d
-                         }, ['Digest ', 'digest_response']);
+                           digest: digest
+                         }, ['Digest ', 'digest']);
                        }
                      )
-                     / (o:other_response {
+                     / (other:other_response {
                          return helpers.serializeable({
-                           other_response: o
-                         }, ['other_response']);
+                           other: other
+                         }, ['other']);
                        })
 digest_response   =  first:dig_resp
                      rest:(COMMA d:dig_resp {return d;})*
@@ -881,9 +881,9 @@ challenge           =  (
                          "Digest" LWS
                          first:digest_cln
                          rest:(COMMA d:digest_cln {return d;})*
-                         { return {digest_clns: helpers.list(first, rest)}; }
+                         { return {digest: helpers.list(first, rest)}; }
                        )
-                       / (o:other_challenge {return {other_challenge: o};})
+                       / (other:other_challenge {return {other: other};})
 other_challenge     =  scheme:auth_scheme LWS first:auth_param
                        rest:(COMMA a:auth_param {return a;})*
                        {
