@@ -629,7 +629,7 @@ describe('RFC 4475 Torture Tests', function () {
 
       it("This register request contains a contact where the 'unknownparam' parameter must be interpreted as a contact-param and not a url-param.", function () {
         assert.strictEqual(parsed.message_headers.Contact[0].addr.uri_parameters.unknownparam, undefined);
-        assert.strictEqual(parsed.message_headers.Contact[0].addr.params.unknownparam, null);
+        assert.strictEqual(parsed.message_headers.Contact[0].params.unknownparam, null);
       });
     });
 
