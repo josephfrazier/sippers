@@ -30,17 +30,19 @@ function parse (input, options){
     throw e;
   }
 
-  try {
-    parsed.headers = combineHeaders(parsed.headers);
-  } catch (e) {
-    throw new ParsedError(parsed, 400, "Multiple " + e.message + " values");
-  }
+  if (options.startRule === 'SIP_message') {
+    try {
+      parsed.headers = combineHeaders(parsed.headers);
+    } catch (e) {
+      throw new ParsedError(parsed, 400, "Multiple " + e.message + " values");
+    }
 
-  if (parsed.Request) {
-    mandateRequestHeaders(parsed);
-  }
+    if (parsed.Request) {
+      mandateRequestHeaders(parsed);
+    }
 
-  checkCSeq(parsed);
+    checkCSeq(parsed);
+  }
 
   return parsed;
 }
