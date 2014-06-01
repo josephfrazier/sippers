@@ -828,7 +828,8 @@ error_uri   =  LAQUOT absoluteURI:absoluteURI RAQUOT
                  return helpers.xparamsBuild(absoluteURI, 'absoluteURI', params);
                }
 
-Expires     =  name:"Expires"i HCOLON value:delta_seconds
+Expires     =  name:"Expires"i HCOLON
+               value:(delta_seconds / (header_value {return helpers.padInt(3600);}))
                {return {name: "Expires", value: value};}
 From        =  name:( "From"i / "f"i ) HCOLON value:from_spec
                {return {name: "From", value: value};}
