@@ -118,17 +118,14 @@ quoted_pair  =  "\\" ([\x00-\x09] / [\x0B-\x0C]
    the user part of the SIP URI MUST be escaped.
 */
 
-SIP_URI          =  "sip:" userinfo:( userinfo )? hostport:hostport
+_SIP_URI          = scheme:$("sip" "s"?) ":" userinfo:( userinfo )? hostport:hostport
                     uri_parameters:uri_parameters headers:( headers )?
                     {
-                      return helpers.sipuriBuild('sip', userinfo, hostport, uri_parameters, headers);
+                      return helpers.sipuriBuild(scheme, userinfo, hostport, uri_parameters, headers);
                     }
 
-SIPS_URI          =  "sips:" userinfo:( userinfo )? hostport:hostport
-                     uri_parameters:uri_parameters headers:( headers )?
-                     {
-                       return helpers.sipuriBuild('sips', userinfo, hostport, uri_parameters, headers);
-                    }
+SIP_URI           =  _SIP_URI
+SIPS_URI          =  _SIP_URI
 
 //TODO telephone_subscriber
 //userinfo         =  ( user / telephone_subscriber ) ( ":" password )? "@"
