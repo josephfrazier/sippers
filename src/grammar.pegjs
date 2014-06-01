@@ -276,13 +276,13 @@ Request        =  Request_Line:Request_Line
                     }, ['Request_Line', 'headers', '\r\n', 'body']);
                   }
 
-Request_Line   =  Method:Method SP Request_URI:Request_URI SP SIP_Version:SIP_Version CRLF
+Request_Line   =  Method:Method SP URI:Request_URI SP SIP_Version:SIP_Version CRLF
                   {
                     return helpers.serializeable({
                       Method: Method,
-                      Request_URI: Request_URI,
+                      URI: URI,
                       SIP_Version: SIP_Version
-                    }, ['Method', 'Request_URI', 'SIP_Version'], {
+                    }, ['Method', 'URI', 'SIP_Version'], {
                       separator: ' ',
                       suffix: '\r\n'
                     });

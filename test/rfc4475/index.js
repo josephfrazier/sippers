@@ -68,7 +68,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('The Request-URI has sips:user@example.com embedded in its userpart.', function () {
-          assert.equal('sips:user@example.com', parsed.Request_Line.Request_URI.userinfo.user);
+          assert.equal('sips:user@example.com', parsed.Request_Line.URI.userinfo.user);
         });
 
         it('The From and To URIs have escaped characters in their userparts.', function () {
@@ -177,7 +177,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('The Request-URI will parse so that the user part is "user;par=u@example.net".', function () {
-          assert.equal('user;par=u@example.net', parsed.Request_Line.Request_URI.userinfo.user);
+          assert.equal('user;par=u@example.net', parsed.Request_Line.URI.userinfo.user);
         });
       });
 
@@ -337,7 +337,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('the SIP Request-URI contains escaped headers', function () {
-          assert.equal(parsed.Request_Line.Request_URI.headers.Route, "<sip:example.com>");
+          assert.equal(parsed.Request_Line.URI.headers.Route, "<sip:example.com>");
         });
       });
 
@@ -484,7 +484,7 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it('This OPTIONS contains an unknown URI scheme in the Request-URI.', function () {
-        assert.strictEqual(parsed.Request_Line.Request_URI.scheme, 'nobodyKnowsThisScheme');
+        assert.strictEqual(parsed.Request_Line.URI.scheme, 'nobodyKnowsThisScheme');
       });
     });
 
@@ -498,7 +498,7 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it('This OPTIONS contains an Request-URI with an IANA-registered scheme that does not commonly appear in Request-URIs of SIP requests.', function () {
-        assert.strictEqual(parsed.Request_Line.Request_URI.scheme, 'soap.beep');
+        assert.strictEqual(parsed.Request_Line.URI.scheme, 'soap.beep');
       });
     });
 
