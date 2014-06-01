@@ -124,6 +124,12 @@ _SIP_URI          = scheme:$("sip" "s"?) ":" userinfo:( userinfo )? hostport:hos
                       return helpers.sipuriBuild(scheme, userinfo, hostport, uri_parameters, headers);
                     }
 
+_SIP_URI_noparams = scheme:$("sip" "s"?) ":" userinfo:( userinfo )? hostport:hostport
+                    headers:( headers )?
+                    {
+                      return helpers.sipuriBuild(scheme, userinfo, hostport, helpers.combineParams([]), headers);
+                    }
+
 SIP_URI           =  _SIP_URI
 SIPS_URI          =  _SIP_URI
 
@@ -290,6 +296,8 @@ absoluteURI    =  scheme:scheme ":" part:( hier_part / opaque_part )
                       part: part
                     }, ['scheme', 'part'], {separator: ':'});
                   }
+// TODO
+_absoluteURI_noparams = absoluteURI
 
 hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )?
                   {
@@ -654,7 +662,7 @@ Contact        =  name:("Contact"i / "m"i ) HCOLON
                     )
                   )
                   {return {name: "Contact", value: value};}
-contact_param  =  addr:(name_addr / addr_spec)
+contact_param  =  addr:(name_addr / _addr_spec_noparams)
                   params:(SEMI c:contact_params {return c;})*
                   {
                     return helpers.addrparamsBuild(addr, params);
@@ -669,6 +677,7 @@ name_addr      =  display_name:( display_name )?
                     return addr_spec;
                   }
 addr_spec      =  SIP_URI / SIPS_URI / absoluteURI
+_addr_spec_noparams = _SIP_URI_noparams / _absoluteURI_noparams
 display_name   =  quoted_string / $( (token LWS)* )
 
 contact_params     =  c_p_q / c_p_expires
@@ -830,7 +839,7 @@ Expires     =  name:"Expires"i HCOLON
                {return {name: "Expires", value: value};}
 From        =  name:( "From"i / "f"i ) HCOLON value:from_spec
                {return {name: "From", value: value};}
-from_spec   =  addr:(name_addr / addr_spec)
+from_spec   =  addr:(name_addr / _addr_spec_noparams)
                params:(SEMI f:from_param {return f;})*
                {
                  return helpers.addrparamsBuild(addr, params);
@@ -1030,7 +1039,7 @@ delay      =  (DIGIT)* ( "." (DIGIT)* )?
 
 To        =  name:( "To"i / "t"i ) HCOLON
              value:(
-               addr:( name_addr / addr_spec )
+               addr:( name_addr / _addr_spec_noparams )
                params:( SEMI t:to_param {return t;} )*
                {
                  return helpers.addrparamsBuild(addr, params);
