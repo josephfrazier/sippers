@@ -221,7 +221,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('contains no reason phrase', function () {
-          assert.equal('', parsed.Status.Reason_Phrase);
+          assert.equal('', parsed.Status.Reason);
         });
       });
     });
