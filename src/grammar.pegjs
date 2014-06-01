@@ -1071,15 +1071,15 @@ Via               =  name:( "Via"i / "v"i ) HCOLON
                        { return helpers.list(first, rest); }
                      )
                      {return {name: "Via", value: value};}
-via_parm          =  sent_protocol:sent_protocol LWS sent_by:sent_by
+via_parm          =  protocol:sent_protocol LWS by:sent_by
                      parameters:( SEMI v:via_params {return v;} )*
                      {
                        parameters = helpers.combineParams(parameters);
                        return helpers.serializeable({
-                         sent_protocol: sent_protocol,
-                         sent_by: sent_by,
+                         protocol: protocol,
+                         by: by,
                          parameters: parameters
-                       }, ['sent_protocol', ' ', 'sent_by', 'parameters']);
+                       }, ['protocol', ' ', 'by', 'parameters']);
                      }
 via_params        =  via_ttl / via_maddr
                      / via_received / via_branch
@@ -1093,14 +1093,14 @@ via_received      =  name:"received" EQUAL value:(IPv4address / IPv6address)
 via_branch        =  name:"branch" EQUAL value:token
                      {return {name: name, value: value};}
 via_extension     =  generic_param
-sent_protocol     =  protocol_name:protocol_name SLASH protocol_version:protocol_version
+sent_protocol     =  name:protocol_name SLASH version:protocol_version
                      SLASH transport:transport
                      {
                        return helpers.serializeable({
-                         protocol_name: protocol_name,
-                         protocol_version: protocol_version,
+                         name: name,
+                         version: version,
                          transport: transport
-                       }, ['protocol_name', 'protocol_version', 'transport'], {separator: '/'});
+                       }, ['name', 'version', 'transport'], {separator: '/'});
                      }
 protocol_name     =  "SIP" / token
 protocol_version  =  token

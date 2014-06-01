@@ -588,7 +588,7 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it('This message is a response with a 2nd Via header field value\'s sent-by containing 255.255.255.255.', function () {
-        assert.strictEqual(parsed.headers.Via[1].sent_by.host, '255.255.255.255');
+        assert.strictEqual(parsed.headers.Via[1].by.host, '255.255.255.255');
       });
     });
 
