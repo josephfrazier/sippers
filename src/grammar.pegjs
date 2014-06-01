@@ -1270,10 +1270,10 @@ Allow_Events      =  name:( "Allow-Events"i / "u"i ) HCOLON
 
 Subscription_State   = name:"Subscription-State"i HCOLON
                        value:(
-                         substate_value:substate_value
+                         value:substate_value
                          parameters:( SEMI p:subexp_params {return p;} )*
                          {
-                           return helpers.xparamsBuild(substate_value, 'substate_value', parameters);
+                           return helpers.xparamsBuild(value, 'value', parameters);
                          }
                        )
                        {return {name: "Subscription-State", value: value};}
