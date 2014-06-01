@@ -565,28 +565,16 @@ describe('RFC 4475 Torture Tests', function () {
     describe('3.3.8. Multiple Values in Single Value Required Fields', function () {
       var name = 'multi01';
       var parsed;
-      it('parses', function () {
-        parsed = assertivelyParse(name);
-      });
-
-      it('round-trips', function () {roundTrip(parsed);});
-
-      it('The message contains a request with multiple Call-ID, To, From, Max- Forwards, and CSeq values.', function () {
-        assert.fail(null, null, 'this actually parses as if only the last of each header was present');
+      it('throws /^400 /', function () {
+        parsed = assertivelyParse(name, /^400 /);
       });
     });
 
     describe('3.3.9. Multiple Content-Length Values', function () {
       var name = 'mcl01';
       var parsed;
-      it('parses', function () {
-        parsed = assertivelyParse(name);
-      });
-
-      it('round-trips', function () {roundTrip(parsed);});
-
-      it('Multiple conflicting Content-Length header field values appear in this request.', function () {
-        assert.fail(null, null, 'this actually parses as if only the last Content-Length header was present');
+      it('throws /^400 /', function () {
+        parsed = assertivelyParse(name, /^400 /);
       });
     });
 
