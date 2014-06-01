@@ -709,10 +709,10 @@ delta_seconds      =  _PDIGITS
 
 Content_Disposition   =  name:"Content-Disposition"i HCOLON
                          value:(
-                           disp_type:disp_type
+                           type:disp_type
                            parameters:( SEMI d:disp_param {return d;} )*
                            {
-                             return helpers.xparamsBuild(disp_type, 'disp_type', parameters, 'parameters');
+                             return helpers.xparamsBuild(type, 'type', parameters, 'parameters');
                            }
                          )
                          {return {name: "Content-Disposition", value: value};}
