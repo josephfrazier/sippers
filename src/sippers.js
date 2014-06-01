@@ -82,7 +82,7 @@ function mandateHeader (parsed, headerName) {
 }
 
 function checkCSeq (parsed) {
-  if (parsed.headers.CSeq.sequenceNumber >= Math.pow(2, 32)) {
+  if (parsed.headers.CSeq.number >= Math.pow(2, 32)) {
     throw new ParsedError(parsed, 400, 'Invalid CSeq sequence number');
   }
 }

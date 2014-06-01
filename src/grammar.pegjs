@@ -774,12 +774,12 @@ m_value          =  token / quoted_string
 
 CSeq  =  name:"CSeq"i HCOLON
          value:(
-           sequenceNumber:_PDIGITS LWS requestMethod:Method
+           number:_PDIGITS LWS method:Method
            {
              return helpers.serializeable({
-               sequenceNumber: sequenceNumber,
-               requestMethod: requestMethod
-             }, ['sequenceNumber', 'requestMethod'], {separator: ' '});
+               number: number,
+               method: method
+             }, ['number', 'method'], {separator: ' '});
            }
          )
          {return {name: "CSeq", value: value};}

@@ -40,7 +40,7 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('has a CSeq number of 9', function () {
-          assert.equal(9, parsed ? parsed.headers.CSeq.sequenceNumber : 9);
+          assert.equal(9, parsed ? parsed.headers.CSeq.number : 9);
         });
 
         it('has a Max-Forwards of 68', function () {
@@ -418,7 +418,7 @@ describe('RFC 4475 Torture Tests', function () {
 
         it('This request has mismatching values for the method in the start line and the CSeq header field.', function () {
           assert.strictEqual('OPTIONS', parsed.Request_Line.Method);
-          assert.strictEqual('INVITE', parsed.headers.CSeq.requestMethod);
+          assert.strictEqual('INVITE', parsed.headers.CSeq.method);
         });
       });
 
@@ -433,7 +433,7 @@ describe('RFC 4475 Torture Tests', function () {
 
         it('This request has mismatching values for the method in the start line and the CSeq header field.', function () {
           assert.strictEqual('NEWMETHOD', parsed.Request_Line.Method);
-          assert.strictEqual('INVITE', parsed.headers.CSeq.requestMethod);
+          assert.strictEqual('INVITE', parsed.headers.CSeq.method);
         });
       });
 
