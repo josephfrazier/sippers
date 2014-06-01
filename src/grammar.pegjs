@@ -1130,13 +1130,13 @@ Warning        =  name:"Warning"i HCOLON
                     { return helpers.list(first, rest); }
                   )
                   {return {name: "Warning", value: value};}
-warning_value  =  warn_code:warn_code SP warn_agent:warn_agent SP warn_text:warn_text
+warning_value  =  code:warn_code SP agent:warn_agent SP text:warn_text
                   {
                     return helpers.serializeable({
-                      warn_code: warn_code,
-                      warn_agent: warn_agent,
-                      warn_text: warn_text
-                    }, ['warn_code', 'warn_agent', 'warn_text'], {separator: ' '});
+                      code: warn_code,
+                      agent: warn_agent,
+                      text: warn_text
+                    }, ['code', 'agent', 'text'], {separator: ' '});
                   }
 warn_code      =  _PDIGIT3
 warn_agent     =  hostport / pseudonym
