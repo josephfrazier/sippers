@@ -447,13 +447,13 @@ Response          =  Status:Status_Line
                        }, ['Status', 'headers', '\r\n', 'body']);
                      }
 
-Status_Line     =  Version:SIP_Version SP Status_Code:Status_Code SP Reason_Phrase:Reason_Phrase CRLF
+Status_Line     =  Version:SIP_Version SP Code:Status_Code SP Reason_Phrase:Reason_Phrase CRLF
                    {
                      return helpers.serializeable({
                        Version: Version,
-                       Status_Code: Status_Code,
+                       Code: Code,
                        Reason_Phrase: Reason_Phrase
-                     }, ['Version', 'Status_Code', 'Reason_Phrase'], {
+                     }, ['Version', 'Code', 'Reason_Phrase'], {
                        separator: ' ',
                        suffix: '\r\n'
                      });
