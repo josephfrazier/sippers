@@ -755,15 +755,15 @@ Content_Length   =  name:( "Content-Length"i / "l"i ) HCOLON value:_PDIGITS
                     { return {name: "Content-Length", value: value}; }
 Content_Type     =  name:( "Content-Type"i / "c"i ) HCOLON value:media_type
                     {return {name: "Content-Type", value: value};}
-media_type       =  m_type:m_type SLASH m_subtype:m_subtype
-                    m_parameters:(SEMI p:m_parameter {return p;})*
+media_type       =  type:m_type SLASH subtype:m_subtype
+                    parameters:(SEMI p:m_parameter {return p;})*
                     {
-                      m_parameters = helpers.combineParams(m_parameters);
+                      parameters = helpers.combineParams(parameters);
                       return helpers.serializeable({
-                        m_type: m_type,
-                        m_subtype: m_subtype,
-                        m_parameters: m_parameters
-                      }, ['m_type', '/', 'm_subtype', 'm_parameters']);
+                        type: type,
+                        subtype: subtype,
+                        parameters: parameters
+                      }, ['type', '/', 'subtype', 'parameters']);
                     }
 m_type           =  token
 m_subtype        =  token

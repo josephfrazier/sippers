@@ -29,9 +29,9 @@ describe('Miscellaneous Tests:', function () {
     assert.deepEqual(
       sippers.parse(message).headers.Accept[0].media_range,
       {
-        m_type: '*',
-        m_subtype: '*',
-        m_parameters: []
+        type: '*',
+        subtype: '*',
+        parameters: []
       }
     );
   });
@@ -41,9 +41,9 @@ describe('Miscellaneous Tests:', function () {
     assert.deepEqual(
       sippers.parse(message).headers.Accept[0].media_range,
       {
-        m_type: 'x-tension',
-        m_subtype: '*',
-        m_parameters: []
+        type: 'x-tension',
+        subtype: '*',
+        parameters: []
       }
     );
   });

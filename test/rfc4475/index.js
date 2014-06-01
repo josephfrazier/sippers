@@ -540,9 +540,9 @@ describe('RFC 4475 Torture Tests', function () {
       it('This INVITE request contains a body of unknown type.', function () {
         assert.deepEqual(parsed.headers['Content-Type'],
           {
-            "m_type": "application",
-            "m_subtype": "unknownformat",
-            "m_parameters": {}
+            "type": "application",
+            "subtype": "unknownformat",
+            "parameters": {}
           }
         );
       });
@@ -662,9 +662,9 @@ describe('RFC 4475 Torture Tests', function () {
         assert.deepEqual(
           parsed.headers.Accept[0].media_range,
           {
-            "m_type": "text",
-            "m_subtype": "nobodyKnowsThis",
-            "m_parameters": {}
+            "type": "text",
+            "subtype": "nobodyKnowsThis",
+            "parameters": {}
           }
         );
       });
