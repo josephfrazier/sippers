@@ -5,6 +5,14 @@ function make200 (headers) {
   return ['SIP/2.0 200 OK', 'CSeq: 1'].concat(headers).concat('\r\n').join('\r\n');
 }
 
+function jsonClone (obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+assert.parsedEqual = function (parsed1, parsed2) {
+  assert.deepEqual(jsonClone(parsed1), jsonClone(parsed2));
+};
+
 describe('Miscellaneous Tests:', function () {
   it('parses Via containing a WSS transport', function () {
     var viaWss = make200("Via: SIP/2.0/WSS 199.7.173.182:443;branch=z9hG4bKd8ff6d97ecd0b43cd0730289e328c61f999e568c;rport");
@@ -95,5 +103,12 @@ describe('Miscellaneous Tests:', function () {
     assert.notEqual(expires1, null);
     assert.equal(expires1, 3600);
     assert.equal(expires2, 3600);
+  });
+
+  it('ignores any CRLF appearing before the start-line', function () {
+    var ok = make200();
+    var crlfok = '\r\n\r\n' + ok;
+
+    assert.parsedEqual(sippers.parse(crlfok), sippers.parse(ok))
   });
 });
