@@ -1279,7 +1279,7 @@ event_reason_value   = token
 // end RFC 6665
 
 extension_header  =  name:header_name HCOLON value:header_value
-                     {return {name: name, value: value};}
+                     {return {name: name, value: value, $isExtension: true};}
 header_name       =  token
 header_value      =  $( (TEXT_UTF8char / UTF8_CONT / LWS)* )
 message_body  =  $( OCTET* )

@@ -11,7 +11,6 @@ function parse (input, options){
 
   try {
     var parsed = grammar.parse(input, options);
-    return parsed;
   } catch (e) {
     // add debugging info
     e.message += [
@@ -22,6 +21,14 @@ function parse (input, options){
 
     throw e;
   }
+
+  if (parsed.Request_Line) {
+    mandateRequestHeaders(parsed);
+  }
+
+  checkCSeq(parsed);
+
+  return parsed;
 }
 
 // RFC 3261 25.1:
@@ -36,8 +43,52 @@ function foldLWS (input) {
   return headers + (hadEmptyLine ? emptyLine : '') + body;
 }
 
+function mandateRequestHeaders (parsed) {
+  return mandateHeaders(parsed, ['To', 'From', 'CSeq', 'Call-ID', 'Max-Forwards', 'Via']);
+}
+
+function mandateHeaders (parsed, headers) {
+  headers.forEach(mandateHeader.bind(null, parsed));
+}
+
+function mandateHeader (parsed, headerName) {
+  var headerValue = parsed.message_headers[headerName];
+  var reasonPrefix;
+  if (!headerValue) {
+    reasonPrefix = 'Missing';
+  }
+  else if (headerValue.$isExtension) {
+    reasonPrefix = 'Malformed';
+  }
+  if (reasonPrefix) {
+    var reasonPhrase = [reasonPrefix, headerName, 'header'].join(' ');
+    throw new ParsedError(parsed, 400, reasonPhrase);
+  }
+  return parsed;
+}
+
+function checkCSeq (parsed) {
+  if (parsed.message_headers.CSeq.sequenceNumber >= Math.pow(2, 32)) {
+    throw new ParsedError(parsed, 400, 'Invalid CSeq sequence number');
+  }
+}
+
+// adapted from http://stackoverflow.com/a/8460753
+function ParsedError (parsed, statusCode, reasonPhrase) {
+  this.statusCode = statusCode;
+  this.reasonPhrase = reasonPhrase;
+  this.parsed = parsed;
+
+  this.name = this.constructor.name;
+  this.message = statusCode + ' ' + reasonPhrase;
+  this.toString = function () {return this.message;};
+  this.constructor.prototype.__proto__ = Error.prototype;
+  Error.captureStackTrace(this, this.constructor);
+}
+
 module.exports = {
   SyntaxError: grammar.SyntaxError,
   parse: parse,
-  foldLWS: foldLWS
+  foldLWS: foldLWS,
+  ParsedError: ParsedError
 };

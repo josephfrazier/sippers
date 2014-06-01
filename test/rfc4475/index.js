@@ -4,15 +4,15 @@ var fs = require('fs');
 
 process.chdir(__dirname);
 
-function assertivelyParse (name, valid) {
+function assertivelyParse (name, error) {
   var path = 'dat/' + name + '.dat';
   var raw = fs.readFileSync(path, 'ascii');
   var parsed;
 
-  var assertion = valid === false ? 'throws' : 'doesNotThrow';
+  var assertion = error !== undefined ? 'throws' : 'doesNotThrow';
   assert[assertion](function () {
     parsed = sippers.parse(raw);
-  });
+  }, error);
 
   return parsed;
 }
@@ -268,48 +268,16 @@ describe('RFC 4475 Torture Tests', function () {
       describe('3.1.2.4. Request Scalar Fields with Overlarge Values', function () {
         var name = 'scalar02';
         var parsed;
-        it('parses', function () {
-          parsed = assertivelyParse(name);
-        });
-
-        it('round-trips', function () {roundTrip(parsed);});
-
-        it('The CSeq sequence number is >2**32-1.', function () {
-          assert(parsed.message_headers.CSeq.sequenceNumber > Math.pow(2, 32) - 1);
-        });
-
-        it('The Max-Forwards value is >255.', function () {
-          assert(parsed.message_headers['Max-Forwards'] > 255);
-        });
-
-        it('The Expires value is >2**32-1.', function () {
-          assert(parsed.message_headers.Expires > Math.pow(2, 32) - 1);
-        });
-
-        it('The Contact expires parameter value is >2**32-1.', function () {
-          assert(parsed.message_headers.Contact[0].params.expires > Math.pow(2, 32) - 1);
+        it('throws /^400 /', function () {
+          parsed = assertivelyParse(name, /^400 /);
         });
       });
 
       describe('3.1.2.5. Response Scalar Fields with Overlarge Values', function () {
         var name = 'scalarlg';
         var parsed;
-        it('parses', function () {
-          parsed = assertivelyParse(name);
-        });
-
-        it('round-trips', function () {roundTrip(parsed);});
-
-        it('The CSeq sequence number is >2**32-1.', function () {
-          assert(parsed.message_headers.CSeq.sequenceNumber > Math.pow(2, 32) - 1);
-        });
-
-        it('The Retry-After field is unreasonably large', function () {
-          assert.equal(parsed.message_headers['Retry-After'].delta_seconds, 949302838503028349304023988);
-        });
-
-        it('The Warning field has a warning-value with more than 3 digits.', function () {
-          assert.strictEqual(parsed.message_headers.Warning, '1812 overture "In Progress"');
+        it('throws /^400 /', function () {
+          parsed = assertivelyParse(name, /^400 /);
         });
       });
 
@@ -499,17 +467,11 @@ describe('RFC 4475 Torture Tests', function () {
     describe('3.3.1. Missing Required Header Fields', function () {
       var name = 'insuf';
       var parsed;
-      it('parses', function () {
-        parsed = assertivelyParse(name);
+      it('throws /^400 /', function () {
+        parsed = assertivelyParse(name, /^400 /);
       });
 
       it('round-trips', function () {roundTrip(parsed);});
-
-      it('This request contains no Call-ID, From, or To header fields.', function () {
-        ['Call-ID', 'From', 'To'].forEach(function (headerName) {
-          assert.strictEqual(undefined, parsed.message_headers[headerName]);
-        });
-      });
     });
 
     describe('3.3.2. Request-URI with Unknown Scheme', function () {
@@ -732,19 +694,19 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it('There is no branch parameter at all on the Via header field value.', function () {
-        assert.strictEqual(undefined, parsed.message_headers.Via[0].params.branch);
+        parsed && assert.strictEqual(undefined, parsed.message_headers.Via[0].params.branch);
       });
 
       it('There is no From tag.', function () {
-        assert.strictEqual(undefined, parsed.message_headers.From.params.tag);
+        parsed && assert.strictEqual(undefined, parsed.message_headers.From.params.tag);
       });
 
       it('There is no explicit Content-Length.', function () {
-        assert.strictEqual(undefined, parsed.message_headers['Content-Length']);
+        parsed && assert.strictEqual(undefined, parsed.message_headers['Content-Length']);
       });
 
       it('The body is assumed to be all octets in the datagram after the null-line.', function () {
-        assert.strictEqual(parsed.message_body,
+        parsed && assert.strictEqual(parsed.message_body,
           'v=0\r\n' +
           'o=mhandley 29739 7272939 IN IP4 192.0.2.5\r\n' +
           's=-\r\n' +
@@ -755,7 +717,7 @@ describe('RFC 4475 Torture Tests', function () {
       });
 
       it('There is no Max-Forwards header field.', function () {
-        assert.strictEqual(undefined, parsed.message_headers['Max-Forwards']);
+        parsed && assert.strictEqual(undefined, parsed.message_headers['Max-Forwards']);
       });
     });
   });

@@ -1,19 +1,23 @@
 var assert = require('assert');
 var sippers = require('../../dist/sippers.js');
 
+function make200 (headers) {
+  return ['SIP/2.0 200 OK', 'CSeq: 1'].concat(headers).concat('\r\n').join('\r\n');
+}
+
 describe('Miscellaneous Tests:', function () {
   it('parses Via containing a WSS transport', function () {
-    var viaWss = "SIP/2.0 200 OK\r\nVia: SIP/2.0/WSS 199.7.173.182:443;branch=z9hG4bKd8ff6d97ecd0b43cd0730289e328c61f999e568c;rport\r\n\r\n";
+    var viaWss = make200("Via: SIP/2.0/WSS 199.7.173.182:443;branch=z9hG4bKd8ff6d97ecd0b43cd0730289e328c61f999e568c;rport");
     assert.notEqual(String, sippers.parse(viaWss).message_headers.Via[0].constructor);
   });
 
   it('parses Route containing a wss transport parameter', function () {
-    var message = "ACK sip:mod_sofia@199.7.173.152:5060 SIP/2.0\r\nRoute: <sip:db9613574a@199.7.173.182:443;transport=wss;lr;ovid=4afad521>\r\n\r\n";
+    var message = make200("Route: <sip:db9613574a@199.7.173.182:443;transport=wss;lr;ovid=4afad521>");
     assert.notEqual(String, sippers.parse(message).message_headers.Route[0].constructor);
   });
 
   it('parses Accept containing */*', function () {
-    var message = "SIP/2.0 200 OK\r\nAccept: */*\r\n\r\n";
+    var message = make200("Accept: */*");
     assert.deepEqual(
       sippers.parse(message).message_headers.Accept[0].media_range,
       {
@@ -25,7 +29,7 @@ describe('Miscellaneous Tests:', function () {
   });
 
   it('parses Accept containing x-tension/*', function () {
-    var message = "SIP/2.0 200 OK\r\nAccept: x-tension/*\r\n\r\n";
+    var message = make200("Accept: x-tension/*");
     assert.deepEqual(
       sippers.parse(message).message_headers.Accept[0].media_range,
       {
@@ -37,24 +41,24 @@ describe('Miscellaneous Tests:', function () {
   });
 
   it('parses empty Accept header', function () {
-    var message = "SIP/2.0 200 OK\r\nAccept: \r\n\r\n";
+    var message = make200("Accept: ");
     assert.strictEqual(sippers.parse(message).message_headers.Accept.length, 0);
   });
 
   it('parses folding Subject header', function () {
-    var message = "SIP/2.0 200 OK\r\nSubject:  \r\n \r\n ...finally\r\n\r\n";
+    var message = make200("CSeq:1\r\nSubject:  \r\n \r\n ...finally");
     var parsed = sippers.parse(message, {startRule: 'SIP_message'});
     assert.strictEqual(parsed.message_headers.Subject, '...finally');
   });
 
   it('parses empty Subject header', function () {
-    var message = "SIP/2.0 200 OK\r\nSubject  :     \r\n\r\n";
+    var message = make200("CSeq:1\r\nSubject  :     ");
     var parsed = sippers.parse(message, {startRule: 'SIP_message'});
     assert.strictEqual(parsed.message_headers.Subject, '');
   });
 
   it('parses empty folding Subject header', function () {
-    var message = "SIP/2.0 200 OK\r\nSubject:  \r\n \r\n\r\n";
+    var message = make200("CSeq:1\r\nSubject:  \r\n ");
     var parsed = sippers.parse(message, {startRule: 'SIP_message'});
     assert.strictEqual(parsed.message_headers.Subject, '');
   });
@@ -63,8 +67,8 @@ describe('Miscellaneous Tests:', function () {
     function firstEncoding(message) {
       return sippers.parse(message, {startRule: 'SIP_message'}).message_headers['Accept-Encoding'][0];
     }
-    var coding1 = firstEncoding("SIP/2.0 200 OK\r\nAccept-Encoding:  \r\n \r\n\r\n");
-    var coding2 = firstEncoding("SIP/2.0 200 OK\r\nAccept-Encoding:  \r\n identity\r\n\r\n");
+    var coding1 = firstEncoding(make200("Accept-Encoding:  \r\n "));
+    var coding2 = firstEncoding(make200("Accept-Encoding:  \r\n identity"));
     assert.notEqual(coding1, null);
     assert.deepEqual(coding1, coding2);
   });
@@ -74,8 +78,8 @@ describe('Miscellaneous Tests:', function () {
       return sippers.parse(message).message_headers.Contact[0].params.expires;
     }
 
-    var expires1 = contactExpires("SIP/2.0 200 OK\r\nContact: <sip:user@host.com>;expires=malformed\r\n\r\n");
-    var expires2 = contactExpires("SIP/2.0 200 OK\r\nContact: <sip:user@host.com>;expires=3600\r\n\r\n");
+    var expires1 = contactExpires(make200("Contact: <sip:user@host.com>;expires=malformed"));
+    var expires2 = contactExpires(make200("Contact: <sip:user@host.com>;expires=3600"));
     assert.notEqual(expires1, null);
     assert.equal(expires1, 3600);
     assert.equal(expires2, 3600);
