@@ -7,6 +7,11 @@ function parse (input, options){
     options = {startRule: options};
   }
 
+  // http://tools.ietf.org/html/rfc3261#section-7.5
+  // Implementations processing SIP messages over stream-oriented transports
+  // MUST ignore any CRLF appearing before the start-line
+  input = input.replace(/(\r\n)*/, '');
+
   input = foldLWS(input);
 
   try {
