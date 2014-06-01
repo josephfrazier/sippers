@@ -694,19 +694,19 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it('There is no branch parameter at all on the Via header field value.', function () {
-        parsed && assert.strictEqual(undefined, parsed.message_headers.Via[0].params.branch);
+        if (parsed) assert.strictEqual(undefined, parsed.message_headers.Via[0].params.branch);
       });
 
       it('There is no From tag.', function () {
-        parsed && assert.strictEqual(undefined, parsed.message_headers.From.params.tag);
+        if (parsed) assert.strictEqual(undefined, parsed.message_headers.From.params.tag);
       });
 
       it('There is no explicit Content-Length.', function () {
-        parsed && assert.strictEqual(undefined, parsed.message_headers['Content-Length']);
+        if (parsed) assert.strictEqual(undefined, parsed.message_headers['Content-Length']);
       });
 
       it('The body is assumed to be all octets in the datagram after the null-line.', function () {
-        parsed && assert.strictEqual(parsed.message_body,
+        if (parsed) assert.strictEqual(parsed.message_body,
           'v=0\r\n' +
           'o=mhandley 29739 7272939 IN IP4 192.0.2.5\r\n' +
           's=-\r\n' +
@@ -717,7 +717,7 @@ describe('RFC 4475 Torture Tests', function () {
       });
 
       it('There is no Max-Forwards header field.', function () {
-        parsed && assert.strictEqual(undefined, parsed.message_headers['Max-Forwards']);
+        if (parsed) assert.strictEqual(undefined, parsed.message_headers['Max-Forwards']);
       });
     });
   });

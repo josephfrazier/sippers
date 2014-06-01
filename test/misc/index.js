@@ -109,6 +109,6 @@ describe('Miscellaneous Tests:', function () {
     var ok = make200();
     var crlfok = '\r\n\r\n' + ok;
 
-    assert.parsedEqual(sippers.parse(crlfok), sippers.parse(ok))
+    assert.parsedEqual(sippers.parse(crlfok), sippers.parse(ok));
   });
 });
