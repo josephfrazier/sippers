@@ -1008,12 +1008,12 @@ Server           =  name:"Server"i HCOLON
                     )
                     {return {name: "Server", value: value};}
 server_val       =  product / comment
-product          =  product_name:token product_version:(SLASH p:product_version {return p;})?
+product          =  name:token version:(SLASH p:product_version {return p;})?
                     {
                       return helpers.serializeable({
-                        product_name: product_name,
-                        product_version: product_version
-                      }, ['product_name', 'product_version'], {separator: '/'});
+                        name: name,
+                        version: version
+                      }, ['name', 'version'], {separator: '/'});
                     }
 product_version  =  token
 
