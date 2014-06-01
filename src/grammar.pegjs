@@ -119,9 +119,9 @@ quoted_pair  =  "\\" ([\x00-\x09] / [\x0B-\x0C]
 */
 
 _SIP_URI          = scheme:$("sip" "s"?) ":" userinfo:( userinfo )? hostport:hostport
-                    uri_parameters:uri_parameters headers:( headers )?
+                    params:uri_parameters headers:( headers )?
                     {
-                      return helpers.sipuriBuild(scheme, userinfo, hostport, uri_parameters, headers);
+                      return helpers.sipuriBuild(scheme, userinfo, hostport, params, headers);
                     }
 
 _SIP_URI_noparams = scheme:$("sip" "s"?) ":" userinfo:( userinfo )? hostport:hostport

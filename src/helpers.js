@@ -95,14 +95,14 @@ function header (name, value) {
   }, ['name', ': ', 'value']);
 }
 
-function sipuriBuild (scheme, userinfo, hostport, uri_parameters, headers) {
+function sipuriBuild (scheme, userinfo, hostport, params, headers) {
   return serializeable({
       scheme: scheme
     , userinfo: userinfo
     , hostport: hostport
-    , uri_parameters: uri_parameters
+    , params: params
     , headers: headers
-  }, ['scheme', ':', 'userinfo', 'hostport', 'uri_parameters', 'headers'], {
+  }, ['scheme', ':', 'userinfo', 'hostport', 'params', 'headers'], {
     transform: function (addrSpecString) {
       if (this.display_name || this._isNameAddr) {
         addrSpecString = serialize(this.display_name) + '<' + addrSpecString + '>';

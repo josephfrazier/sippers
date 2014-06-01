@@ -78,7 +78,7 @@ describe('RFC 4475 Torture Tests', function () {
 
         it('The Contact URI has escaped characters in the URI parameters.', function () {
           assert.deepEqual(
-            jsonClone(parsed.headers.Contact[0].addr.uri_parameters),
+            jsonClone(parsed.headers.Contact[0].addr.params),
             {
               "lr": null,
               "name": "value%41"
@@ -616,7 +616,7 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it("This register request contains a contact where the 'unknownparam' parameter must be interpreted as a contact-param and not a url-param.", function () {
-        assert.strictEqual(parsed.headers.Contact[0].addr.uri_parameters.unknownparam, undefined);
+        assert.strictEqual(parsed.headers.Contact[0].addr.params.unknownparam, undefined);
         assert.strictEqual(parsed.headers.Contact[0].params.unknownparam, null);
       });
     });
@@ -631,7 +631,7 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it('This register request contains a contact where the URI has an unknown parameter.', function () {
-        assert.strictEqual(parsed.headers.Contact[0].addr.uri_parameters.unknownparam, null);
+        assert.strictEqual(parsed.headers.Contact[0].addr.params.unknownparam, null);
       });
     });
 
