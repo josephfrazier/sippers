@@ -603,11 +603,11 @@ auth_param        =  name:auth_param_name EQUAL
                      value:( token / quoted_string )
                      {return {name: name, value: value};}
 auth_param_name   =  token
-other_response    =  auth_scheme:auth_scheme LWS first:auth_param
+other_response    =  scheme:auth_scheme LWS first:auth_param
                      rest:(COMMA a:auth_param {return a;})*
                      {
                        parameters = helpers.list(first, rest);
-                       return helpers.xparamsBuild(auth_scheme, 'auth_scheme', parameters, 'parameters', {
+                       return helpers.xparamsBuild(scheme, 'scheme', parameters, 'parameters', {
                          separator: ', ',
                          prefix: ' '
                        });
@@ -884,11 +884,11 @@ challenge           =  (
                          { return {digest_clns: helpers.list(first, rest)}; }
                        )
                        / (o:other_challenge {return {other_challenge: o};})
-other_challenge     =  auth_scheme:auth_scheme LWS first:auth_param
+other_challenge     =  scheme:auth_scheme LWS first:auth_param
                        rest:(COMMA a:auth_param {return a;})*
                        {
                          parameters = helpers.list(first, rest);
-                         return helpers.xparamsBuild(auth_scheme, 'auth_scheme', parameters, 'parameters', ', ');
+                         return helpers.xparamsBuild(scheme, 'scheme', parameters, 'parameters', ', ');
                        }
 digest_cln          =  realm / domain / nonce
                         / opaque / stale / algorithm
