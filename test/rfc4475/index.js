@@ -124,8 +124,8 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('The display name portion of the To and From header fields is "%Z%45".', function () {
-          assert.equal('%Z%45', parsed.headers.To.addr.display_name);
-          assert.equal('%Z%45', parsed.headers.From.addr.display_name);
+          assert.equal('%Z%45', parsed.headers.To.addr.name);
+          assert.equal('%Z%45', parsed.headers.From.addr.name);
         });
 
         it('This message has two Contact header field values, not three.', function () {
