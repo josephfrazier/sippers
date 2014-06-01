@@ -341,9 +341,11 @@ srvr           =  (
                     hostport: hostport
                     {
                       return helpers.serializeable({
-                        userinfo: userinfo,
-                        hostport: hostport
-                      }, ['userinfo', 'hostport']);
+                        user: userinfo && userinfo.user,
+                        password: userinfo && userinfo.password,
+                        host: hostport && hostport.host,
+                        port: hostport && hostport.port
+                      }, [userinfo, hostport]);
                     }
                   )?
 
