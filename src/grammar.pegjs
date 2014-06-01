@@ -673,7 +673,7 @@ name_addr      =  name:( display_name )?
                     if (name) {
                       addr_spec.name = name;
                     }
-                    Object.defineProperty(addr_spec, '_isNameAddr', {value: true});
+                    Object.defineProperty(addr_spec, '$isNameAddr', {value: true});
                     return addr_spec;
                   }
 addr_spec      =  SIP_URI / SIPS_URI / absoluteURI
