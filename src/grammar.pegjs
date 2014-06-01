@@ -1241,13 +1241,13 @@ Event             =  name:( "Event"i / "o"i ) HCOLON
                        }
                      )
                      {return {name: name, value: value};}
-event_type        =  event_package:event_package
+event_type        =  package:event_package
                      templates:( "." t:event_template {return t;} )*
                      {
                        return helpers.serializeable({
-                         event_package: event_package,
+                         package: package,
                          templates: templates
-                       }, ['event_package', 'templates']);
+                       }, ['package', 'templates']);
                      }
 event_package     =  token_nodot
 event_template    =  token_nodot
