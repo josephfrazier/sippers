@@ -84,4 +84,16 @@ describe('Miscellaneous Tests:', function () {
     assert.equal(expires1, 3600);
     assert.equal(expires2, 3600);
   });
+
+  it('parses malformed Expires headers as equivalent to 3600', function () {
+    function expiresHeader (message) {
+      return sippers.parse(make200(message)).message_headers.Expires;
+    }
+
+    var expires1 = expiresHeader("Expires: malformed");
+    var expires2 = expiresHeader("Expires: 3600");
+    assert.notEqual(expires1, null);
+    assert.equal(expires1, 3600);
+    assert.equal(expires2, 3600);
+  });
 });
