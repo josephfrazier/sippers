@@ -740,13 +740,13 @@ Content_Language  =  name:"Content-Language"i HCOLON
                        { return helpers.list(first, rest); }
                      )
                      {return {name: "Content-Language", value: value};}
-language_tag      =  primary_tag:primary_tag
+language_tag      =  tag:primary_tag
                      subtags:( "-" s:subtag {return s;})*
                      {
                        return helpers.serializeable({
-                         primary_tag: primary_tag,
+                         tag: tag,
                          subtags: subtags
-                       }, ['primary_tag', 'subtags']);
+                       }, ['tag', 'subtags']);
                      }
 primary_tag       =  _1to8ALPHA
 subtag            =  _1to8ALPHA
