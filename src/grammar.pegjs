@@ -85,8 +85,12 @@ SLASH   =  SWS "/" SWS {return '/';} // slash
 EQUAL   =  SWS "=" SWS {return '=';} // equal
 LPAREN  =  SWS "(" SWS {return '(';} // left parenthesis
 RPAREN  =  SWS ")" SWS {return ')';} // right parenthesis
-RAQUOT  =  ">" SWS     {return '>';} // right angle quote
-LAQUOT  =  SWS "<"     {return '<';} // left angle quote
+// Ignore spaces directly inside angle brackets
+// See https://tools.ietf.org/html/rfc4475#section-3.1.2.14
+//RAQUOT  =  ">" SWS     {return '>';} // right angle quote
+//LAQUOT  =  SWS "<"     {return '<';} // left angle quote
+RAQUOT  =  SWS ">" SWS {return '>';} // right angle quote
+LAQUOT  =  SWS "<" SWS {return '<';} // left angle quote
 COMMA   =  SWS "," SWS {return ',';} // comma
 SEMI    =  SWS ";" SWS {return ';';} // semicolon
 COLON   =  SWS ":" SWS {return ':';} // colon

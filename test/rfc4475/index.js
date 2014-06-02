@@ -383,10 +383,6 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('round-trips', function () {roundTrip(parsed);});
-
-        it('the addr-spec in the To header field contains spaces', function () {
-          assert.strictEqual(parsed.headers.To, '"Watson, Thomas" < sip:t.watson@example.org >');
-        });
       });
 
       describe('3.1.2.15. Non-token Characters in Display Name', function () {
@@ -397,6 +393,10 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('round-trips', function () {roundTrip(parsed);});
+
+        it('parses the user in the addr-spec in the To header field', function () {
+          assert.equal(parsed.headers.To.addr.user, 't.watson');
+        });
       });
 
       describe('3.1.2.16. Unknown Protocol Version', function () {
