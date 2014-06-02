@@ -276,7 +276,10 @@ Request        =  Request:Request_Line
                     }, ['Request', 'headers', '\r\n', 'body']);
                   }
 
-Request_Line   =  Method:Method SP URI:Request_URI SP Version:SIP_Version CRLF
+// see https://tools.ietf.org/html/rfc4475#section-3.1.2.9
+// see https://tools.ietf.org/html/rfc4475#section-3.1.2.10
+//Request_Line   =  Method:Method SP URI:Request_URI SP Version:SIP_Version CRLF
+Request_Line   =  SWS Method:Method LWS URI:Request_URI LWS Version:SIP_Version SWS CRLF
                   {
                     return helpers.serializeable({
                       Method: Method,
@@ -457,7 +460,10 @@ Response          =  Status:Status_Line
                        }, ['Status', 'headers', '\r\n', 'body']);
                      }
 
-Status_Line     =  Version:SIP_Version SP Code:Status_Code SP Reason:Reason_Phrase CRLF
+// see https://tools.ietf.org/html/rfc4475#section-3.1.2.9
+// see https://tools.ietf.org/html/rfc4475#section-3.1.2.10
+//Status_Line     =  Version:SIP_Version SP Code:Status_Code SP Reason:Reason_Phrase CRLF
+Status_Line     =  SWS Version:SIP_Version LWS Code:Status_Code LWS Reason:Reason_Phrase SWS CRLF
                    {
                      return helpers.serializeable({
                        Version: Version,

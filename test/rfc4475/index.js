@@ -312,16 +312,24 @@ describe('RFC 4475 Torture Tests', function () {
       describe('3.1.2.9. Multiple SP Separating Request-Line Elements', function () {
         var name = 'lwsstart';
         var parsed;
-        it('does not parse', function () {
-          parsed = assertivelyParse(name, false);
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('does not include the extra SP characters when serializing', function () {
+          assert.equal(parsed.Request.serialize(), 'INVITE sip:user@example.com SIP/2.0\r\n');
         });
       });
  
       describe('3.1.2.10. SP Characters at End of Request-Line', function () {
         var name = 'trws';
         var parsed;
-        it('does not parse', function () {
-          parsed = assertivelyParse(name, false);
+        it('parses', function () {
+          parsed = assertivelyParse(name);
+        });
+
+        it('does not include the extra SP characters when serializing', function () {
+          assert.equal(parsed.Request.serialize(), 'OPTIONS sip:remote-target@example.com SIP/2.0\r\n');
         });
       });
 
