@@ -404,30 +404,16 @@ describe('RFC 4475 Torture Tests', function () {
       describe('3.1.2.17. Start Line and CSeq Method Mismatch', function () {
         var name = 'mismatch01';
         var parsed;
-        it('parses', function () {
-          parsed = assertivelyParse(name);
-        });
-
-        it('round-trips', function () {roundTrip(parsed);});
-
-        it('This request has mismatching values for the method in the start line and the CSeq header field.', function () {
-          assert.strictEqual('OPTIONS', parsed.Request.Method);
-          assert.strictEqual('INVITE', parsed.headers.CSeq.method);
+        it('throws /^400 /', function () {
+          parsed = assertivelyParse(name, /^400 /);
         });
       });
 
       describe('3.1.2.18. Unknown Method with CSeq Method Mismatch', function () {
         var name = 'mismatch02';
         var parsed;
-        it('parses', function () {
-          parsed = assertivelyParse(name);
-        });
-
-        it('round-trips', function () {roundTrip(parsed);});
-
-        it('This request has mismatching values for the method in the start line and the CSeq header field.', function () {
-          assert.strictEqual('NEWMETHOD', parsed.Request.Method);
-          assert.strictEqual('INVITE', parsed.headers.CSeq.method);
+        it('throws /^(501|400) /', function () {
+          parsed = assertivelyParse(name, /^(501|400) /);
         });
       });
 

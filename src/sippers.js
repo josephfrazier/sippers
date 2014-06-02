@@ -39,9 +39,10 @@ function parse (input, options){
 
     if (parsed.Request) {
       mandateRequestHeaders(parsed);
+      checkCSeqMethod(parsed);
     }
 
-    checkCSeq(parsed);
+    checkCSeqRange(parsed);
     checkSIPVersion(parsed);
   }
 
@@ -84,9 +85,15 @@ function mandateHeader (parsed, headerName) {
   return parsed;
 }
 
-function checkCSeq (parsed) {
+function checkCSeqRange (parsed) {
   if (parsed.headers.CSeq.number >= Math.pow(2, 32)) {
     throw new ParsedError(parsed, 400, 'Invalid CSeq sequence number');
+  }
+}
+
+function checkCSeqMethod (parsed) {
+  if (parsed.Request.Method != parsed.headers.CSeq.method) {
+    throw new ParsedError(parsed, 400, 'CSeq Method does not match Request Method');
   }
 }
 
