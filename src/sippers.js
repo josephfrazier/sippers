@@ -44,6 +44,7 @@ function parse (input, options){
 
     checkCSeqRange(parsed);
     checkSIPVersion(parsed);
+    mandateHeader(parsed, 'Content-Length', true);
   }
 
   return parsed;
@@ -69,13 +70,13 @@ function mandateHeaders (parsed, headers) {
   headers.forEach(mandateHeader.bind(null, parsed));
 }
 
-function mandateHeader (parsed, headerName) {
+function mandateHeader (parsed, headerName, optional) {
   var headerValue = parsed.headers[headerName];
   var reasonPrefix;
-  if (!headerValue) {
+  if (!headerValue && !optional) {
     reasonPrefix = 'Missing';
   }
-  else if (headerValue.$isExtension) {
+  else if (headerValue && headerValue.$isExtension) {
     reasonPrefix = 'Malformed';
   }
   if (reasonPrefix) {
