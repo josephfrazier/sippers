@@ -108,7 +108,7 @@ function sipuriBuild (scheme, userinfo, hostport, parameters, headers) {
   }, ['scheme', ':', userinfo, hostport, 'parameters', 'headers'], {
     transform: function (addrSpecString) {
       if (this.name || this.$isNameAddr) {
-        addrSpecString = serialize(this.name) + '<' + addrSpecString + '>';
+        addrSpecString = serialize(this.name) + ' <' + addrSpecString + '>';
       }
       return addrSpecString;
     }
