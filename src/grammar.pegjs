@@ -688,7 +688,10 @@ name_addr      =  name:( display_name )?
                   }
 addr_spec      =  SIP_URI / SIPS_URI / absoluteURI
 _addr_spec_noparams = _SIP_URI_noparams / _absoluteURI_noparams
-display_name   =  quoted_string / $( (token LWS)* )
+// Make optional the space between display_name and < in addr_spec.
+// See https://tools.ietf.org/html/rfc4475#section-3.1.1.6
+//display_name   =  quoted_string / $( (token LWS)* )
+display_name   =  quoted_string / $( token? (LWS token)* )
 
 contact_params     =  c_p_q / c_p_expires
                       // begin RFC 5626
