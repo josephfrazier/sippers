@@ -42,6 +42,7 @@ function parse (input, options){
     }
 
     checkCSeq(parsed);
+    checkSIPVersion(parsed);
   }
 
   return parsed;
@@ -86,6 +87,12 @@ function mandateHeader (parsed, headerName) {
 function checkCSeq (parsed) {
   if (parsed.headers.CSeq.number >= Math.pow(2, 32)) {
     throw new ParsedError(parsed, 400, 'Invalid CSeq sequence number');
+  }
+}
+
+function checkSIPVersion (parsed) {
+  if ((parsed.Request || parsed.Status).Version != "SIP/2.0") {
+    throw new ParsedError(parsed, 505, 'Version Not Supported');
   }
 }
 

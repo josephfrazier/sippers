@@ -396,14 +396,8 @@ describe('RFC 4475 Torture Tests', function () {
       describe('3.1.2.16. Unknown Protocol Version', function () {
         var name = 'badvers';
         var parsed;
-        it('parses', function () {
-          parsed = assertivelyParse(name);
-        });
-
-        it('round-trips', function () {roundTrip(parsed);});
-
-        it('has version number 7.0', function () {
-          assert.strictEqual(parsed.Request.Version, 'SIP/7.0');
+        it('throws /^505 /', function () {
+          parsed = assertivelyParse(name, /^505 /);
         });
       });
 
