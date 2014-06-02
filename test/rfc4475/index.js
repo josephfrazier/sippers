@@ -268,6 +268,7 @@ describe('RFC 4475 Torture Tests', function () {
       describe('3.1.2.5. Response Scalar Fields with Overlarge Values', function () {
         var name = 'scalarlg';
         var parsed;
+        //    An element receiving this response will simply discard it.
         it('throws /^400 /', function () {
           parsed = assertivelyParse(name, /^400 /);
         });
@@ -276,30 +277,31 @@ describe('RFC 4475 Torture Tests', function () {
       describe('3.1.2.6. Unterminated Quoted String in Display Name', function () {
         var name = 'quotbal';
         var parsed;
-        it('parses', function () {
-          parsed = assertivelyParse(name);
-        });
-
-        it('round-trips', function () {roundTrip(parsed);});
-
-        it('has an unterminated quote in the display name of the To field', function () {
-          assert.strictEqual(parsed.headers.To, '"Mr. J. User <sip:j.user@example.com>');
+        it('throws /^400 /', function () {
+          parsed = assertivelyParse(name, /^400 /);
         });
       });
 
+      /*
+         It is reasonable always to reject a request with this error with a
+         400 Bad Request.  Elements attempting to be liberal with what they
+         accept may choose to ignore the brackets.  If the element forwards
+         the request, it must not include the brackets in the messages it
+         sends.
+      */
       describe('3.1.2.7. <> Enclosing Request-URI', function () {
         var name = 'ltgtruri';
         var parsed;
-        it('does not parse', function () {
-          parsed = assertivelyParse(name, false);
+        it('throws /^400 /', function () {
+          parsed = assertivelyParse(name, /^400 /);
         });
       });
 
       describe('3.1.2.8. Malformed SIP Request-URI (embedded LWS)', function () {
         var name = 'lwsruri';
         var parsed;
-        it('does not parse', function () {
-          parsed = assertivelyParse(name, false);
+        it('throws /^400 /', function () {
+          parsed = assertivelyParse(name, /^400 /);
         });
       });
 
@@ -327,6 +329,10 @@ describe('RFC 4475 Torture Tests', function () {
         });
       });
 
+      /*
+         An element could choose to be liberal in what it accepts
+         and ignore the escaped headers
+      */
       describe('3.1.2.11. Escaped Headers in SIP Request-URI', function () {
         var name = 'escruri';
         var parsed;
@@ -351,21 +357,20 @@ describe('RFC 4475 Torture Tests', function () {
         it('round-trips', function () {roundTrip(parsed);});
 
         it('contains a non-GMT time zone in the SIP Date header field', function () {
-          assert.strictEqual(parsed.headers.Date, "Fri, 01 Jan 2010 16:00:00 EST");
+          assert.equal(parsed.headers.Date, "Fri, 01 Jan 2010 16:00:00 EST");
         });
       });
 
+      /*
+         An element choosing to be liberal in what it
+         accepts could infer the angle brackets since there is no ambiguity in
+         this example.  In general, that won't be possible.
+      */
       describe('3.1.2.13. Failure to Enclose name-addr URI in <>', function () {
         var name = 'regbadct';
         var parsed;
-        it('parses', function () {
-          parsed = assertivelyParse(name);
-        });
-
-        it('round-trips', function () {roundTrip(parsed);});
-
-        it('The SIP URI contained in the Contact Header field has an escaped header', function () {
-          assert.equal(parsed.headers.Contact[0].addr.headers.Route, "<sip:sip.example.com>");
+        it('throws /^400 /', function () {
+          parsed = assertivelyParse(name, /^400 /);
         });
       });
 
@@ -377,6 +382,10 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('round-trips', function () {roundTrip(parsed);});
+
+        it('parses the user in the addr-spec in the To header field', function () {
+          assert.equal(parsed.headers.To.addr.user, 't.watson');
+        });
       });
 
       describe('3.1.2.15. Non-token Characters in Display Name', function () {
@@ -411,6 +420,10 @@ describe('RFC 4475 Torture Tests', function () {
         });
       });
 
+      /*
+         This response has a response code larger than 699.  An element
+         receiving this response should simply drop it.
+      */
       describe('3.1.2.19. Overlarge Response Code', function () {
         var name = 'bigcode';
         var parsed;
@@ -422,6 +435,16 @@ describe('RFC 4475 Torture Tests', function () {
   });
 
   describe('3.2. Transaction Layer Semantics', function () {
+    /*
+       This request indicates support for RFC 3261-style transaction
+       identifiers by providing the z9hG4bK prefix to the branch parameter,
+       but it provides no identifier.  A parser must not break when
+       receiving this message.  An element receiving this request could
+       reject the request with a 400 Response (preferably statelessly, as
+       other requests from the source are likely also to have a malformed
+       branch parameter), or it could fall back to the RFC 2543-style
+       transaction identifier.
+    */
     describe('3.2.1. Missing Transaction Identifier', function () {
       var name = 'badbranch';
       var parsed;
@@ -444,35 +467,35 @@ describe('RFC 4475 Torture Tests', function () {
       it('throws /^400 /', function () {
         parsed = assertivelyParse(name, /^400 /);
       });
-
-      it('round-trips', function () {roundTrip(parsed);});
     });
 
+    /*
+       This OPTIONS contains an unknown URI scheme in the Request-URI.  A
+       parser must accept this as a well-formed SIP request.
+
+       An element receiving this request will reject it with a 416
+       Unsupported URI Scheme response.
+    */
     describe('3.3.2. Request-URI with Unknown Scheme', function () {
       var name = 'unkscm';
       var parsed;
-      it('parses', function () {
-        parsed = assertivelyParse(name);
-      });
-
-      it('round-trips', function () {roundTrip(parsed);});
-
-      it('This OPTIONS contains an unknown URI scheme in the Request-URI.', function () {
-        assert.strictEqual(parsed.Request.URI.scheme, 'nobodyKnowsThisScheme');
+      it('throws /^416 /', function () {
+        parsed = assertivelyParse(name, /^416 /);
       });
     });
 
+    /*
+       If an element will never accept this scheme as meaningful in a
+       Request-URI, it is appropriate to treat it as unknown and return a
+       416 Unsupported URI Scheme response.  If the element might accept
+       some URIs with this scheme, then a 404 Not Found is appropriate for
+       those URIs it doesn't accept.
+    */
     describe('3.3.3. Request-URI with Known but Atypical Scheme', function () {
       var name = 'novelsc';
       var parsed;
-      it('parses', function () {
-        parsed = assertivelyParse(name);
-      });
-
-      it('round-trips', function () {roundTrip(parsed);});
-
-      it('This OPTIONS contains an Request-URI with an IANA-registered scheme that does not commonly appear in Request-URIs of SIP requests.', function () {
-        assert.strictEqual(parsed.Request.URI.scheme, 'soap.beep');
+      it('throws /^(416|404) /', function () {
+        parsed = assertivelyParse(name, /^(416|404) /);
       });
     });
 
