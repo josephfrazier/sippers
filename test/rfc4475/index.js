@@ -252,14 +252,8 @@ describe('RFC 4475 Torture Tests', function () {
       describe('3.1.2.3. Negative Content-Length', function () {
         var name = 'ncl';
         var parsed;
-        it('parses', function () {
-          parsed = assertivelyParse(name);
-        });
-
-        it('round-trips', function () {roundTrip(parsed);});
-
-        it('This request has a negative value for Content-Length.', function () {
-          assert.strictEqual('-999', parsed.headers['Content-Length']);
+        it('throws /^400 /', function () {
+          parsed = assertivelyParse(name, /^400 /);
         });
       });
 
