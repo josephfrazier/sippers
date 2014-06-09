@@ -38,6 +38,15 @@ function repeat (str) {
   });
 }
 
+// adapted from http://stackoverflow.com/a/4209150
+function hex (str) {
+  return str.replace(/<hex>([^<]*)<\/hex>/g, function (match, encoded) {
+    return encoded.replace(/([0-9A-F]{2})/g, function (match, pair) {
+      return String.fromCharCode(parseInt(pair, 16));
+    });
+  });
+}
+
 describe('RFC 4475 Torture Tests', function () {
   describe('3.1. Parser Tests (syntax)', function () {
     describe('3.1.1. Valid Messages', function () {
@@ -377,6 +386,13 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('round-trips', function () {roundTrip(parsed);});
+
+        it('contains unreserved and non-ascii UTF-8 characters', function () {
+          if (parsed) assert.equal(
+            hex('= 2**3 * 5**2 <hex>D0BDD0BE20D181D182D0BE20D0B4D0B5D0B2D18FD0BDD0BED181D182D0BE20D0B4D0B5D0B2D18FD182D18C202D20D0BFD180D0BED181D182D0BED0B5</hex>'),
+            parsed.Status.Reason
+          );
+        });
       });
 
       describe('3.1.1.13. Empty Reason Phrase', function () {
