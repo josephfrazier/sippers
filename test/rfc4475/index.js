@@ -39,6 +39,17 @@ describe('RFC 4475 Torture Tests', function () {
 
         it('round-trips', function () {roundTrip(parsed);});
 
+        it('has escaped characters within quotes', function () {
+          if (parsed) assert.equal(
+            "J Rosenberg \\\"",
+            parsed.headers.From.addr.name
+          );
+          if (parsed) assert.equal(
+            "Quoted string \"\"",
+            parsed.headers.Contact[0].addr.name
+          );
+        });
+
         it('has an empty Subject', function () {
           if (parsed) assert.equal('', parsed.headers.Subject);
         });
