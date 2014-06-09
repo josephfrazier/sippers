@@ -198,6 +198,111 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('round-trips', function () {roundTrip(parsed);});
+
+        function repeats (str) {
+          return str.replace(/<repeat count=(\d*)>([^<]*)<\/repeat>/g, function (match, count, value) {
+            var repeated = '';
+            count = parseInt(count, 10);
+            for ( ; count > 0; count--) {
+              repeated += value;
+            }
+            return repeated;
+          });
+        }
+
+        describe('The To header field', function () {
+          it('has a long display name', function () {
+            if (!parsed) return;
+
+            assert.equal(
+              repeats('I have a user name of <repeat count=10>extreme</repeat> proportion'),
+              parsed.headers.To.addr.name
+            );
+          });
+
+          it('has long uri parameter names and values', function () {
+            if (!parsed) return;
+
+            assert.equal(
+              repeats('very<repeat count=20>long</repeat>value'),
+              parsed.headers.To.addr.parameters.unknownparam1
+            );
+
+            assert.equal(
+              'shortvalue',
+              parsed.headers.To.addr.parameters[repeats('longparam<repeat count=25>name</repeat>')]
+            );
+
+            assert.strictEqual(
+              null,
+              parsed.headers.To.addr.parameters[repeats('very<repeat count=25>long</repeat>ParameterNameWithNoValue')]
+            );
+          });
+        });
+
+        describe('The From header field', function () {
+          it('has an amazingly long caller name', function () {
+            if (parsed) assert.equal(
+              repeats('<repeat count=5>amazinglylongcallername</repeat>'),
+              parsed.headers.From.addr.user
+            );
+          });
+
+          it('has long header parameter names and values', function () {
+            if (!parsed) return;
+
+            assert.equal(
+              repeats('unknowheaderparam<repeat count=15>value</repeat>'),
+              parsed.headers.From.parameters[repeats('unknownheaderparam<repeat count=20>name</repeat>')]
+            );
+
+            assert.strictEqual(
+              null,
+              parsed.headers.From.parameters[repeats('unknownValueless<repeat count=10>paramname</repeat>')]
+            );
+          });
+
+          it('has, in particular, a very long tag', function () {
+            if (parsed) assert.equal(
+              repeats('12<repeat count=50>982</repeat>424'),
+              parsed.headers.From.parameters.tag
+            );
+          });
+        });
+
+        describe('The Call-ID header field', function () {
+          it('is one long token', function () {
+            assert.equal(
+              parsed.headers['Call-ID'],
+              repeats('longreq.one<repeat count=20>really</repeat>longcallid')
+            );
+          });
+        });
+
+        describe('The Via header field', function () {
+          it('has 34 values, the last with a long branch', function () {
+            for (var i = 0; i < 33; i++) {
+              assert.equal(
+                parsed.headers.Via[i].by.host,
+                'sip' + (33 - i) + '.example.com'
+              );
+            }
+
+            assert.equal(
+              parsed.headers.Via[33].parameters.branch,
+              repeats('very<repeat count=50>long</repeat>branchvalue')
+            );
+          });
+        });
+
+        describe('The Contact header field', function () {
+          it('has an amazingly long caller name', function () {
+            if (parsed) assert.equal(
+              repeats('<repeat count=5>amazinglylongcallername</repeat>'),
+              parsed.headers.Contact[0].addr.user
+            );
+          });
+        });
       });
 
       describe('3.1.1.8. Extra Trailing Octets in a UDP Datagram', function () {
