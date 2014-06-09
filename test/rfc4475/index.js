@@ -184,6 +184,10 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('round-trips', function () {roundTrip(parsed);});
+
+        it('has a From display-name of "caller"', function () {
+          if (parsed) assert.equal('caller', parsed.headers.From.addr.name);
+        });
       });
 
       describe('3.1.1.7. Long Values in Header Fields', function () {
