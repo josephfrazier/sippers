@@ -39,12 +39,44 @@ describe('RFC 4475 Torture Tests', function () {
 
         it('round-trips', function () {roundTrip(parsed);});
 
-        it('has a CSeq number of 9', function () {
-          assert.equal(9, parsed ? parsed.headers.CSeq.number : 9);
+        it('has an empty Subject', function () {
+          if (parsed) assert.equal('', parsed.headers.Subject);
         });
 
-        it('has a Max-Forwards of 68', function () {
-          assert.equal(68, parsed ? parsed.headers['Max-Forwards'] : 68);
+        it('has a mix of short and long form for the same header field name', function () {
+          if (parsed) assert.equal(3, parsed.headers.Via.length);
+        });
+
+        it('has an unknown Request-URI parameter', function () {
+          if (parsed) assert.strictEqual(null, parsed.Request.URI.parameters.unknownparam);
+        });
+
+        it('has unknown header fields', function () {
+          if (parsed) assert.equal(
+            'newfangled value continued newfangled value',
+            parsed.headers.NewFangledHeader
+          );
+        });
+
+        it('has an unknown header field with a value that would be syntactically invalid if it were defined in terms of generic-param', function () {
+          if (parsed) assert.equal(';;,,;;,;', parsed.headers.UnknownHeaderWithUnusualValue);
+        });
+
+        it('has unknown parameters of a known header field', function () {
+          if (parsed) assert.strictEqual('newvalue', parsed.headers.Contact[0].parameters.newparam);
+        });
+
+        it('has a uri parameter with no value', function () {
+          if (parsed) assert.strictEqual(null, parsed.headers.Route[0].addr.parameters['unknown-no-value']);
+        });
+
+        it('has a header parameter with no value', function () {
+          if (parsed) assert.strictEqual(null, parsed.headers.Contact[0].parameters.secondparam);
+        });
+
+        it('has integer fields (Max-Forwards and CSeq) with leading zeros', function () {
+          if (parsed) assert.equal(68, parsed.headers['Max-Forwards']);
+          if (parsed) assert.equal(9, parsed.headers.CSeq.number);
         });
       });
 
