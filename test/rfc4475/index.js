@@ -334,13 +334,22 @@ describe('RFC 4475 Torture Tests', function () {
       });
 
       describe('3.1.1.10. Varied and Unknown Transport Types', function () {
-        var name = 'semiuri';
+        var name = 'transports';
         var parsed;
         it('parses', function () {
           parsed = assertivelyParse(name);
         });
 
         it('round-trips', function () {roundTrip(parsed);});
+
+        it('contains Via header field values with all known transport types and exercises the transport extension mechanism', function () {
+          ['UDP', 'SCTP', 'TLS', 'UNKNOWN', 'TCP'].forEach(function (transport, i) {
+            assert.equal(
+              parsed.headers.Via[i].protocol.transport,
+              transport
+            );
+          });
+        });
       });
 
       describe('3.1.1.11. Multipart MIME Message', function () {
