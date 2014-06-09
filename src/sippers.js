@@ -46,6 +46,7 @@ function parse (input, options){
 
     checkCSeqRange(parsed);
     mandateHeader(parsed, 'Content-Length', true);
+    mandateHeader(parsed, 'Contact', true);
   }
 
   return parsed;
