@@ -37,13 +37,14 @@ function parse (input, options){
       throw new ParsedError(parsed, 400, "Multiple " + e.message + " values");
     }
 
+    checkStartLine(parsed);
+
     if (parsed.Request) {
       mandateRequestHeaders(parsed);
       checkCSeqMethod(parsed);
     }
 
     checkCSeqRange(parsed);
-    checkSIPVersion(parsed);
     mandateHeader(parsed, 'Content-Length', true);
   }
 
@@ -96,6 +97,13 @@ function checkCSeqMethod (parsed) {
   if (parsed.Request.Method != parsed.headers.CSeq.method) {
     throw new ParsedError(parsed, 400, 'CSeq Method does not match Request Method');
   }
+}
+
+function checkStartLine (parsed) {
+  if (parsed.start_line) {
+    throw new ParsedError(parsed, 400, 'Malformed start-line');
+  }
+  checkSIPVersion(parsed);
 }
 
 function checkSIPVersion (parsed) {

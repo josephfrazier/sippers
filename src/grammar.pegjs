@@ -270,19 +270,42 @@ hvalue          =  chars:_hchar* {return helpers.joinEscaped(chars);}
 _hchar          =  hnv_unreserved / unreserved / escaped
 hnv_unreserved  =  "[" / "]" / "/" / "?" / ":" / "+" / "$"
 
-SIP_message    =  Request / Response
+//SIP_message    =  Request / Response
+// http://tools.ietf.org/html/rfc3261#section-7
+SIP_message     = generic_message
 
-Request        =  Request:Request_Line
+generic_message = start_line:start_line
                   headers:_message_headers
                   CRLF
                   body:( message_body )?
                   {
-                    return helpers.serializeable({
-                      Request: Request,
+                    var template = {
                       headers: headers,
                       body: body
-                    }, ['Request', 'headers', '\r\n', 'body']);
+                    };
+
+                    function setStartLine (name) {
+                      template[name] = start_line;
+                      return helpers.serializeable(template,
+                          [name, 'headers', '\r\n', body]);
+                    }
+
+                    // Request
+                    if (start_line.Method) {
+                      return setStartLine('Request');
+                    }
+                    // Response
+                    else if (start_line.Code) {
+                      return setStartLine('Status');
+                    }
+                    // malformed
+                    else {
+                      return setStartLine('start_line');
+                    }
                   }
+
+// add fallback for malformed start-lines
+start_line     =  Request_Line / Status_Line / $([^\r]*)
 
 // see https://tools.ietf.org/html/rfc4475#section-3.1.2.9
 // see https://tools.ietf.org/html/rfc4475#section-3.1.2.10
@@ -455,18 +478,6 @@ message_header  =  message_header:(
                 }
 
 Method            =  token
-
-Response          =  Status:Status_Line
-                     headers:_message_headers
-                     CRLF
-                     body:( message_body )?
-                     {
-                       return helpers.serializeable({
-                         Status: Status,
-                         headers: headers,
-                         body: body
-                       }, ['Status', 'headers', '\r\n', 'body']);
-                     }
 
 // see https://tools.ietf.org/html/rfc4475#section-3.1.2.9
 // see https://tools.ietf.org/html/rfc4475#section-3.1.2.10
