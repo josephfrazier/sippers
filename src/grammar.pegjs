@@ -132,10 +132,9 @@ _SIP_URI          = scheme:$("sip" "s"?) ":" userinfo:( userinfo )? hostport:hos
                       return helpers.sipuriBuild(scheme, userinfo, hostport, parameters, headers);
                     }
 
-_SIP_URI_noparams = scheme:$("sip" "s"?) ":" userinfo:( userinfo )? hostport:hostport
-                    headers:( headers )?
+_SIP_URI_unenclosed = scheme:$("sip" "s"?) ":" userinfo:( userinfo )? hostport:hostport
                     {
-                      return helpers.sipuriBuild(scheme, userinfo, hostport, helpers.combineParams([]), headers);
+                      return helpers.sipuriBuild(scheme, userinfo, hostport, helpers.combineParams([]), null);
                     }
 
 SIP_URI           =  _SIP_URI
@@ -331,7 +330,7 @@ absoluteURI    =  scheme:scheme ":" part:( hier_part / opaque_part )
                     }, ['scheme', 'part'], {separator: ':'});
                   }
 // TODO
-_absoluteURI_noparams = absoluteURI
+_absoluteURI_unenclosed = absoluteURI
 
 hier_part      =  path:( net_path / abs_path ) query:( "?" q:query {return q;} )?
                   {
@@ -697,7 +696,7 @@ Contact        =  name:("Contact"i / "m"i ) HCOLON
                     )
                   )
                   {return {name: "Contact", value: value};}
-contact_param  =  addr:(name_addr / _addr_spec_noparams)
+contact_param  =  addr:(name_addr / _addr_spec_unenclosed)
                   parameters:(SEMI c:contact_params {return c;})*
                   {
                     return helpers.addrparamsBuild(addr, parameters);
@@ -712,7 +711,7 @@ name_addr      =  name:( display_name )?
                     return addr_spec;
                   }
 addr_spec      =  SIP_URI / SIPS_URI / absoluteURI
-_addr_spec_noparams = _SIP_URI_noparams / _absoluteURI_noparams
+_addr_spec_unenclosed = _SIP_URI_unenclosed / _absoluteURI_unenclosed
 // Make optional the space between display_name and < in addr_spec.
 // See https://tools.ietf.org/html/rfc4475#section-3.1.1.6
 //display_name   =  quoted_string / $( (token LWS)* )
@@ -877,7 +876,7 @@ Expires     =  name:"Expires"i HCOLON
                {return {name: "Expires", value: value};}
 From        =  name:( "From"i / "f"i ) HCOLON value:from_spec
                {return {name: "From", value: value};}
-from_spec   =  addr:(name_addr / _addr_spec_noparams)
+from_spec   =  addr:(name_addr / _addr_spec_unenclosed)
                parameters:(SEMI f:from_param {return f;})*
                {
                  return helpers.addrparamsBuild(addr, parameters);
@@ -1077,7 +1076,7 @@ delay      =  (DIGIT)* ( "." (DIGIT)* )?
 
 To        =  name:( "To"i / "t"i ) HCOLON
              value:(
-               addr:( name_addr / _addr_spec_noparams )
+               addr:( name_addr / _addr_spec_unenclosed )
                parameters:( SEMI t:to_param {return t;} )*
                {
                  return helpers.addrparamsBuild(addr, parameters);
