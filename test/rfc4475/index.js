@@ -360,6 +360,13 @@ describe('RFC 4475 Torture Tests', function () {
         });
 
         it('round-trips', function () {roundTrip(parsed);});
+
+        it('has a body of length given by the Content-Length header', function () {
+          assert.equal(
+            parsed.body.length,
+            parsed.headers['Content-Length']
+          );
+        });
       });
 
       describe('3.1.1.12. Unusual Reason Phrase', function () {
