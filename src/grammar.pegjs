@@ -106,15 +106,19 @@ ctext    =  [\x21-\x27] / [\x2A-\x5B] / [\x5D-\x7E] / UTF8_NONASCII
             / LWS
 
 
-quoted_string  =  SWS DQUOTE value:$((qdtext / quoted_pair )*) DQUOTE
+quoted_string  =  SWS DQUOTE value:(qdtext / quoted_pair )* DQUOTE
                   {
-                    return helpers.defineDelimited(value, '"' + value + '"');
+                    value = helpers.joinEscaped(value);
+                    return helpers.defineDelimited(value, '"' + value.serialize() + '"');
                   }
 qdtext         =  LWS / "\x21" / [\x23-\x5B] / [\x5D-\x7E]
                   / UTF8_NONASCII
 
-quoted_pair  =  "\\" ([\x00-\x09] / [\x0B-\x0C]
+quoted_pair  =  "\\" value:([\x00-\x09] / [\x0B-\x0C]
                 / [\x0E-\x7F])
+                {
+                  return helpers.defineDelimited(value, '\\' + value);
+                }
 
 /*
    The BNF for telephone_subscriber can be found in RFC 2806 [9].  Note,
