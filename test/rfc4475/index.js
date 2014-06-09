@@ -663,8 +663,14 @@ describe('RFC 4475 Torture Tests', function () {
     describe('3.3.2. Request-URI with Unknown Scheme', function () {
       var name = 'unkscm';
       var parsed;
-      it('throws /^416 /', function () {
-        parsed = assertivelyParse(name, /^416 /);
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('round-trips', function () {roundTrip(parsed);});
+
+      it('contains an unknown URI scheme in the Request-URI', function () {
+        assert.equal('nobodyKnowsThisScheme', parsed.Request.URI.scheme);
       });
     });
 
@@ -678,8 +684,14 @@ describe('RFC 4475 Torture Tests', function () {
     describe('3.3.3. Request-URI with Known but Atypical Scheme', function () {
       var name = 'novelsc';
       var parsed;
-      it('throws /^(416|404) /', function () {
-        parsed = assertivelyParse(name, /^(416|404) /);
+      it('parses', function () {
+        parsed = assertivelyParse(name);
+      });
+
+      it('round-trips', function () {roundTrip(parsed);});
+
+      it('contains a Request-URI with an IANA-registered scheme that does not commonly appear in Request-URIs of SIP requests', function () {
+        assert.equal('soap.beep', parsed.Request.URI.scheme);
       });
     });
 
