@@ -56,9 +56,9 @@ function foldLWS (input) {
   var emptyLine = '\r\n\r\n';
   var hadEmptyLine = input.indexOf(emptyLine) > -1;
   var folding = /[\t ]*\r\n[\t ]+/g;
-  var headersBody = input.split(emptyLine, 2);
+  var headersBody = input.split(emptyLine);
   var headers = headersBody[0].replace(folding, ' ');
-  var body = headersBody[1] || '';
+  var body = headersBody.slice(1).join(emptyLine);
   return headers + (hadEmptyLine ? emptyLine : '') + body;
 }
 
