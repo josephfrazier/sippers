@@ -129,12 +129,12 @@ quoted_pair  =  "\\" value:([\x00-\x09] / [\x0B-\x0C]
 _SIP_URI          = scheme:$("sip" "s"?) ":" userinfo:( userinfo )? hostport:hostport
                     parameters:uri_parameters headers:( headers )?
                     {
-                      return helpers.sipuriBuild(scheme, userinfo, hostport, parameters, headers);
+                      return helpers.serializeable.sipURI(scheme, userinfo, hostport, parameters, headers);
                     }
 
 _SIP_URI_unenclosed = scheme:$("sip" "s"?) ":" userinfo:( userinfo )? hostport:hostport
                     {
-                      return helpers.sipuriBuild(scheme, userinfo, hostport, helpers.combineParams([]), null);
+                      return helpers.serializeable.sipURI(scheme, userinfo, hostport, helpers.combineParams([]), null);
                     }
 
 SIP_URI           =  _SIP_URI
@@ -162,7 +162,7 @@ password         =  chars:( unreserved / escaped /
 
 hostport         =  host:host port:( ":" p:port {return p;} )?
                     {
-                      return helpers.hostportBuild(host, port);
+                      return helpers.serializeable.hostPort(host, port);
                     }
 host             =  $( hostname / IPv4address / IPv6reference )
 hostname         =  ( domainlabel "." )* toplabel ( "." )?
@@ -368,7 +368,7 @@ path_segments  =  first:segment rest:( "/" s:segment {return s;} )*
 segment        =  value:_pchars
                   parameters:( ";" p:param {return p;} )*
                   {
-                    return helpers.xparamsBuild(value, 'value', parameters);
+                    return helpers.serializeable.xParams(value, 'value', parameters);
                   }
 param          =  _pchars
 _pchars        =  chars:pchar* {return helpers.joinEscaped(chars);}
@@ -509,7 +509,7 @@ Accept         =  name:"Accept"i HCOLON
                   {return {name: "Accept", value: value || []};}
 accept_range   =  range:media_range parameters:(SEMI a:accept_param {return a;})*
                   {
-                    return helpers.xparamsBuild(range, 'range', parameters, 'parameters');
+                    return helpers.serializeable.xParams(range, 'range', parameters);
                   }
 //media_range    =  ( "*/*"
 //                  / ( m_type SLASH "*" )
@@ -547,7 +547,7 @@ Accept_Encoding  =  name:"Accept-Encoding"i HCOLON
 encoding         =  codings:codings
                     parameters:(SEMI a:accept_param {return a;})*
                     {
-                      return helpers.xparamsBuild(codings, 'codings', parameters, 'parameters');
+                      return helpers.serializeable.xParams(codings, 'codings', parameters);
                     }
 codings          =  content_coding / "*"
 content_coding   =  token
@@ -562,7 +562,7 @@ Accept_Language  =  name:"Accept-Language"i HCOLON
 language         =  range:language_range
                     parameters:(SEMI a:accept_param {return a;})*
                     {
-                      return helpers.xparamsBuild(range, 'range', parameters, 'parameters');
+                      return helpers.serializeable.xParams(range, 'range', parameters);
                     }
 language_range   =  $ ( ( _1to8ALPHA ( "-" _1to8ALPHA )* ) / "*" )
 _1to8ALPHA       = ALPHA ALPHA? ALPHA? ALPHA? ALPHA? ALPHA? ALPHA? ALPHA?
@@ -577,7 +577,7 @@ Alert_Info   =  name:"Alert-Info"i HCOLON
 alert_param  =  LAQUOT URI:absoluteURI RAQUOT
                 parameters:( SEMI g:generic_param {return g;} )*
                 {
-                  return helpers.xparamsBuild(URI, 'URI', parameters);
+                  return helpers.serializeable.xParams(URI, 'URI', parameters);
                 }
 
 Allow  =  name:"Allow"i HCOLON
@@ -641,7 +641,7 @@ other_response    =  scheme:auth_scheme LWS first:auth_param
                      rest:(COMMA a:auth_param {return a;})*
                      {
                        parameters = helpers.list(first, rest);
-                       return helpers.xparamsBuild(scheme, 'scheme', parameters, 'parameters', {
+                       return helpers.serializeable.xParams(scheme, 'scheme', parameters, {
                          separator: ', ',
                          prefix: ' '
                        });
@@ -678,7 +678,7 @@ Call_Info   =  name:"Call-Info"i HCOLON
 info        =  LAQUOT URI:absoluteURI RAQUOT
                parameters:( SEMI i:info_param {return i;} )*
                {
-                 return helpers.xparamsBuild(URI, 'URI', parameters, 'parameters');
+                 return helpers.serializeable.xParams(URI, 'URI', parameters);
                }
 info_param  =  (
                  name:"purpose" EQUAL
@@ -699,7 +699,7 @@ Contact        =  name:("Contact"i / "m"i ) HCOLON
 contact_param  =  addr:(name_addr / _addr_spec_unenclosed)
                   parameters:(SEMI c:contact_params {return c;})*
                   {
-                    return helpers.addrparamsBuild(addr, parameters);
+                    return helpers.serializeable.addrParams(addr, parameters);
                   }
 name_addr      =  name:( display_name )?
                   LAQUOT addr_spec:addr_spec RAQUOT
@@ -749,7 +749,7 @@ Content_Disposition   =  name:"Content-Disposition"i HCOLON
                            type:disp_type
                            parameters:( SEMI d:disp_param {return d;} )*
                            {
-                             return helpers.xparamsBuild(type, 'type', parameters, 'parameters');
+                             return helpers.serializeable.xParams(type, 'type', parameters);
                            }
                          )
                          {return {name: "Content-Disposition", value: value};}
@@ -868,7 +868,7 @@ Error_Info  =  name:"Error-Info"i HCOLON
 error_uri   =  LAQUOT URI:absoluteURI RAQUOT
                parameters:( SEMI g:generic_param {return g;} )*
                {
-                 return helpers.xparamsBuild(URI, 'URI', parameters);
+                 return helpers.serializeable.xParams(URI, 'URI', parameters);
                }
 
 Expires     =  name:"Expires"i HCOLON
@@ -879,7 +879,7 @@ From        =  name:( "From"i / "f"i ) HCOLON value:from_spec
 from_spec   =  addr:(name_addr / _addr_spec_unenclosed)
                parameters:(SEMI f:from_param {return f;})*
                {
-                 return helpers.addrparamsBuild(addr, parameters);
+                 return helpers.serializeable.addrParams(addr, parameters);
                }
 from_param  =  tag_param / generic_param
 tag_param   =  name:"tag" EQUAL value:token
@@ -925,7 +925,7 @@ other_challenge     =  scheme:auth_scheme LWS first:auth_param
                        rest:(COMMA a:auth_param {return a;})*
                        {
                          parameters = helpers.list(first, rest);
-                         return helpers.xparamsBuild(scheme, 'scheme', parameters, 'parameters', ', ');
+                         return helpers.serializeable.xParams(scheme, 'scheme', parameters, ', ');
                        }
 digest_cln          =  realm / domain / nonce
                         / opaque / stale / algorithm
@@ -983,7 +983,7 @@ Record_Route  =  name:"Record-Route"i HCOLON
 rec_route     =  addr:name_addr
                  parameters:( SEMI r:rr_param {return r;} )*
                  {
-                   return helpers.addrparamsBuild(addr, parameters);
+                   return helpers.serializeable.addrParams(addr, parameters);
                  }
 rr_param      =  generic_param
 
@@ -992,7 +992,7 @@ Reply_To      =  name:"Reply-To"i HCOLON value:rplyto_spec
 rplyto_spec   =  addr:( name_addr / addr_spec )
                  parameters:( SEMI r:rplyto_param {return r;} )*
                  {
-                   return helpers.addrparamsBuild(addr, parameters);
+                   return helpers.serializeable.addrParams(addr, parameters);
                  }
 rplyto_param  =  generic_param
 Require       =  name:"Require"i HCOLON
@@ -1034,7 +1034,7 @@ Route        =  name:"Route"i HCOLON
                 {return {name: "Route", value: value};}
 route_param  =  addr:name_addr parameters:( SEMI r:rr_param {return r;} )*
                 {
-                  return helpers.addrparamsBuild(addr, parameters);
+                  return helpers.serializeable.addrParams(addr, parameters);
                 }
 
 Server           =  name:"Server"i HCOLON
@@ -1079,7 +1079,7 @@ To        =  name:( "To"i / "t"i ) HCOLON
                addr:( name_addr / _addr_spec_unenclosed )
                parameters:( SEMI t:to_param {return t;} )*
                {
-                 return helpers.addrparamsBuild(addr, parameters);
+                 return helpers.serializeable.addrParams(addr, parameters);
                }
              )
              {return {name: "To", value: value};}
@@ -1151,7 +1151,7 @@ transport         =  "UDP" / "TCP" / "TLS" / "SCTP"
 
 sent_by           =  host:host port:( COLON p:port {return p;} )?
                      {
-                       return helpers.hostportBuild(host, port);
+                       return helpers.serializeable.hostPort(host, port);
                      }
 // ttl               =  1*3DIGIT // 0 to 255
 ttl             = "25" [\x30-\x35]          // 250-255
@@ -1219,7 +1219,7 @@ Reason            =  name:"Reason"i HCOLON
 reason_value      =  protocol:protocol
                      parameters:(SEMI r:reason_params {return r;})*
                      {
-                       return helpers.xparamsBuild(protocol, 'protocol', parameters);
+                       return helpers.serializeable.xParams(protocol, 'protocol', parameters);
                      }
 protocol          =  "SIP" / "Q.850" / token
 reason_params     =  protocol_cause / reason_text
@@ -1244,7 +1244,7 @@ Path       = name:"Path"i HCOLON
 path_value = addr:name_addr
              parameters:( SEMI p:rr_param {return p;} )*
              {
-               return helpers.addrparamsBuild(addr, parameters);
+               return helpers.serializeable.addrParams(addr, parameters);
              }
 // end RFC 3327
 
@@ -1255,7 +1255,7 @@ Refer_To = name:("Refer-To"i / "r"i) HCOLON
              addr:( name_addr / addr_spec )
              parameters:(SEMI p:generic_param {return p;})*
              {
-               return helpers.addrparamsBuild(addr, parameters);
+               return helpers.serializeable.addrParams(addr, parameters);
              }
            )
            {return {name: "Refer-To", value: value};}
@@ -1274,7 +1274,7 @@ Event             =  name:( "Event"i / "o"i ) HCOLON
                        type:event_type
                        parameters:( SEMI p:event_param {return p;} )*
                        {
-                         return helpers.xparamsBuild(type, 'type', parameters);
+                         return helpers.serializeable.xParams(type, 'type', parameters);
                        }
                      )
                      {return {name: name, value: value};}
@@ -1310,7 +1310,7 @@ Subscription_State   = name:"Subscription-State"i HCOLON
                          value:substate_value
                          parameters:( SEMI p:subexp_params {return p;} )*
                          {
-                           return helpers.xparamsBuild(value, 'value', parameters);
+                           return helpers.serializeable.xParams(value, 'value', parameters);
                          }
                        )
                        {return {name: "Subscription-State", value: value};}

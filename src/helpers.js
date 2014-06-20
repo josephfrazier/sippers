@@ -96,7 +96,23 @@ function header (name, value) {
   }, ['name', ': ', 'value']);
 }
 
-function sipuriBuild (scheme, userinfo, hostport, parameters, headers) {
+function serializeable (obj, propertyList, options) {
+  options = options || {};
+  options.transform = options.transform && options.transform.bind(obj);
+  return Object.defineProperty(obj, 'serialize', {value:
+    function (propertyList, options) {
+      function getProperty (property) {
+        if (property in this) {
+          return this[property];
+        }
+        return property;
+      }
+      return serialize(propertyList.map(getProperty.bind(this)), options);
+    }.bind(obj, propertyList, options)
+  });
+}
+
+serializeable.sipURI = function serializeable_sipURI (scheme, userinfo, hostport, parameters, headers) {
   return serializeable({
       scheme: scheme
     , user: userinfo && userinfo.user
@@ -115,39 +131,22 @@ function sipuriBuild (scheme, userinfo, hostport, parameters, headers) {
   });
 }
 
-function serializeable (obj, propertyList, options) {
-  options = options || {};
-  options.transform = options.transform && options.transform.bind(obj);
-  return Object.defineProperty(obj, 'serialize', {value:
-    function (propertyList, options) {
-      function getProperty (property) {
-        if (property in this) {
-          return this[property];
-        }
-        return property;
-      }
-      return serialize(propertyList.map(getProperty.bind(this)), options);
-    }.bind(obj, propertyList, options)
-  });
-}
-
-function hostportBuild (host, port) {
+serializeable.hostPort = function serializeable_hostPort (host, port) {
   return serializeable({
     host: host,
     port: port
   }, ['host', 'port'], {separator: ':'});
 }
 
-function xparamsBuild (prop, propName, parameters, paramsName, combineOptions) {
-  paramsName = paramsName || 'parameters';
+serializeable.xParams = function serializeable_xParams (prop, propName, parameters, combineOptions) {
   var ret = {};
   ret[propName] = prop;
-  ret[paramsName] = combineParams(parameters, combineOptions);
-  return serializeable(ret, [propName, paramsName]);
+  ret['parameters'] = combineParams(parameters, combineOptions);
+  return serializeable(ret, [propName, 'parameters']);
 }
 
-function addrparamsBuild (addr, parameters) {
-  return xparamsBuild(addr, 'addr', parameters, 'parameters');
+serializeable.addrParams = function serializeable_addrParams (addr, parameters) {
+  return serializeable.xParams(addr, 'addr', parameters);
 }
 
 function ret (val) {return function (val) {
@@ -205,12 +204,8 @@ module.exports = {
   padInt: padInt
   ,joinEscaped: joinEscaped
   ,serializeable: serializeable
-  ,hostportBuild: hostportBuild
   ,mapList: mapList
   ,combineParams: combineParams
-  ,sipuriBuild: sipuriBuild
-  ,addrparamsBuild: addrparamsBuild
-  ,xparamsBuild: xparamsBuild
   ,defineDelimited: defineDelimited
   ,list: list
   ,header: header
