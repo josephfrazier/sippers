@@ -1,0 +1,118 @@
+<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="index.js"><meta name="groc-github-url" content="https://github.com/joseph-onsip/sippers"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/joseph-onsip/sippers/blob/master/index.js">index.js</a></div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="kd">var</span> <span class="nx">grammar</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./dist/grammar&#39;</span><span class="p">);</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>See RFC 3261 Section 7.3</p></div></div><div class="code"><div class="wrapper"><span class="kd">var</span> <span class="nx">combineHeaders</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./dist/helpers&#39;</span><span class="p">).</span><span class="nx">mapList</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">parse</span> <span class="p">(</span><span class="nx">input</span><span class="p">,</span> <span class="nx">options</span><span class="p">){</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>allow startRule to be passed as string, default to SIP_message</p></div></div><div class="code"><div class="wrapper">  <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="s1">&#39;SIP_message&#39;</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">constructor</span> <span class="o">===</span> <span class="nb">String</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span><span class="nx">startRule</span><span class="o">:</span> <span class="nx">options</span><span class="p">};</span>
+  <span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>http://tools.ietf.org/html/rfc3261#section-7.5
+Implementations processing SIP messages over stream-oriented transports
+MUST ignore any CRLF appearing before the start-line</p></div></div><div class="code"><div class="wrapper">  <span class="nx">input</span> <span class="o">=</span> <span class="nx">input</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/(\r\n)*/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+
+  <span class="nx">input</span> <span class="o">=</span> <span class="nx">foldLWS</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span>
+
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">parsed</span> <span class="o">=</span> <span class="nx">grammar</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">input</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>add debugging info</p></div></div><div class="code"><div class="wrapper">    <span class="nx">e</span><span class="p">.</span><span class="nx">message</span> <span class="o">+=</span> <span class="p">[</span>
+      <span class="s1">&#39; at line&#39;</span><span class="p">,</span> <span class="nx">e</span><span class="p">.</span><span class="nx">line</span><span class="p">,</span>
+      <span class="s1">&#39;column&#39;</span><span class="p">,</span> <span class="nx">e</span><span class="p">.</span><span class="nx">column</span><span class="p">,</span>
+      <span class="s1">&#39;of (LWS folded):\n\n&lt;&lt; EOM&#39;</span><span class="p">,</span> <span class="s1">&#39;\n&#39;</span> <span class="o">+</span> <span class="nx">input</span> <span class="o">+</span> <span class="s1">&#39;EOM&#39;</span>
+    <span class="p">].</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">);</span>
+
+    <span class="k">throw</span> <span class="nx">e</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">startRule</span> <span class="o">===</span> <span class="s1">&#39;SIP_message&#39;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">try</span> <span class="p">{</span>
+      <span class="nx">parsed</span><span class="p">.</span><span class="nx">headers</span> <span class="o">=</span> <span class="nx">combineHeaders</span><span class="p">(</span><span class="nx">parsed</span><span class="p">.</span><span class="nx">headers</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">throw</span> <span class="k">new</span> <span class="nx">ParsedError</span><span class="p">(</span><span class="nx">parsed</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Multiple &quot;</span> <span class="o">+</span> <span class="nx">e</span><span class="p">.</span><span class="nx">message</span> <span class="o">+</span> <span class="s2">&quot; values&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nx">checkStartLine</span><span class="p">(</span><span class="nx">parsed</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">parsed</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">mandateRequestHeaders</span><span class="p">(</span><span class="nx">parsed</span><span class="p">);</span>
+      <span class="nx">checkCSeqMethod</span><span class="p">(</span><span class="nx">parsed</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nx">checkCSeqRange</span><span class="p">(</span><span class="nx">parsed</span><span class="p">);</span>
+    <span class="nx">mandateHeader</span><span class="p">(</span><span class="nx">parsed</span><span class="p">,</span> <span class="s1">&#39;Content-Length&#39;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+    <span class="nx">mandateHeader</span><span class="p">(</span><span class="nx">parsed</span><span class="p">,</span> <span class="s1">&#39;Contact&#39;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="nx">parsed</span><span class="p">;</span>
+<span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>RFC 3261 25.1:
+All linear white space, including folding, has the same semantics as SP.</p></div></div><div class="code"><div class="wrapper"><span class="kd">function</span> <span class="nx">foldLWS</span> <span class="p">(</span><span class="nx">input</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">emptyLine</span> <span class="o">=</span> <span class="s1">&#39;\r\n\r\n&#39;</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">hadEmptyLine</span> <span class="o">=</span> <span class="nx">input</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">emptyLine</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">folding</span> <span class="o">=</span> <span class="sr">/[\t ]*\r\n[\t ]+/g</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">headersBody</span> <span class="o">=</span> <span class="nx">input</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="nx">emptyLine</span><span class="p">);</span>
+  <span class="kd">var</span> <span class="nx">headers</span> <span class="o">=</span> <span class="nx">headersBody</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">replace</span><span class="p">(</span><span class="nx">folding</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">);</span>
+  <span class="kd">var</span> <span class="nx">body</span> <span class="o">=</span> <span class="nx">headersBody</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="nx">emptyLine</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">headers</span> <span class="o">+</span> <span class="p">(</span><span class="nx">hadEmptyLine</span> <span class="o">?</span> <span class="nx">emptyLine</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="nx">body</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">mandateRequestHeaders</span> <span class="p">(</span><span class="nx">parsed</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">mandateHeaders</span><span class="p">(</span><span class="nx">parsed</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;To&#39;</span><span class="p">,</span> <span class="s1">&#39;From&#39;</span><span class="p">,</span> <span class="s1">&#39;CSeq&#39;</span><span class="p">,</span> <span class="s1">&#39;Call-ID&#39;</span><span class="p">,</span> <span class="s1">&#39;Max-Forwards&#39;</span><span class="p">,</span> <span class="s1">&#39;Via&#39;</span><span class="p">]);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">mandateHeaders</span> <span class="p">(</span><span class="nx">parsed</span><span class="p">,</span> <span class="nx">headers</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">headers</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">mandateHeader</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">parsed</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">mandateHeader</span> <span class="p">(</span><span class="nx">parsed</span><span class="p">,</span> <span class="nx">headerName</span><span class="p">,</span> <span class="nx">optional</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">headerValue</span> <span class="o">=</span> <span class="nx">parsed</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="nx">headerName</span><span class="p">];</span>
+  <span class="kd">var</span> <span class="nx">reasonPrefix</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">headerValue</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">optional</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">reasonPrefix</span> <span class="o">=</span> <span class="s1">&#39;Missing&#39;</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">headerValue</span> <span class="o">&amp;&amp;</span> <span class="nx">headerValue</span><span class="p">.</span><span class="nx">$isExtension</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">reasonPrefix</span> <span class="o">=</span> <span class="s1">&#39;Malformed&#39;</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">reasonPrefix</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">reasonPhrase</span> <span class="o">=</span> <span class="p">[</span><span class="nx">reasonPrefix</span><span class="p">,</span> <span class="nx">headerName</span><span class="p">,</span> <span class="s1">&#39;header&#39;</span><span class="p">].</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">);</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nx">ParsedError</span><span class="p">(</span><span class="nx">parsed</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="nx">reasonPhrase</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nx">parsed</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">checkCSeqRange</span> <span class="p">(</span><span class="nx">parsed</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">parsed</span><span class="p">.</span><span class="nx">headers</span><span class="p">.</span><span class="nx">CSeq</span><span class="p">.</span><span class="nx">number</span> <span class="o">&gt;=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">32</span><span class="p">))</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nx">ParsedError</span><span class="p">(</span><span class="nx">parsed</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;Invalid CSeq sequence number&#39;</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">checkCSeqMethod</span> <span class="p">(</span><span class="nx">parsed</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">parsed</span><span class="p">.</span><span class="nx">Request</span><span class="p">.</span><span class="nx">Method</span> <span class="o">!=</span> <span class="nx">parsed</span><span class="p">.</span><span class="nx">headers</span><span class="p">.</span><span class="nx">CSeq</span><span class="p">.</span><span class="nx">method</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nx">ParsedError</span><span class="p">(</span><span class="nx">parsed</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;CSeq Method does not match Request Method&#39;</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">checkStartLine</span> <span class="p">(</span><span class="nx">parsed</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">parsed</span><span class="p">.</span><span class="nx">start_line</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nx">ParsedError</span><span class="p">(</span><span class="nx">parsed</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;Malformed start-line&#39;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="nx">checkSIPVersion</span><span class="p">(</span><span class="nx">parsed</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">checkSIPVersion</span> <span class="p">(</span><span class="nx">parsed</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">((</span><span class="nx">parsed</span><span class="p">.</span><span class="nx">Request</span> <span class="o">||</span> <span class="nx">parsed</span><span class="p">.</span><span class="nx">Status</span><span class="p">).</span><span class="nx">Version</span> <span class="o">!=</span> <span class="s2">&quot;SIP/2.0&quot;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nx">ParsedError</span><span class="p">(</span><span class="nx">parsed</span><span class="p">,</span> <span class="mi">505</span><span class="p">,</span> <span class="s1">&#39;Version Not Supported&#39;</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>adapted from http://stackoverflow.com/a/8460753</p></div></div><div class="code"><div class="wrapper"><span class="kd">function</span> <span class="nx">ParsedError</span> <span class="p">(</span><span class="nx">parsed</span><span class="p">,</span> <span class="nx">statusCode</span><span class="p">,</span> <span class="nx">reasonPhrase</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">statusCode</span> <span class="o">=</span> <span class="nx">statusCode</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">reasonPhrase</span> <span class="o">=</span> <span class="nx">reasonPhrase</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">parsed</span> <span class="o">=</span> <span class="nx">parsed</span><span class="p">;</span>
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">constructor</span><span class="p">.</span><span class="nx">name</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">message</span> <span class="o">=</span> <span class="nx">statusCode</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="nx">reasonPhrase</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">toString</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span><span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">message</span><span class="p">;};</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">constructor</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">__proto__</span> <span class="o">=</span> <span class="nb">Error</span><span class="p">.</span><span class="nx">prototype</span><span class="p">;</span>
+  <span class="nb">Error</span><span class="p">.</span><span class="nx">captureStackTrace</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">constructor</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">SyntaxError</span><span class="o">:</span> <span class="nx">grammar</span><span class="p">.</span><span class="nx">SyntaxError</span><span class="p">,</span>
+  <span class="nx">parse</span><span class="o">:</span> <span class="nx">parse</span><span class="p">,</span>
+  <span class="nx">foldLWS</span><span class="o">:</span> <span class="nx">foldLWS</span><span class="p">,</span>
+  <span class="nx">ParsedError</span><span class="o">:</span> <span class="nx">ParsedError</span>
+<span class="p">};</span></div></div></div></div></body></html>

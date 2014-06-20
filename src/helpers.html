@@ -1,0 +1,207 @@
+<!DOCTYPE html><html lang="en"><head><title>src/helpers</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="src/helpers"><meta name="groc-project-path" content="src/helpers.js"><meta name="groc-github-url" content="https://github.com/joseph-onsip/sippers"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/joseph-onsip/sippers/blob/master/src/helpers.js">src/helpers.js</a></div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="kd">function</span> <span class="nx">mapList</span> <span class="p">(</span><span class="nx">isHeaders</span><span class="p">,</span> <span class="nx">list</span><span class="p">,</span> <span class="nx">serializeOptions</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">function</span> <span class="nx">combine</span> <span class="p">(</span><span class="nx">map</span><span class="p">,</span> <span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">name</span> <span class="o">=</span> <span class="nx">item</span><span class="p">.</span><span class="nx">name</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">value</span> <span class="o">=</span> <span class="nx">item</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">isHeaders</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">prevValue</span> <span class="o">=</span> <span class="nx">map</span><span class="p">[</span><span class="nx">name</span><span class="p">];</span>
+      <span class="kd">var</span> <span class="nx">prevArray</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">prevValue</span><span class="p">);</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">prevArray</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">value</span> <span class="o">=</span> <span class="nx">prevValue</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">value</span><span class="p">);</span>
+      <span class="p">}</span>
+      <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">prevValue</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="nx">map</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">map</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">var</span> <span class="nx">combined</span> <span class="o">=</span> <span class="nx">list</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">combine</span><span class="p">,</span> <span class="p">{});</span>
+
+  <span class="kd">function</span> <span class="nx">serializeList</span> <span class="p">(</span><span class="nx">isHeaders</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+    <span class="kd">var</span> <span class="nx">separator</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">separator</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">prefix</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">prefix</span><span class="p">;</span>
+
+    <span class="kd">var</span> <span class="nx">keySerialize</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>cast to array</p></div></div><div class="code"><div class="wrapper">      <span class="kd">var</span> <span class="nx">values</span> <span class="o">=</span> <span class="p">[].</span><span class="nx">concat</span><span class="p">(</span><span class="k">this</span><span class="p">[</span><span class="nx">name</span><span class="p">]);</span>
+      <span class="nx">values</span> <span class="o">=</span> <span class="nx">values</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span><span class="k">return</span> <span class="nx">serialize</span><span class="p">(</span><span class="nx">i</span><span class="p">);});</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">isHeaders</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">headerSep</span> <span class="o">=</span> <span class="nx">name</span> <span class="o">===</span> <span class="s1">&#39;User-Agent&#39;</span> <span class="o">?</span> <span class="s1">&#39; &#39;</span> <span class="o">:</span> <span class="s1">&#39;, &#39;</span><span class="p">;</span>
+        <span class="kd">var</span> <span class="nx">joined</span> <span class="o">=</span> <span class="nx">values</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">headerSep</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">name</span> <span class="o">+</span> <span class="s1">&#39;: &#39;</span> <span class="o">+</span> <span class="nx">joined</span> <span class="o">+</span> <span class="s1">&#39;\r\n&#39;</span><span class="p">;</span>
+      <span class="p">}</span>
+      <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nx">separator</span> <span class="o">||</span> <span class="s1">&#39;;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="nx">name</span> <span class="o">+</span> <span class="p">(</span><span class="nx">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">?</span> <span class="s1">&#39;=&#39;</span> <span class="o">+</span> <span class="nx">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+
+    <span class="kd">var</span> <span class="nx">serialized</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">keySerialize</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">separator</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">serialized</span> <span class="o">=</span> <span class="nx">serialized</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">separator</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">prefix</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">serialized</span> <span class="o">=</span> <span class="nx">prefix</span> <span class="o">+</span> <span class="nx">serialized</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">serialized</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">defineProperty</span><span class="p">(</span><span class="nx">combined</span><span class="p">,</span> <span class="s1">&#39;serialize&#39;</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">value</span><span class="o">:</span> <span class="nx">serializeList</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">combined</span><span class="p">,</span> <span class="nx">isHeaders</span><span class="p">,</span> <span class="nx">serializeOptions</span><span class="p">)</span>
+  <span class="p">});</span>
+<span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>non-RFC, just convenient</p></div></div><div class="code"><div class="wrapper"><span class="kd">var</span> <span class="nx">combineParams</span> <span class="o">=</span> <span class="nx">mapList</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">serialize</span> <span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+  <span class="kd">var</span> <span class="nx">prefix</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">prefix</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">separator</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">separator</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">suffix</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">suffix</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">transform</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">transform</span> <span class="o">||</span> <span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span><span class="k">return</span> <span class="nx">i</span><span class="p">;};</span>
+  <span class="kd">var</span> <span class="nx">serialized</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">serialize</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">serialized</span> <span class="o">=</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">serialize</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">obj</span><span class="p">))</span> <span class="p">{</span>
+      <span class="nx">serialized</span> <span class="o">=</span> <span class="nx">obj</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>jshint eqnull:true</p></div></div><div class="code"><div class="wrapper">        <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span><span class="k">return</span> <span class="nx">i</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">;})</span>
+        <span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span><span class="k">return</span> <span class="nx">serialize</span><span class="p">(</span><span class="nx">i</span><span class="p">);})</span>
+        <span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">separator</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">serialized</span> <span class="o">=</span> <span class="nx">obj</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nx">transform</span><span class="p">(</span><span class="nx">prefix</span> <span class="o">+</span> <span class="nx">serialized</span> <span class="o">+</span> <span class="nx">suffix</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">list</span> <span class="p">(</span><span class="nx">first</span><span class="p">,</span> <span class="nx">rest</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="s1">&#39;, &#39;</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">constructor</span> <span class="o">===</span> <span class="nb">String</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span><span class="nx">separator</span><span class="o">:</span> <span class="nx">options</span><span class="p">};</span>
+  <span class="p">}</span>
+  <span class="kd">var</span> <span class="nx">catted</span> <span class="o">=</span> <span class="p">[</span><span class="nx">first</span><span class="p">].</span><span class="nx">concat</span><span class="p">(</span><span class="nx">rest</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">serializeable</span><span class="p">(</span><span class="nx">catted</span><span class="p">,</span> <span class="nx">catted</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">header</span> <span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">serializeable</span><span class="p">({</span>
+    <span class="nx">name</span><span class="o">:</span> <span class="nx">name</span><span class="p">,</span>
+    <span class="nx">value</span><span class="o">:</span> <span class="nx">value</span>
+  <span class="p">},</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;: &#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">]);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">sipuriBuild</span> <span class="p">(</span><span class="nx">scheme</span><span class="p">,</span> <span class="nx">userinfo</span><span class="p">,</span> <span class="nx">hostport</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="nx">headers</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">serializeable</span><span class="p">({</span>
+      <span class="nx">scheme</span><span class="o">:</span> <span class="nx">scheme</span>
+    <span class="p">,</span> <span class="nx">user</span><span class="o">:</span> <span class="nx">userinfo</span> <span class="o">&amp;&amp;</span> <span class="nx">userinfo</span><span class="p">.</span><span class="nx">user</span>
+    <span class="p">,</span> <span class="nx">password</span><span class="o">:</span> <span class="nx">userinfo</span> <span class="o">&amp;&amp;</span> <span class="nx">userinfo</span><span class="p">.</span><span class="nx">password</span>
+    <span class="p">,</span> <span class="nx">host</span><span class="o">:</span> <span class="nx">hostport</span> <span class="o">&amp;&amp;</span> <span class="nx">hostport</span><span class="p">.</span><span class="nx">host</span>
+    <span class="p">,</span> <span class="nx">port</span><span class="o">:</span> <span class="nx">hostport</span> <span class="o">&amp;&amp;</span> <span class="nx">hostport</span><span class="p">.</span><span class="nx">port</span>
+    <span class="p">,</span> <span class="nx">parameters</span><span class="o">:</span> <span class="nx">parameters</span>
+    <span class="p">,</span> <span class="nx">headers</span><span class="o">:</span> <span class="nx">headers</span>
+  <span class="p">},</span> <span class="p">[</span><span class="s1">&#39;scheme&#39;</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="nx">userinfo</span><span class="p">,</span> <span class="nx">hostport</span><span class="p">,</span> <span class="s1">&#39;parameters&#39;</span><span class="p">,</span> <span class="s1">&#39;headers&#39;</span><span class="p">],</span> <span class="p">{</span>
+    <span class="nx">transform</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">addrSpecString</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">name</span> <span class="o">||</span> <span class="k">this</span><span class="p">.</span><span class="nx">$isNameAddr</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">addrSpecString</span> <span class="o">=</span> <span class="nx">serialize</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; &lt;&#39;</span> <span class="o">+</span> <span class="nx">addrSpecString</span> <span class="o">+</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">;</span>
+      <span class="p">}</span>
+      <span class="k">return</span> <span class="nx">addrSpecString</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">serializeable</span> <span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="nx">propertyList</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+  <span class="nx">options</span><span class="p">.</span><span class="nx">transform</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">transform</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">transform</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">obj</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">defineProperty</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="s1">&#39;serialize&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span>
+    <span class="kd">function</span> <span class="p">(</span><span class="nx">propertyList</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">function</span> <span class="nx">getProperty</span> <span class="p">(</span><span class="nx">property</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">property</span> <span class="k">in</span> <span class="k">this</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">return</span> <span class="k">this</span><span class="p">[</span><span class="nx">property</span><span class="p">];</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="nx">property</span><span class="p">;</span>
+      <span class="p">}</span>
+      <span class="k">return</span> <span class="nx">serialize</span><span class="p">(</span><span class="nx">propertyList</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">getProperty</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)),</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="nx">propertyList</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">hostportBuild</span> <span class="p">(</span><span class="nx">host</span><span class="p">,</span> <span class="nx">port</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">serializeable</span><span class="p">({</span>
+    <span class="nx">host</span><span class="o">:</span> <span class="nx">host</span><span class="p">,</span>
+    <span class="nx">port</span><span class="o">:</span> <span class="nx">port</span>
+  <span class="p">},</span> <span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">],</span> <span class="p">{</span><span class="nx">separator</span><span class="o">:</span> <span class="s1">&#39;:&#39;</span><span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">xparamsBuild</span> <span class="p">(</span><span class="nx">prop</span><span class="p">,</span> <span class="nx">propName</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="nx">paramsName</span><span class="p">,</span> <span class="nx">combineOptions</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">paramsName</span> <span class="o">=</span> <span class="nx">paramsName</span> <span class="o">||</span> <span class="s1">&#39;parameters&#39;</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">{};</span>
+  <span class="nx">ret</span><span class="p">[</span><span class="nx">propName</span><span class="p">]</span> <span class="o">=</span> <span class="nx">prop</span><span class="p">;</span>
+  <span class="nx">ret</span><span class="p">[</span><span class="nx">paramsName</span><span class="p">]</span> <span class="o">=</span> <span class="nx">combineParams</span><span class="p">(</span><span class="nx">parameters</span><span class="p">,</span> <span class="nx">combineOptions</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">serializeable</span><span class="p">(</span><span class="nx">ret</span><span class="p">,</span> <span class="p">[</span><span class="nx">propName</span><span class="p">,</span> <span class="nx">paramsName</span><span class="p">]);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">addrparamsBuild</span> <span class="p">(</span><span class="nx">addr</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">xparamsBuild</span><span class="p">(</span><span class="nx">addr</span><span class="p">,</span> <span class="s1">&#39;addr&#39;</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="s1">&#39;parameters&#39;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">ret</span> <span class="p">(</span><span class="nx">val</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">val</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">val</span><span class="p">;</span>
+<span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">val</span><span class="p">);}</span>
+
+<span class="kd">function</span> <span class="nx">defineObject</span> <span class="p">(</span><span class="nx">type</span><span class="p">,</span> <span class="nx">value</span><span class="p">,</span> <span class="nx">serialized</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">defineProperties</span><span class="p">(</span><span class="k">new</span> <span class="nx">type</span><span class="p">(</span><span class="nx">value</span><span class="p">),</span> <span class="p">{</span>
+    <span class="nx">valueOf</span><span class="o">:</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="nx">ret</span><span class="p">(</span><span class="nx">value</span><span class="p">)},</span>
+    <span class="nx">serialize</span><span class="o">:</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="nx">ret</span><span class="p">(</span><span class="nx">serialized</span><span class="p">)}</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">defineDelimited</span> <span class="o">=</span> <span class="nx">defineObject</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nb">String</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">joinEscaped</span> <span class="p">(</span><span class="nx">chars</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">value</span> <span class="o">=</span> <span class="nx">chars</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+  <span class="kd">var</span> <span class="nx">serialized</span> <span class="o">=</span> <span class="nx">serialize</span><span class="p">(</span><span class="nx">chars</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">defineDelimited</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">serialized</span><span class="p">);</span>
+<span class="p">}</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>adapted from http://stackoverflow.com/a/1685917</p></div></div><div class="code"><div class="wrapper"><span class="kd">function</span> <span class="nx">toFixed</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">e</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">e</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">x</span><span class="p">.</span><span class="nx">toString</span><span class="p">().</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;e-&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">x</span> <span class="o">*=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="nx">e</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+        <span class="nx">x</span> <span class="o">=</span> <span class="s1">&#39;0.&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">new</span> <span class="nb">Array</span><span class="p">(</span><span class="nx">e</span><span class="p">)).</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="nx">x</span><span class="p">.</span><span class="nx">toString</span><span class="p">().</span><span class="nx">substring</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">e</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">x</span><span class="p">.</span><span class="nx">toString</span><span class="p">().</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">e</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">e</span> <span class="o">-=</span> <span class="mi">20</span><span class="p">;</span>
+        <span class="nx">x</span> <span class="o">/=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="nx">e</span><span class="p">);</span>
+        <span class="nx">x</span> <span class="o">+=</span> <span class="p">(</span><span class="k">new</span> <span class="nb">Array</span><span class="p">(</span><span class="nx">e</span><span class="o">+</span><span class="mi">1</span><span class="p">)).</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nx">x</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">padInt</span> <span class="p">(</span><span class="nx">text</span><span class="p">,</span> <span class="nx">width</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">value</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">text</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+  <span class="kd">var</span> <span class="nx">serialized</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">width</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">serialized</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;0000&#39;</span> <span class="o">+</span> <span class="nx">value</span><span class="p">).</span><span class="nx">slice</span><span class="p">(</span><span class="o">-</span><span class="nx">width</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">serialized</span> <span class="o">=</span> <span class="nx">toFixed</span><span class="p">(</span><span class="nx">value</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nx">defineObject</span><span class="p">(</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">value</span><span class="p">,</span> <span class="nx">serialized</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">padInt</span><span class="o">:</span> <span class="nx">padInt</span>
+  <span class="p">,</span><span class="nx">joinEscaped</span><span class="o">:</span> <span class="nx">joinEscaped</span>
+  <span class="p">,</span><span class="nx">serializeable</span><span class="o">:</span> <span class="nx">serializeable</span>
+  <span class="p">,</span><span class="nx">hostportBuild</span><span class="o">:</span> <span class="nx">hostportBuild</span>
+  <span class="p">,</span><span class="nx">mapList</span><span class="o">:</span> <span class="nx">mapList</span>
+  <span class="p">,</span><span class="nx">combineParams</span><span class="o">:</span> <span class="nx">combineParams</span>
+  <span class="p">,</span><span class="nx">sipuriBuild</span><span class="o">:</span> <span class="nx">sipuriBuild</span>
+  <span class="p">,</span><span class="nx">addrparamsBuild</span><span class="o">:</span> <span class="nx">addrparamsBuild</span>
+  <span class="p">,</span><span class="nx">xparamsBuild</span><span class="o">:</span> <span class="nx">xparamsBuild</span>
+  <span class="p">,</span><span class="nx">defineDelimited</span><span class="o">:</span> <span class="nx">defineDelimited</span>
+  <span class="p">,</span><span class="nx">list</span><span class="o">:</span> <span class="nx">list</span>
+  <span class="p">,</span><span class="nx">header</span><span class="o">:</span> <span class="nx">header</span>
+<span class="p">};</span></div></div></div></div></body></html>
