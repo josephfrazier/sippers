@@ -22,6 +22,9 @@ var options = {
   },
   mocha: {
     reporter: 'spec'
+  },
+  groc: {
+    args: ['index.js', 'src/helpers.js']
   }
 };
 
@@ -51,13 +54,21 @@ gulp.task('test', ['lint'], function () {
   ;
 });
 
-gulp.task('doc', function () {
-  return groc.CLI(['index.js', 'src/helpers.js'], function(error) {
+function grocCLI (args) {
+  return groc.CLI(args, function(error) {
     if (error) {
       console.error(error);
       process.exit(1)
     }
   });
+}
+
+gulp.task('doc', function () {
+  return grocCLI(options.groc.args);
+});
+
+gulp.task('docpush', function () {
+  return grocCLI(options.groc.args.concat('--github'));
 });
 
 gulp.task('default', ['test']);
