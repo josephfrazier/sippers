@@ -1,5 +1,5 @@
 var assert = require('assert-diff');
-var sippers = require('../../dist/sippers.js');
+var sippers = require('../../');
 var fs = require('fs');
 
 process.chdir(__dirname);

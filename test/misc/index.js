@@ -1,5 +1,5 @@
 var assert = require('assert');
-var sippers = require('../../dist/sippers.js');
+var sippers = require('../../');
 
 function make200 (headers) {
   return ['SIP/2.0 200 OK', 'CSeq: 1'].concat(headers).concat('\r\n').join('\r\n');
