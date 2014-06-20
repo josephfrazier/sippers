@@ -24,7 +24,7 @@ var options = {
     reporter: 'spec'
   },
   groc: {
-    args: ['index.js', 'src/helpers.js']
+    args: ['index.js', 'src/helpers.js', 'src/ParsedError.js']
   }
 };
 
