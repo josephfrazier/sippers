@@ -28,8 +28,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
     }, {
       "type": "folder",
       "data": {
-        "path": "dist",
-        "title": "dist"
+        "path": "src",
+        "title": "src"
       },
       "depth": 1,
       "children": [
@@ -45,10 +45,10 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "foldPrefix": "^",
               "name": "JavaScript"
             },
-            "sourcePath": "/Users/josephfrazier/sippers/dist/helpers.js",
-            "projectPath": "dist/helpers.js",
-            "targetPath": "dist/helpers",
-            "pageTitle": "dist/helpers",
+            "sourcePath": "/Users/josephfrazier/sippers/src/helpers.js",
+            "projectPath": "src/helpers.js",
+            "targetPath": "src/helpers",
+            "pageTitle": "src/helpers",
             "title": "helpers"
           },
           "depth": 2,
