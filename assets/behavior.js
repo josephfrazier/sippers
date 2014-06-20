@@ -21,7 +21,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         "projectPath": "index.js",
         "targetPath": "index",
         "pageTitle": "index",
-        "title": "index"
+        "firstHeader": {
+          "type": "heading",
+          "data": {
+            "level": 1,
+            "title": "sippers",
+            "slug": "sippers",
+            "isFileHeader": true
+          },
+          "depth": 1
+        },
+        "title": "sippers"
       },
       "depth": 1,
       "outline": []
@@ -34,6 +44,26 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
       "depth": 1,
       "children": [
         {
+          "type": "file",
+          "data": {
+            "language": {
+              "nameMatchers": [".js"],
+              "pygmentsLexer": "javascript",
+              "multiLineComment": ["/*", "*", "*/"],
+              "singleLineComment": ["//"],
+              "ignorePrefix": "}",
+              "foldPrefix": "^",
+              "name": "JavaScript"
+            },
+            "sourcePath": "/Users/josephfrazier/sippers/src/ParsedError.js",
+            "projectPath": "src/ParsedError.js",
+            "targetPath": "src/ParsedError",
+            "pageTitle": "src/ParsedError",
+            "title": "ParsedError"
+          },
+          "depth": 2,
+          "outline": []
+        }, {
           "type": "file",
           "data": {
             "language": {
