@@ -13,11 +13,12 @@
   },
   "homepage": "https://github.com/joseph-onsip/sippers",
   "devDependencies": {
+    "assert-diff": "0.0.4",
+    "groc": "^0.6.3",
     "gulp": "~3.6.2",
-    "gulp-peg": "~0.1.1",
-    "gulp-util": "~2.2.14",
     "gulp-jshint": "~1.6.1",
     "gulp-mocha": "~0.4.1",
-    "assert-diff": "0.0.4"
+    "gulp-peg": "~0.1.1",
+    "gulp-util": "~2.2.14"
   }
 }

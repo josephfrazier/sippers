@@ -3,6 +3,7 @@ var gutil = require('gulp-util');
 var peg = require('gulp-peg');
 var jshint = require('gulp-jshint');
 var mocha = require('gulp-mocha');
+var groc = require('groc');
 
 // make gulp work from subdirectories
 process.chdir(__dirname);
@@ -48,6 +49,15 @@ gulp.task('test', ['lint'], function () {
     .pipe(jshint.reporter('default'))
     .pipe(mocha(options.mocha))
   ;
+});
+
+gulp.task('doc', function () {
+  return groc.CLI(['index.js', 'src/helpers.js'], function(error) {
+    if (error) {
+      console.error(error);
+      process.exit(1)
+    }
+  });
 });
 
 gulp.task('default', ['test']);
