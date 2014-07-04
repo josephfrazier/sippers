@@ -98,7 +98,7 @@ module.exports.SyntaxError = grammar.SyntaxError;
 // See [ParsedError](src/ParsedError.html)
 // @static
 // @module <a id="ParsedError" href="#ParsedError">ParsedError</a>
-var ParsedError = module.exports.ParsedError = require('./src/ParsedError')
+var ParsedError = module.exports.ParsedError = require('./dist/ParsedError')
 
 /// RFC 3261 Section 8.1.1 (http://tools.ietf.org/html/rfc3261#section-8.1.1):
 /// A valid SIP request formulated by a UAC MUST, at a minimum, contain
