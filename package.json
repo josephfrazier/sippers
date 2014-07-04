@@ -15,7 +15,7 @@
   "devDependencies": {
     "assert-diff": "0.0.4",
     "groc": "^0.6.3",
-    "gulp": "~3.6.2",
+    "gulp": "^3.8.5",
     "gulp-jshint": "~1.6.1",
     "gulp-mocha": "~0.4.1",
     "gulp-peg": "~0.1.1",
