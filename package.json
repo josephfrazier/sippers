@@ -1,7 +1,7 @@
 {
   "name": "sippers",
   "version": "0.0.0",
-  "description": "A SIP parsing library.",
+  "description": "Formal SIP parsing in the browser.",
   "main": "index.js",
   "repository": {
     "type": "git",
