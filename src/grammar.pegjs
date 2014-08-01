@@ -950,7 +950,12 @@ domain              =  name:"domain" EQUAL LDQUOT
                          { return helpers.list(first, rest, ' '); }
                        )
                        RDQUOT
-                       {return {name: name, value: value};}
+                       {
+                         return {
+                           name: name,
+                           value: helpers.defineDelimited(value, '"' + value.serialize() + '"')
+                         };
+                       }
 URI                 =  absoluteURI / abs_path
 nonce               =  name:"nonce" EQUAL value:nonce_value
                        {return {name: name, value: value};}
@@ -968,7 +973,12 @@ qop_options         =  name:"qop" EQUAL LDQUOT
                          { return helpers.list(first, rest, ','); }
                        )
                        RDQUOT
-                       {return {name: name, value: value};}
+                       {
+                         return {
+                           name: name,
+                           value: helpers.defineDelimited(value, '"' + value.serialize() + '"')
+                         };
+                       }
 qop_value           =  "auth" / "auth-int" / token
 
 Proxy_Authorization  =  name:"Proxy-Authorization"i HCOLON value:credentials
