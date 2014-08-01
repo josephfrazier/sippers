@@ -1,9 +1,26 @@
+// These headers are allowed to show up multiple times, but should be
+// serialized back into separate fields instead of combined into one.
+// See http://tools.ietf.org/html/rfc3261#section-7.3.1
+var noncombinedHeaders = {
+   'WWW-Authenticate': true
+  ,'Authorization': true
+  ,'Proxy-Authenticate': true
+  ,'Proxy-Authorization': true
+};
+
 function mapList (isHeaders, list, serializeOptions) {
   function combine (map, item) {
     var name = item.name;
     var value = item.value;
     if (isHeaders) {
       var prevValue = map[name];
+
+      // Even though noncombined headers are serialized as multiple fields,
+      // nevertheless merge them into an array for the JSON representation.
+      if (noncombinedHeaders[name]) {
+        prevValue = [].concat(prevValue || []);
+      }
+
       var prevArray = Array.isArray(prevValue);
       if (prevArray) {
         value = prevValue.concat(value);
@@ -28,9 +45,20 @@ function mapList (isHeaders, list, serializeOptions) {
       var values = [].concat(this[name]);
       values = values.map(function(i){return serialize(i);});
       if (isHeaders) {
-        var headerSep = name === 'User-Agent' ? ' ' : ', ';
-        var joined = values.join(headerSep);
-        return name + ': ' + joined + '\r\n';
+        function buildField (value) {
+          return name + ': ' + value + '\r\n';
+        }
+
+        if (noncombinedHeaders[name]) {
+          // serialize noncombined headers back into separate fields
+          return values.map(buildField).join('');
+        }
+        else {
+          // combine headers into single field when possible
+          var headerSep = name === 'User-Agent' ? ' ' : ', ';
+          var joined = values.join(headerSep);
+          return buildField(joined);
+        }
       }
       else {
         return (separator || ';') + name + (values[0] ? '=' + values[0] : '');

@@ -744,7 +744,7 @@ describe('RFC 4475 Torture Tests', function () {
       it('round-trips', function () {roundTrip(parsed);});
 
       it('This REGISTER request contains an Authorization header field with an unknown scheme.', function () {
-        assert.strictEqual(parsed.headers.Authorization.other.scheme, 'NoOneKnowsThisScheme');
+        assert.strictEqual(parsed.headers.Authorization[0].other.scheme, 'NoOneKnowsThisScheme');
       });
     });
 
