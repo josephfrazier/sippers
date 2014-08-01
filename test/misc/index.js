@@ -1,12 +1,11 @@
 var assert = require('assert');
 var sippers = require('../../');
 
+var roundTrip = require('../testhelpers').roundTrip;
+var jsonClone = require('../testhelpers').jsonClone;
+
 function make200 (headers) {
   return ['SIP/2.0 200 OK', 'CSeq: 1'].concat(headers).concat('\r\n').join('\r\n');
-}
-
-function jsonClone (obj) {
-  return JSON.parse(JSON.stringify(obj));
 }
 
 assert.parsedEqual = function (parsed1, parsed2) {

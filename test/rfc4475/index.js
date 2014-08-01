@@ -2,6 +2,9 @@ var assert = require('assert-diff');
 var sippers = require('../../');
 var fs = require('fs');
 
+var roundTrip = require('../testhelpers').roundTrip;
+var jsonClone = require('../testhelpers').jsonClone;
+
 process.chdir(__dirname);
 
 function assertivelyParse (name, error) {
@@ -15,16 +18,6 @@ function assertivelyParse (name, error) {
   }, error);
 
   return parsed;
-}
-
-function roundTrip (parsed) {
-  if (!parsed) return;
-  var parsed2 = sippers.parse(parsed.serialize(), {startRule: 'SIP_message'});
-  assert.deepEqual(jsonClone(parsed), jsonClone(parsed2), 'serialize/parse round-trip came back different');
-}
-
-function jsonClone (obj) {
-  return JSON.parse(JSON.stringify(obj));
 }
 
 function repeat (str) {
