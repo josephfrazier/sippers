@@ -915,17 +915,28 @@ other_priority  =  token
 Proxy_Authenticate  =  name:"Proxy-Authenticate"i HCOLON value:challenge
                        {return {name: "Proxy-Authenticate", value: value};}
 challenge           =  (
-                         "Digest" LWS
-                         first:digest_cln
-                         rest:(COMMA d:digest_cln {return d;})*
-                         { return {digest: helpers.list(first, rest)}; }
+                         "Digest" LWS digest:_digest_challenge
+                         {
+                           return helpers.serializeable({
+                             digest: digest
+                           }, ['Digest ', 'digest']);
+                         }
                        )
-                       / (other:other_challenge {return {other: other};})
+                       / (other:other_challenge {
+                           return helpers.serializeable({
+                             other: other
+                           }, ['other']);
+                         })
 other_challenge     =  scheme:auth_scheme LWS first:auth_param
                        rest:(COMMA a:auth_param {return a;})*
                        {
                          parameters = helpers.list(first, rest);
                          return helpers.serializeable.xParams(scheme, 'scheme', parameters, ', ');
+                       }
+_digest_challenge   =  first:digest_cln
+                       rest:(COMMA d:digest_cln {return d;})*
+                       {
+                         return helpers.combineParams(helpers.list(first, rest), {separator: ', '});
                        }
 digest_cln          =  realm / domain / nonce
                         / opaque / stale / algorithm
