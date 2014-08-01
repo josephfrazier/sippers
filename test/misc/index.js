@@ -110,4 +110,45 @@ describe('Miscellaneous Tests:', function () {
 
     assert.parsedEqual(sippers.parse(crlfok), sippers.parse(ok));
   });
+
+  // see http://tools.ietf.org/html/rfc3261#section-7.3.1
+  describe('a message with non-combined multiple header fields', function () {
+    var noncombinedHeaders = {
+      'WWW-Authenticate': [
+        'Digest realm="atlanta.com", domain="sip:boxesbybob.com", qop="auth", nonce="f84f1cec41e6cbe5aea9c8e88d359", opaque="", stale=FALSE, algorithm=MD5',
+        'Digest realm="biloxi.com", domain="sip:boxesbybob.com", qop="auth", nonce="f84f1cec41e6cbe5aea9c8e88d359", opaque="", stale=FALSE, algorithm=MD5'
+      ],
+      'Authorization': [
+        'Digest username="Alice", realm="atlanta.com", nonce="84a4cc6f3082121f32b42a2187831a9e", response="7587245234b3434cc3412213e5f113a5432"',
+        'Digest username="Bob", realm="biloxi.com", nonce="84a4cc6f3082121f32b42a2187831a9e", response="7587245234b3434cc3412213e5f113a5432"'
+      ],
+      'Proxy-Authenticate': [
+        'Digest realm="atlanta.com", domain="sip:ss1.carrier.com", qop="auth", nonce="f84f1cec41e6cbe5aea9c8e88d359", opaque="", stale=FALSE, algorithm=MD5',
+        'Digest realm="biloxi.com", domain="sip:ss1.carrier.com", qop="auth", nonce="f84f1cec41e6cbe5aea9c8e88d359", opaque="", stale=FALSE, algorithm=MD5'
+      ],
+      'Proxy-Authorization': [
+        'Digest username="Alice", realm="atlanta.com", nonce="c60f3082ee1212b402a21831ae", response="245f23415f11432b3434341c022"',
+        'Digest username="Bob", realm="biloxi.com", nonce="c60f3082ee1212b402a21831ae", response="245f23415f11432b3434341c022"'
+      ]
+    };
+
+    var headerList = Object.keys(noncombinedHeaders).reduce(function (list, name) {
+      return list.concat(noncombinedHeaders[name].map(function (value) {
+        return name + ': ' + value;
+      }));
+    }, []);
+
+    var message = make200(headerList);
+
+    var parsed;
+
+    it('parses', function () {
+      parsed = sippers.parse(message);
+    });
+
+    it('round-trips', function () {
+      roundTrip(parsed);
+      assert.equal(message, parsed.serialize());
+    });
+  });
 });
